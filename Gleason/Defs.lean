@@ -68,21 +68,28 @@ variable (m : ProjMeasure n)
 /-- Premier exercice de preuve (M1) : `μ ⊥ = 0`.
 Indication : `⊥ ⟂ ⊥` et `⊥ ⊔ ⊥ = ⊥`, donc `μ ⊥ = 2 * μ ⊥`. -/
 theorem bot_eq_zero : m.μ ⊥ = 0 := by
-  sorry
+  have h := m.add_isOrtho ⊥ ⊥ (Submodule.IsOrtho.symm (Submodule.isOrtho_bot_left))
+  simp at h
+  linarith
 
 /-- Additivité avec le complément orthogonal : `μ A + μ Aᗮ = 1`.
 Indication : en dimension finie, `A ⊔ Aᗮ = ⊤` et `A ⟂ Aᗮ`. -/
 theorem add_orthogonal_compl (A : Submodule ℂ (H n)) : m.μ A + m.μ Aᗮ = 1 := by
-  sorry
+  rw [← m.top_eq_one, ← Submodule.sup_orthogonal_of_hasOrthogonalProjection (K := A)]
+  exact (m.add_isOrtho A Aᗮ (Submodule.isOrtho_orthogonal_right A)).symm
 
 /-- Toute valeur est ≤ 1. Conséquence de `add_orthogonal_compl` et `nonneg`. -/
 theorem le_one (A : Submodule ℂ (H n)) : m.μ A ≤ 1 := by
-  sorry
+  linarith [m.add_orthogonal_compl A, m.nonneg Aᗮ]
 
 /-- Monotonie : si `A ≤ B` alors `μ A ≤ μ B`.
 Indication : `B = A ⊔ (B ⊓ Aᗮ)` en dimension finie, et les deux morceaux sont orthogonaux. -/
 theorem mono {A B : Submodule ℂ (H n)} (h : A ≤ B) : m.μ A ≤ m.μ B := by
-  sorry
+  have hdecomp := Submodule.sup_orthogonal_inf_of_hasOrthogonalProjection h
+  have hortho : A ⟂ (Aᗮ ⊓ B) :=
+    (Submodule.isOrtho_orthogonal_right A).mono_right inf_le_left
+  rw [← hdecomp, m.add_isOrtho _ _ hortho]
+  linarith [m.nonneg (Aᗮ ⊓ B)]
 
 end ProjMeasure
 

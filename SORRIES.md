@@ -1,20 +1,20 @@
 # Suivi des sorry (mettre à jour à chaque commit qui en ferme un)
 
 ## M1 — fondations (faciles, à faire en premier, dans l'ordre)
-- [ ] Nonvacuity.pureState.top_eq_one
-- [ ] Nonvacuity.pureState.add_isOrtho   ← premier vrai lemme (P_{A⊔B} = P_A + P_B si A ⟂ B)
-- [ ] Nonvacuity.pureEffectMeasure.map_one
-- [ ] Nonvacuity.pureEffectMeasure.additive
-- [ ] ProjMeasure.bot_eq_zero
-- [ ] ProjMeasure.add_orthogonal_compl
-- [ ] ProjMeasure.le_one
-- [ ] ProjMeasure.mono
+- [x] Nonvacuity.pureState.top_eq_one
+- [x] Nonvacuity.pureState.add_isOrtho   ← premier vrai lemme (P_{A⊔B} = P_A + P_B si A ⟂ B)
+- [x] Nonvacuity.pureEffectMeasure.map_one
+- [x] Nonvacuity.pureEffectMeasure.additive
+- [x] ProjMeasure.bot_eq_zero
+- [x] ProjMeasure.add_orthogonal_compl
+- [x] ProjMeasure.le_one
+- [x] ProjMeasure.mono
 
 ## M-B — Busch 2003 (cible de publication n°1)
-- [ ] EffectMeasure.map_zero
-- [ ] EffectMeasure.mono
-- [ ] EffectMeasure.isEffect_projL
-- [ ] EffectMeasure.toProjMeasure (2 sorry)
+- [x] EffectMeasure.map_zero
+- [x] EffectMeasure.mono
+- [x] EffectMeasure.isEffect_projL
+- [x] EffectMeasure.toProjMeasure (2 sorry)
 - [ ] busch (à décomposer en ~6 lemmes, plan dans Busch/Main.lean)
 - [ ] busch_born_rule
 

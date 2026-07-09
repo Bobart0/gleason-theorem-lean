@@ -45,16 +45,39 @@ variable (F : EffectMeasure n)
 
 /-- `f 0 = 0` (prendre `S = T = 0` dans l'additivité). -/
 theorem map_zero : F.f 0 = 0 := by
-  sorry
+  have h0 : IsEffect (0 : H n →ₗ[ℂ] H n) := by
+    refine ⟨⟨fun _ _ => by simp, fun x => by simp⟩, ?_⟩
+    simp only [sub_zero]
+    exact ⟨LinearMap.IsSymmetric.one, fun x => by
+      simp only [Module.End.one_apply]; exact @inner_self_nonneg ℂ _ _ _ _ x⟩
+  have h := F.additive 0 0 h0 h0 (by simpa using h0)
+  simp at h; linarith
 
 /-- Monotonie sur les effets : si `S ≤ T` (c.-à-d. `T - S` positif) alors `f S ≤ f T`. -/
 theorem mono {S T : H n →ₗ[ℂ] H n} (hS : IsEffect S) (hT : IsEffect T)
     (h : IsPositiveOp (T - S)) : F.f S ≤ F.f T := by
-  sorry
+  have hTS : IsEffect (T - S) := by
+    refine ⟨h, ?_⟩
+    have heq : 1 - (T - S) = (1 - T) + S := by abel
+    rw [heq]
+    exact ⟨hT.2.1.add hS.1.1, fun x => by
+      rw [LinearMap.add_apply, inner_add_left, Complex.add_re]
+      exact add_nonneg (hT.2.2 x) (hS.1.2 x)⟩
+  have heff : IsEffect (S + (T - S)) := by
+    rwa [show S + (T - S) = T from by abel]
+  have := F.additive S (T - S) hS hTS heff
+  rw [show S + (T - S) = T from by abel] at this
+  linarith [F.nonneg (T - S) hTS]
 
 /-- Toute projection orthogonale est un effet. -/
 theorem isEffect_projL (A : Submodule ℂ (H n)) : IsEffect (projL A) := by
-  sorry
+  refine ⟨⟨Submodule.starProjection_isSymmetric A,
+          fun x => Submodule.re_inner_starProjection_nonneg A x⟩, ?_⟩
+  have heq : 1 - projL A = projL Aᗮ := by
+    simp [projL, Submodule.starProjection_orthogonal']
+  rw [heq]
+  exact ⟨Submodule.starProjection_isSymmetric Aᗮ,
+         fun x => Submodule.re_inner_starProjection_nonneg Aᗮ x⟩
 
 /-- **Pont Busch → Gleason** : la restriction d'une mesure d'effets aux projections
 est une mesure de projection. (Additivité : pour `A ⟂ B`,
@@ -63,10 +86,40 @@ def toProjMeasure (F : EffectMeasure n) : ProjMeasure n where
   μ A := F.f (projL A)
   nonneg A := F.nonneg _ (isEffect_projL A)
   top_eq_one := by
-    -- projL ⊤ = 1
-    sorry
+    have : projL (⊤ : Submodule ℂ (H n)) = 1 := by
+      simp [projL, Submodule.starProjection_top']
+    rw [this, F.map_one]
   add_isOrtho A B hAB := by
-    sorry
+    have hdecomp : projL (A ⊔ B) = projL A + projL B := by
+      apply LinearMap.ext; intro v
+      show (A ⊔ B).starProjection v = A.starProjection v + B.starProjection v
+      apply Submodule.eq_starProjection_of_mem_of_inner_eq_zero
+      · exact Submodule.add_mem_sup
+          (Submodule.starProjection_apply_mem A v)
+          (Submodule.starProjection_apply_mem B v)
+      · intro w hw
+        obtain ⟨a, ha, b, hb, rfl⟩ := Submodule.mem_sup.mp hw
+        rw [inner_add_right]
+        have h1 : ⟪v - (A.starProjection v + B.starProjection v), a⟫_ℂ = 0 := by
+          rw [show v - (A.starProjection v + B.starProjection v) =
+              (v - A.starProjection v) - B.starProjection v from by abel,
+              inner_sub_left,
+              Submodule.starProjection_inner_eq_zero (K := A) v a ha,
+              Submodule.isOrtho_iff_inner_eq.mp hAB.symm _
+                (Submodule.starProjection_apply_mem B v) _ ha]
+          simp
+        have h2 : ⟪v - (A.starProjection v + B.starProjection v), b⟫_ℂ = 0 := by
+          rw [show v - (A.starProjection v + B.starProjection v) =
+              (v - B.starProjection v) - A.starProjection v from by abel,
+              inner_sub_left,
+              Submodule.starProjection_inner_eq_zero (K := B) v b hb,
+              Submodule.isOrtho_iff_inner_eq.mp hAB _
+                (Submodule.starProjection_apply_mem A v) _ hb]
+          simp
+        rw [h1, h2, add_zero]
+    rw [hdecomp]
+    exact F.additive _ _ (isEffect_projL A) (isEffect_projL B)
+      (by rw [← hdecomp]; exact isEffect_projL (A ⊔ B))
 
 end EffectMeasure
 
