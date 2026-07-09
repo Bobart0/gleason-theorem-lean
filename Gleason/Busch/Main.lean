@@ -205,7 +205,7 @@ theorem EffectMeasure.map_realSmul (F : EffectMeasure n)
     have : IsEffect (1 : H n →ₗ[ℂ] H n) :=
       ⟨⟨LinearMap.IsSymmetric.one, fun x => by
           simp only [Module.End.one_apply]; exact @inner_self_nonneg ℂ _ _ _ _ x⟩,
-       ⟨by simp [LinearMap.sub_apply], fun x => by simp⟩⟩
+       ⟨by simp, fun x => by simp⟩⟩
     linarith [F.mono hT this hT.2, F.map_one]
   suffices h : ∀ k : ℕ, |F.f ((↑r : ℂ) • T) - r * F.f T| ≤ (2⁻¹ : ℝ) ^ k by
     by_contra hne
@@ -264,7 +264,88 @@ theorem selfAdjoint_effect_decomp (S : H n →ₗ[ℂ] H n) (hS : S.IsSymmetric)
     ∃ (Ep Em : H n →ₗ[ℂ] H n) (c : ℝ),
       IsEffect Ep ∧ IsEffect Em ∧ 0 < c ∧
       S = (↑c : ℂ) • Ep - (↑c : ℂ) • Em := by
-  sorry
+  -- Operator norm bound via finite-dimensional continuity
+  set c := ‖LinearMap.toContinuousLinearMap S‖ + 1 with hc_def
+  have hc : (0 : ℝ) < c := by positivity
+  have hSb : ∀ x : H n, ‖S x‖ ≤ (c - 1) * ‖x‖ := by
+    intro x
+    have h := (LinearMap.toContinuousLinearMap S).le_opNorm x
+    simp only [LinearMap.coe_toContinuousLinearMap'] at h
+    have hc1 : ‖LinearMap.toContinuousLinearMap S‖ = c - 1 := by linarith [hc_def]
+    linarith [mul_le_mul_of_nonneg_right hc1.le (norm_nonneg x)]
+  -- Quadratic form bound: |re ⟪Sx, x⟫| ≤ (c-1) ‖x‖²
+  have hq : ∀ x : H n, |(⟪S x, x⟫_ℂ).re| ≤ (c - 1) * ‖x‖ ^ 2 := by
+    intro x
+    calc |(⟪S x, x⟫_ℂ).re|
+        ≤ ‖⟪S x, x⟫_ℂ‖ := Complex.abs_re_le_norm _
+      _ ≤ ‖S x‖ * ‖x‖ := norm_inner_le_norm _ _
+      _ ≤ (c - 1) * ‖x‖ * ‖x‖ := mul_le_mul_of_nonneg_right (hSb x) (norm_nonneg _)
+      _ = (c - 1) * ‖x‖ ^ 2 := by ring
+  -- Key identities
+  have h_cinv_c : c⁻¹ * c = 1 := inv_mul_cancel₀ (ne_of_gt hc)
+  have hcinv : (0 : ℝ) < c⁻¹ := inv_pos.mpr hc
+  -- Symmetry of summands
+  have hScS := hS.smul (Complex.conj_ofReal (c⁻¹ : ℝ))
+  have hSp := (LinearMap.IsSymmetric.one.add hScS).smul (Complex.conj_ofReal (2⁻¹ : ℝ))
+  have hSm := (LinearMap.IsSymmetric.one.sub hScS).smul (Complex.conj_ofReal (2⁻¹ : ℝ))
+  -- 1 - Ep = Em and 1 - Em = Ep
+  have h1p : (1 : H n →ₗ[ℂ] H n) - (↑(2⁻¹ : ℝ) : ℂ) • (1 + (↑(c⁻¹) : ℂ) • S) =
+             (↑(2⁻¹ : ℝ) : ℂ) • (1 - (↑(c⁻¹) : ℂ) • S) := by
+    ext x; simp [LinearMap.smul_apply, LinearMap.add_apply, LinearMap.sub_apply,
+                  Module.End.one_apply]; ring
+  have h1m : (1 : H n →ₗ[ℂ] H n) - (↑(2⁻¹ : ℝ) : ℂ) • (1 - (↑(c⁻¹) : ℂ) • S) =
+             (↑(2⁻¹ : ℝ) : ℂ) • (1 + (↑(c⁻¹) : ℂ) • S) := by
+    ext x; simp [LinearMap.smul_apply, LinearMap.add_apply, LinearMap.sub_apply,
+                  Module.End.one_apply]; ring
+  -- Zero product for nlinarith
+  have h_zero : ∀ x : H n, (c⁻¹ * c - 1) * ‖x‖ ^ 2 = 0 := fun _ => by
+    rw [h_cinv_c, sub_self, zero_mul]
+  -- Positivity of Ep
+  have hpos_p : ∀ x : H n,
+      0 ≤ (⟪((↑(2⁻¹ : ℝ) : ℂ) • (1 + (↑(c⁻¹) : ℂ) • S)) x, x⟫_ℂ).re := by
+    intro x
+    simp only [LinearMap.smul_apply, LinearMap.add_apply, Module.End.one_apply,
+               inner_smul_left, inner_add_left, Complex.conj_ofReal,
+               Complex.re_ofReal_mul, Complex.add_re]
+    apply mul_nonneg (by positivity : (0 : ℝ) ≤ 2⁻¹)
+    have hre : (⟪x, x⟫_ℂ).re = ‖x‖ ^ 2 := inner_self_eq_norm_sq (𝕜 := ℂ) x
+    rw [hre]
+    nlinarith [mul_le_mul_of_nonneg_left ((abs_le.mp (hq x)).1) hcinv.le,
+               h_zero x, mul_nonneg hcinv.le (sq_nonneg ‖x‖)]
+  -- Positivity of Em
+  have hpos_m : ∀ x : H n,
+      0 ≤ (⟪((↑(2⁻¹ : ℝ) : ℂ) • (1 - (↑(c⁻¹) : ℂ) • S)) x, x⟫_ℂ).re := by
+    intro x
+    simp only [LinearMap.smul_apply, LinearMap.sub_apply, Module.End.one_apply,
+               inner_smul_left, inner_sub_left, Complex.conj_ofReal,
+               Complex.re_ofReal_mul, Complex.sub_re]
+    apply mul_nonneg (by positivity : (0 : ℝ) ≤ 2⁻¹)
+    have hre : (⟪x, x⟫_ℂ).re = ‖x‖ ^ 2 := inner_self_eq_norm_sq (𝕜 := ℂ) x
+    rw [hre]
+    nlinarith [mul_le_mul_of_nonneg_left ((abs_le.mp (hq x)).2) hcinv.le,
+               h_zero x, mul_nonneg hcinv.le (sq_nonneg ‖x‖)]
+  -- Assemble
+  refine ⟨(↑(2⁻¹ : ℝ) : ℂ) • (1 + (↑(c⁻¹) : ℂ) • S),
+          (↑(2⁻¹ : ℝ) : ℂ) • (1 - (↑(c⁻¹) : ℂ) • S), c, ?_, ?_, hc, ?_⟩
+  · -- IsEffect Ep
+    constructor
+    · exact ⟨hSp, hpos_p⟩
+    · rw [h1p]; exact ⟨hSm, hpos_m⟩
+  · -- IsEffect Em
+    constructor
+    · exact ⟨hSm, hpos_m⟩
+    · rw [h1m]; exact ⟨hSp, hpos_p⟩
+  · -- Decomposition: S = c • Ep - c • Em
+    rw [← smul_sub, ← smul_sub]
+    have hsub : (1 + (↑(c⁻¹) : ℂ) • S : H n →ₗ[ℂ] H n) - (1 - (↑(c⁻¹) : ℂ) • S) =
+                (2 : ℂ) • ((↑(c⁻¹) : ℂ) • S) := by
+      ext x; simp [LinearMap.add_apply, LinearMap.smul_apply, two_smul]
+    rw [hsub]; simp only [smul_smul]
+    have hscal : (↑c : ℂ) * ((↑(2⁻¹ : ℝ) : ℂ) * ((2 : ℂ) * (↑(c⁻¹) : ℂ))) = 1 := by
+      have h2 : (↑(2⁻¹ : ℝ) : ℂ) * 2 = 1 := by norm_num
+      rw [← mul_assoc (↑(2⁻¹ : ℝ) : ℂ) 2 _, h2, one_mul,
+          ← Complex.ofReal_mul, mul_inv_cancel₀ (ne_of_gt hc), Complex.ofReal_one]
+    rw [hscal, one_smul]
 
 -- ── (B7a) Bonne définition de l'extension ────────────────────────
 -- Si deux décompositions c₁(Ep₁ − Em₁) = c₂(Ep₂ − Em₂) du même
