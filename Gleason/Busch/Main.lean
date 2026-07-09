@@ -437,27 +437,144 @@ theorem EffectMeasure.extendSA_well_defined (F : EffectMeasure n)
 -- quelconque S = c(Ep − Em) (existence par B6, bonne définition par B7a).
 -- Linéarité ℝ : décomposer S+T et r·S, appliquer B7a.
 
-noncomputable def EffectMeasure.extendSA (F : EffectMeasure n) (hn : 1 ≤ n) :
-    (H n →ₗ[ℂ] H n) → ℝ := by
-  sorry
+-- Combinaison convexe d'effets est un effet.
+private theorem isEffect_convex_comb {A B : H n →ₗ[ℂ] H n} {r₁ r₂ : ℝ}
+    (hA : IsEffect A) (hB : IsEffect B)
+    (hr₁ : 0 ≤ r₁) (hr₂ : 0 ≤ r₂) (hrs : r₁ + r₂ = 1) :
+    IsEffect ((↑r₁ : ℂ) • A + (↑r₂ : ℂ) • B) := by
+  have hr₁' : r₁ ≤ 1 := by linarith
+  have hr₂' : r₂ ≤ 1 := by linarith
+  have he₁ := isEffect_complexSmul hA hr₁ hr₁'
+  have he₂ := isEffect_complexSmul hB hr₂ hr₂'
+  refine ⟨⟨he₁.1.1.add he₂.1.1, fun x => ?_⟩, ?_⟩
+  · rw [LinearMap.add_apply, inner_add_left, Complex.add_re]
+    exact add_nonneg (he₁.1.2 x) (he₂.1.2 x)
+  · have h1 : (1 : H n →ₗ[ℂ] H n) - ((↑r₁ : ℂ) • A + (↑r₂ : ℂ) • B) =
+              (↑r₁ : ℂ) • (1 - A) + (↑r₂ : ℂ) • (1 - B) := by
+      have hsum : (↑r₁ : ℂ) • (1 : H n →ₗ[ℂ] H n) + (↑r₂ : ℂ) • 1 = 1 := by
+        rw [← add_smul, ← Complex.ofReal_add, hrs, Complex.ofReal_one, one_smul]
+      conv_lhs => rw [← hsum]
+      simp only [smul_sub]; abel
+    rw [h1]
+    refine ⟨(hA.2.1.smul (Complex.conj_ofReal r₁)).add
+            (hB.2.1.smul (Complex.conj_ofReal r₂)), fun x => ?_⟩
+    simp only [LinearMap.add_apply, LinearMap.smul_apply, inner_add_left, inner_smul_left,
+                Complex.conj_ofReal, Complex.add_re, Complex.re_ofReal_mul]
+    exact add_nonneg (mul_nonneg hr₁ (hA.2.2 x)) (mul_nonneg hr₂ (hB.2.2 x))
+
+open Classical in
+noncomputable def EffectMeasure.extendSA (F : EffectMeasure n) (_ : 1 ≤ n) :
+    (H n →ₗ[ℂ] H n) → ℝ := fun S =>
+  if hS : S.IsSymmetric then
+    (selfAdjoint_effect_decomp S hS).choose_spec.choose_spec.choose *
+      F.f (selfAdjoint_effect_decomp S hS).choose -
+    (selfAdjoint_effect_decomp S hS).choose_spec.choose_spec.choose *
+      F.f (selfAdjoint_effect_decomp S hS).choose_spec.choose
+  else 0
+
+-- Indépendance du choix de décomposition : toute décomposition valide
+-- S = c(Ep - Em) donne la même valeur extendSA(S).
+private theorem EffectMeasure.extendSA_eq (F : EffectMeasure n) (hn : 1 ≤ n)
+    {S : H n →ₗ[ℂ] H n} (hS : S.IsSymmetric)
+    {Ep Em : H n →ₗ[ℂ] H n} {c : ℝ}
+    (hEp : IsEffect Ep) (hEm : IsEffect Em) (hc : 0 < c)
+    (heq : S = (↑c : ℂ) • Ep - (↑c : ℂ) • Em) :
+    F.extendSA hn S = c * F.f Ep - c * F.f Em := by
+  classical
+  unfold EffectMeasure.extendSA
+  rw [dif_pos hS]
+  set d := selfAdjoint_effect_decomp S hS
+  obtain ⟨hEp₀, hEm₀, hc₀, heq₀⟩ := d.choose_spec.choose_spec.choose_spec
+  exact F.extendSA_well_defined hEp₀ hEm₀ hc₀ hEp hEm hc (heq₀.symm.trans heq)
 
 -- L'extension est ℝ-additive sur les auto-adjoints.
 theorem EffectMeasure.extendSA_add (F : EffectMeasure n) (hn : 1 ≤ n)
     {S T : H n →ₗ[ℂ] H n} (hS : S.IsSymmetric) (hT : T.IsSymmetric) :
     F.extendSA hn (S + T) = F.extendSA hn S + F.extendSA hn T := by
-  sorry
+  obtain ⟨EpS, EmS, cS, hEpS, hEmS, hcS, heqS⟩ := selfAdjoint_effect_decomp S hS
+  obtain ⟨EpT, EmT, cT, hEpT, hEmT, hcT, heqT⟩ := selfAdjoint_effect_decomp T hT
+  rw [F.extendSA_eq hn hS hEpS hEmS hcS heqS,
+      F.extendSA_eq hn hT hEpT hEmT hcT heqT]
+  -- Construct decomposition of S + T via convex combination
+  set C := cS + cT
+  have hC : 0 < C := add_pos hcS hcT
+  have hC_ne := ne_of_gt hC
+  set rS := cS / C with hrS_def
+  set rT := cT / C with hrT_def
+  have hrS : 0 ≤ rS := div_nonneg hcS.le hC.le
+  have hrT : 0 ≤ rT := div_nonneg hcT.le hC.le
+  have hrs : rS + rT = 1 := by
+    simp only [hrS_def, hrT_def]; rw [← add_div]; exact div_self hC_ne
+  have hrS' : rS ≤ 1 := by linarith
+  have hrT' : rT ≤ 1 := by linarith
+  set Ep' := (↑rS : ℂ) • EpS + (↑rT : ℂ) • EpT
+  set Em' := (↑rS : ℂ) • EmS + (↑rT : ℂ) • EmT
+  have hEp' : IsEffect Ep' := isEffect_convex_comb hEpS hEpT hrS hrT hrs
+  have hEm' : IsEffect Em' := isEffect_convex_comb hEmS hEmT hrS hrT hrs
+  have heqST : S + T = (↑C : ℂ) • Ep' - (↑C : ℂ) • Em' := by
+    simp only [Ep', Em', smul_add, smul_smul, ← Complex.ofReal_mul]
+    rw [show (C : ℝ) * rS = cS from by rw [hrS_def, ← mul_div_assoc, mul_div_cancel_left₀ cS hC_ne],
+        show (C : ℝ) * rT = cT from by rw [hrT_def, ← mul_div_assoc, mul_div_cancel_left₀ cT hC_ne]]
+    rw [heqS, heqT]; abel
+  rw [F.extendSA_eq hn (hS.add hT) hEp' hEm' hC heqST]
+  -- Expand f(Ep') and f(Em') using additivity + B5
+  have heffS := isEffect_complexSmul hEpS hrS hrS'
+  have heffT := isEffect_complexSmul hEpT hrT hrT'
+  have heffSm := isEffect_complexSmul hEmS hrS hrS'
+  have heffTm := isEffect_complexSmul hEmT hrT hrT'
+  rw [F.additive _ _ heffS heffT hEp', F.map_realSmul hEpS hrS hrS',
+      F.map_realSmul hEpT hrT hrT',
+      F.additive _ _ heffSm heffTm hEm', F.map_realSmul hEmS hrS hrS',
+      F.map_realSmul hEmT hrT hrT']
+  -- Arithmetic: C * (rS * f EpS + rT * f EpT) - C * (rS * f EmS + rT * f EmT)
+  --           = (cS * f EpS - cS * f EmS) + (cT * f EpT - cT * f EmT)
+  have hCrS : C * rS = cS := by
+    rw [hrS_def, ← mul_div_assoc, mul_div_cancel_left₀ cS hC_ne]
+  have hCrT : C * rT = cT := by
+    rw [hrT_def, ← mul_div_assoc, mul_div_cancel_left₀ cT hC_ne]
+  simp only [mul_add, ← mul_assoc, hCrS, hCrT]; ring
 
 -- L'extension est ℝ-homogène sur les auto-adjoints.
 theorem EffectMeasure.extendSA_realSmul (F : EffectMeasure n) (hn : 1 ≤ n)
     {S : H n →ₗ[ℂ] H n} (hS : S.IsSymmetric) (r : ℝ) :
     F.extendSA hn ((↑r : ℂ) • S) = r * F.extendSA hn S := by
-  sorry
+  obtain ⟨Ep, Em, c, hEp, hEm, hc, heq⟩ := selfAdjoint_effect_decomp S hS
+  rw [F.extendSA_eq hn hS hEp hEm hc heq]
+  by_cases hr : 0 ≤ r
+  · -- r ≥ 0 : r·S = (r·c)·Ep - (r·c)·Em
+    by_cases hr0 : r = 0
+    · subst hr0; simp only [Complex.ofReal_zero, zero_smul]
+      have h0 : IsEffect (0 : H n →ₗ[ℂ] H n) := ⟨⟨fun _ _ => by simp, fun _ => by simp⟩,
+        by simp only [sub_zero]; exact ⟨.one, fun x => by
+          simp only [Module.End.one_apply]; exact @inner_self_nonneg ℂ _ _ _ _ x⟩⟩
+      rw [F.extendSA_eq hn (fun _ _ => by simp) h0 h0 one_pos (by simp)]
+      simp [F.map_zero]
+    · have hrc : 0 < r * c := mul_pos (lt_of_le_of_ne hr (Ne.symm hr0)) hc
+      have h_rc : (↑r : ℂ) * (↑c : ℂ) = (↑(r * c) : ℂ) := by push_cast; ring
+      have heq' : (↑r : ℂ) • S = (↑(r * c) : ℂ) • Ep - (↑(r * c) : ℂ) • Em := by
+        rw [heq, smul_sub, smul_smul, smul_smul, h_rc]
+      rw [F.extendSA_eq hn (hS.smul (Complex.conj_ofReal r)) hEp hEm hrc heq']; ring
+  · -- r < 0 : r·S = (-r·c)·Em - (-r·c)·Ep
+    push Not at hr
+    have hnrc : 0 < -r * c := mul_pos (neg_pos.mpr hr) hc
+    have h_rc : (↑r : ℂ) * (↑c : ℂ) = -(↑(-r * c) : ℂ) := by push_cast; ring
+    have heq' : (↑r : ℂ) • S = (↑(-r * c) : ℂ) • Em - (↑(-r * c) : ℂ) • Ep := by
+      rw [heq, smul_sub, smul_smul, smul_smul, h_rc]
+      simp only [neg_smul, neg_sub_neg]
+    rw [F.extendSA_eq hn (hS.smul (Complex.conj_ofReal r)) hEm hEp hnrc heq']; ring
 
 -- L'extension coïncide avec f sur les effets.
 theorem EffectMeasure.extendSA_extends (F : EffectMeasure n) (hn : 1 ≤ n)
     {T : H n →ₗ[ℂ] H n} (hT : IsEffect T) :
     F.extendSA hn T = F.f T := by
-  sorry
+  have h0 : IsEffect (0 : H n →ₗ[ℂ] H n) := by
+    refine ⟨⟨fun _ _ => by simp, fun x => by simp⟩, ?_⟩
+    simp only [sub_zero]
+    exact ⟨LinearMap.IsSymmetric.one, fun x => by
+      simp only [Module.End.one_apply]; exact @inner_self_nonneg ℂ _ _ _ _ x⟩
+  have heq : T = (↑(1 : ℝ) : ℂ) • T - (↑(1 : ℝ) : ℂ) • (0 : H n →ₗ[ℂ] H n) := by simp
+  rw [F.extendSA_eq hn hT.1.1 hT h0 one_pos heq]
+  simp [F.map_zero]
 
 -- ── (B8) Représentation de Riesz en dimension finie ─────────────
 -- Sur l'espace réel des auto-adjoints de H n, le produit scalaire
