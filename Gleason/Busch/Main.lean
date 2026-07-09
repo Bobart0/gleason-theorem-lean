@@ -101,11 +101,37 @@ theorem EffectMeasure.map_dyadic_smul (F : EffectMeasure n)
 --   f(n · T) = n · f(T)  (additivité itérée, n : ℕ, n·T effet)
 -- puis diviser.
 
+-- Lemme auxiliaire : si A et B sont positifs et A+B est un effet, alors A l'est.
+-- (car 1 − A = (1 − (A+B)) + B, somme de deux positifs)
+private theorem isEffect_summand {A B : H n →ₗ[ℂ] H n}
+    (hA : IsPositiveOp A) (hB : IsPositiveOp B) (hAB : IsEffect (A + B)) :
+    IsEffect A := by
+  refine ⟨hA, ⟨LinearMap.IsSymmetric.one.sub hA.1, fun x => ?_⟩⟩
+  have heq : (1 - A) x = (1 - (A + B)) x + B x := by
+    simp [LinearMap.sub_apply, LinearMap.add_apply, Module.End.one_apply]; abel
+  rw [heq, inner_add_left, Complex.add_re]
+  exact add_nonneg (hAB.2.2 x) (hB.2 x)
+
 theorem EffectMeasure.map_nat_smul (F : EffectMeasure n)
     {T : H n →ₗ[ℂ] H n} (hT : IsEffect T) (m : ℕ)
     (heff : IsEffect ((↑(m : ℝ) : ℂ) • T)) :
     F.f ((↑(m : ℝ) : ℂ) • T) = (m : ℝ) * F.f T := by
-  sorry
+  induction m with
+  | zero =>
+    simp only [Nat.cast_zero, Complex.ofReal_zero, zero_smul, zero_mul, F.map_zero]
+  | succ m ih =>
+    have hdecomp : (↑(↑(m + 1) : ℝ) : ℂ) • T = (↑(↑m : ℝ) : ℂ) • T + T := by
+      have : (↑(↑(m + 1) : ℝ) : ℂ) = (↑(↑m : ℝ) : ℂ) + 1 := by push_cast; ring
+      rw [this, add_smul, one_smul]
+    have hm_pos : IsPositiveOp ((↑(↑m : ℝ) : ℂ) • T) :=
+      ⟨hT.1.1.smul (Complex.conj_ofReal _), fun x => by
+        simp only [LinearMap.smul_apply, inner_smul_left, Complex.conj_ofReal,
+                   Complex.re_ofReal_mul]
+        exact mul_nonneg (Nat.cast_nonneg m) (hT.1.2 x)⟩
+    have hm_eff : IsEffect ((↑(↑m : ℝ) : ℂ) • T) :=
+      isEffect_summand hm_pos hT.1 (by rw [← hdecomp]; exact heff)
+    rw [hdecomp, F.additive _ _ hm_eff hT (by rw [← hdecomp]; exact heff), ih hm_eff]
+    push_cast; ring
 
 theorem EffectMeasure.map_rat_smul (F : EffectMeasure n)
     {T : H n →ₗ[ℂ] H n} (hT : IsEffect T)
