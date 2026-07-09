@@ -577,24 +577,47 @@ theorem EffectMeasure.extendSA_extends (F : EffectMeasure n) (hn : 1 ≤ n)
   simp [F.map_zero]
 
 -- ── (B8) Représentation de Riesz en dimension finie ─────────────
--- Sur l'espace réel des auto-adjoints de H n, le produit scalaire
--- de Hilbert–Schmidt ⟨A, B⟩ := Re tr(A ∘ B) est un produit
--- scalaire réel (défini positif car A auto-adjoint ⇒ tr(A²) ≥ 0,
--- = 0 ssi A = 0). Par le théorème de Riesz–Fréchet
--- (InnerProductSpace.toDual de Mathlib, pour espaces complets —
--- automatique en dimension finie), toute fonctionnelle ℝ-linéaire
--- g est de la forme S ↦ ⟨ρ, S⟩ = Re tr(ρ ∘ S) pour un unique
--- ρ auto-adjoint.
---
--- Alternative : construction directe via la base orthonormée.
--- Fixer (eᵢ) ONB de H n. Les opérateurs rang-1
---   Eᵢⱼ = (rankOne eⱼ eᵢ + rankOne eᵢ eⱼ) / 2  (partie réelle)
---   Fᵢⱼ = i·(rankOne eⱼ eᵢ − rankOne eᵢ eⱼ) / 2 (partie imaginaire)
--- forment une base des auto-adjoints. On pose
---   ⟪ρ eᵢ, eⱼ⟫ := g(rankOne eⱼ eᵢ)
--- (fonctionnelle évaluée sur le rang-1) et on vérifie
--- g(S) = Re tr(ρ S) par linéarité sur cette base.
--- NB : Mathlib fournit rankOne, trace_rankOne, isPositive_rankOne_self.
+-- Construction directe : fixer une ONB (eᵢ), définir la matrice
+--   M i j := ↑(g(E_ij)/2) + I · ↑(g(F_ij)/2)
+-- où E_ij = rankOne eᵢ eⱼ + rankOne eⱼ eᵢ  (symétrique)
+--     F_ij = I·(rankOne eᵢ eⱼ − rankOne eⱼ eᵢ)  (symétrique)
+-- Poser ρ := M.toEuclideanLin. Montrer M hermitienne (d'où ρ
+-- symétrique), puis g(S) = Re tr(ρ S) pour tout S symétrique par
+-- linéarité sur la base {E_ij, F_ij}, et unicité par tr(δ²) ≥ 0.
+
+-- Unicité pour la représentation de Riesz : si deux opérateurs
+-- symétriques donnent le même Re tr(· ∘ S) pour tout S symétrique,
+-- ils sont égaux (preuve par tr(δ²) = ∑ ‖δ(bᵢ)‖²).
+private theorem riesz_unique
+    {ρ₁ ρ₂ : H n →ₗ[ℂ] H n}
+    (hρ₁ : ρ₁.IsSymmetric) (hρ₂ : ρ₂.IsSymmetric)
+    (h : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
+      (LinearMap.trace ℂ (H n) (ρ₁ ∘ₗ S)).re = (LinearMap.trace ℂ (H n) (ρ₂ ∘ₗ S)).re) :
+    ρ₁ = ρ₂ := by
+  set δ := ρ₁ - ρ₂
+  have hδ_sym : δ.IsSymmetric := hρ₁.sub hρ₂
+  have hδ_trace : (LinearMap.trace ℂ (H n) (δ ∘ₗ δ)).re = 0 := by
+    have : ∀ S, S.IsSymmetric →
+        (LinearMap.trace ℂ (H n) (δ ∘ₗ S)).re = 0 := by
+      intro S hS; have := h S hS
+      simp only [δ, LinearMap.sub_comp, map_sub, Complex.sub_re]; linarith
+    exact this δ hδ_sym
+  set b := stdOrthonormalBasis ℂ (H n)
+  rw [LinearMap.trace_eq_sum_inner _ b, Complex.re_sum] at hδ_trace
+  have hterms : ∀ i, (⟪b i, (δ ∘ₗ δ) (b i)⟫_ℂ).re = ‖δ (b i)‖ ^ 2 := by
+    intro i; simp only [LinearMap.comp_apply]
+    rw [← hδ_sym (b i) (δ (b i))]
+    exact inner_self_eq_norm_sq (𝕜 := ℂ) _
+  simp_rw [hterms] at hδ_trace
+  have hall := (Finset.sum_eq_zero_iff_of_nonneg (fun i _ => sq_nonneg _)).mp hδ_trace
+  have hzero : ∀ i, δ (b i) = 0 := by
+    intro i; have := hall i (Finset.mem_univ i)
+    rwa [sq_eq_zero_iff, norm_eq_zero] at this
+  have hδ_zero : δ = 0 := LinearMap.ext fun x => by
+    conv_lhs => rw [show x = ∑ i, ⟪b i, x⟫_ℂ • b i from (b.sum_repr' x).symm]
+    simp only [map_sum, map_smul, hzero, smul_zero, Finset.sum_const_zero,
+               LinearMap.zero_apply]
+  exact sub_eq_zero.mp hδ_zero
 
 theorem riesz_selfAdjoint (hn : 1 ≤ n)
     (g : (H n →ₗ[ℂ] H n) → ℝ)
@@ -605,7 +628,85 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
     ∃! ρ : H n →ₗ[ℂ] H n, ρ.IsSymmetric ∧
       ∀ (S : H n →ₗ[ℂ] H n), S.IsSymmetric →
         g S = (LinearMap.trace ℂ (H n) (ρ ∘ₗ S)).re := by
-  sorry
+  -- Fix an ONB indexed by Fin n
+  set b := EuclideanSpace.basisFun (Fin n) ℂ
+  -- rankOne as LinearMap
+  let ro : H n → H n → (H n →ₗ[ℂ] H n) := fun x y =>
+    (InnerProductSpace.rankOne ℂ x y : H n →L[ℂ] H n).toLinearMap
+  -- Symmetric rank-one combinations
+  let E := fun i j : Fin n => ro (b i) (b j) + ro (b j) (b i)
+  let F := fun i j : Fin n => (Complex.I : ℂ) • (ro (b i) (b j) - ro (b j) (b i))
+  -- Define the Hermitian matrix from g
+  set M : Matrix (Fin n) (Fin n) ℂ := fun i j =>
+    ↑(g (E i j) / 2) + Complex.I * ↑(g (F i j) / 2) with hM_def
+  set ρ := Matrix.toEuclideanLin M with hρ_def
+  -- E and F are symmetric operators
+  have hE_sym : ∀ i j, (E i j).IsSymmetric := fun i j x y => by
+    simp only [E, ro, LinearMap.add_apply, ContinuousLinearMap.coe_coe,
+               InnerProductSpace.rankOne_apply, inner_add_left, inner_add_right,
+               inner_smul_left, inner_smul_right, inner_conj_symm]
+    ring
+  have hF_sym : ∀ i j, (F i j).IsSymmetric := fun i j x y => by
+    simp only [F, ro, LinearMap.smul_apply, LinearMap.sub_apply,
+               ContinuousLinearMap.coe_coe, InnerProductSpace.rankOne_apply,
+               inner_smul_left, inner_sub_left, inner_smul_right, inner_sub_right,
+               inner_conj_symm]
+    have : (starRingEnd ℂ) Complex.I = -Complex.I := RCLike.conj_I
+    rw [this]; ring
+  -- g(0) = 0
+  have hg_zero : g 0 = 0 := by
+    have := hg_smul 0 0 LinearMap.IsSymmetric.zero
+    simp at this; exact this
+  -- g(E j i) = g(E i j) (E symmetric in indices)
+  have hgE : ∀ i j, g (E j i) = g (E i j) := fun i j => by
+    congr 1; exact add_comm _ _
+  -- g(F j i) = -g(F i j) (F antisymmetric in indices)
+  have hgF : ∀ i j, g (F j i) = -g (F i j) := by
+    intro i j
+    have hsum : F j i + F i j = 0 := by
+      simp only [F, ← smul_add]; convert smul_zero _; abel
+    have h := hg_add (F j i) (F i j) (hF_sym j i) (hF_sym i j)
+    rw [hsum, hg_zero] at h; linarith
+  -- Symmetry of ρ : M is Hermitian
+  have hρ_sym : ρ.IsSymmetric := by
+    rw [hρ_def, Matrix.isSymmetric_toEuclideanLin_iff]
+    apply Matrix.IsHermitian.ext; intro i j
+    simp only [hM_def]
+    rw [hgE i j, hgF i j]
+    apply Complex.ext <;>
+      simp [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+            Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
+            neg_div, mul_comm]
+  -- Representation
+  have hρ_rep : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
+      g S = (LinearMap.trace ℂ (H n) (ρ ∘ₗ S)).re := by
+    -- D4 : accord de g et de Re∘tr∘(ρ∘ₗ·) sur les éléments de base E i j, F i j
+    have hD4 : ∀ i j : Fin n,
+        g (E i j) = (LinearMap.trace ℂ (H n) (ρ ∘ₗ E i j)).re ∧
+        g (F i j) = (LinearMap.trace ℂ (H n) (ρ ∘ₗ F i j)).re := by
+      sorry
+    -- D2 : g est ℝ-linéaire sur les sommes finies d'opérateurs symétriques
+    have hD2 : ∀ {ι : Type} [Fintype ι] (c : ι → ℝ) (B : ι → H n →ₗ[ℂ] H n),
+        (∀ k, (B k).IsSymmetric) →
+        g (∑ k, (↑(c k) : ℂ) • B k) = ∑ k, c k * g (B k) := by
+      sorry
+    -- D3 : idem pour Re∘tr∘(ρ∘ₗ·), sans hypothèse de symétrie (linéarité pure)
+    have hD3 : ∀ {ι : Type} [Fintype ι] (c : ι → ℝ) (B : ι → H n →ₗ[ℂ] H n),
+        (LinearMap.trace ℂ (H n) (ρ ∘ₗ ∑ k, (↑(c k) : ℂ) • B k)).re =
+        ∑ k, c k * (LinearMap.trace ℂ (H n) (ρ ∘ₗ B k)).re := by
+      sorry
+    -- D1 : décomposition de S symétrique sur la base {E i j, F i j} (facteur 1/2,
+    -- vérifié sur le cas diagonal i = j : F i i = 0, E i i = 2·ro(bᵢ)(bᵢ))
+    have hD1 : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
+        S = (∑ p : Fin n × Fin n,
+              (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ) • E p.1 p.2) +
+            (∑ p : Fin n × Fin n,
+              (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) • F p.1 p.2) := by
+      sorry
+    sorry -- assemblage final via D1, D2, D3, D4 (après remplissage de D1)
+  -- Assemble
+  exact ⟨ρ, ⟨⟨hρ_sym, hρ_rep⟩, fun ρ' ⟨hρ'_sym, hρ'_rep⟩ =>
+    riesz_unique hρ'_sym hρ_sym fun S hS => by rw [← hρ'_rep S hS]; exact hρ_rep S hS⟩⟩
 
 -- ── (B9) Assemblage : positivité et trace 1 ─────────────────────
 -- L'opérateur ρ fourni par B8, appliqué à g = F.extendSA, vérifie :
@@ -633,19 +734,36 @@ où Gleason échoue). -/
 theorem busch {n : ℕ} (hn : 1 ≤ n) (F : EffectMeasure n) :
     ∃! ρ : H n →ₗ[ℂ] H n, IsDensityOperator ρ ∧
       ∀ T, IsEffect T → F.f T = (LinearMap.trace ℂ (H n) (ρ ∘ₗ T)).re := by
-  -- Assemblage : B1–B5 → map_realSmul ; B6–B7 → extendSA linéaire ;
-  -- B8 → ρ auto-adjoint avec g = Re tr(ρ ·) ; B9 → ρ densité.
-  sorry
+  obtain ⟨ρ, ⟨hρ_sym, hrep⟩, huniq⟩ := riesz_selfAdjoint hn (F.extendSA hn)
+    (fun S T hS hT => F.extendSA_add hn hS hT)
+    (fun r S hS => F.extendSA_realSmul hn hS r)
+  refine ⟨ρ, ⟨⟨hρ_sym, ?_, ?_⟩, ?_⟩, ?_⟩
+  · -- Positivité : Re⟪ρ x, x⟫ ≥ 0
+    sorry
+  · -- Trace 1
+    sorry
+  · -- Représentation sur les effets : F.f T = Re tr(ρ ∘ T)
+    intro T hT
+    rw [← F.extendSA_extends hn hT]
+    exact hrep T hT.1.1
+  · -- Unicité
+    intro ρ' ⟨⟨hρ'_sym, _, _⟩, hrep'⟩
+    apply huniq
+    refine ⟨hρ'_sym, fun S hS => ?_⟩
+    -- Montrer : F.extendSA hn S = Re tr(ρ' ∘ S) pour S symétrique
+    obtain ⟨Ep, Em, c, hEp, hEm, hc, heq⟩ := selfAdjoint_effect_decomp S hS
+    rw [F.extendSA_eq hn hS hEp hEm hc heq, hrep' Ep hEp, hrep' Em hEm, heq]
+    simp only [LinearMap.comp_sub, LinearMap.comp_smul, map_sub, map_smul, smul_eq_mul]
+    have hre : ∀ x : ℂ, ((↑c : ℂ) * x).re = c * x.re := fun x => RCLike.re_ofReal_mul c x
+    simp only [Complex.sub_re, hre]
 
 /-- Corollaire : règle de Born sur les projections, dès la dimension 1, sous
 l'hypothèse (plus forte que celle de Gleason) d'additivité sur les effets. -/
 theorem busch_born_rule {n : ℕ} (hn : 1 ≤ n) (F : EffectMeasure n) :
     ∃ ρ : H n →ₗ[ℂ] H n, IsDensityOperator ρ ∧
       ∀ A : Submodule ℂ (H n), F.toProjMeasure.μ A = bornValue ρ A := by
-  -- De busch : ρ représente f sur les effets ; projL A est un effet
-  -- (isEffect_projL) ; toProjMeasure.μ A = f(projL A) par définition ;
-  -- bornValue ρ A = Re tr(ρ ∘ projL A) par définition.
-  sorry
+  obtain ⟨ρ, ⟨hρ, hrep⟩, _⟩ := busch hn F
+  exact ⟨ρ, hρ, fun A => hrep (projL A) (EffectMeasure.isEffect_projL A)⟩
 
 end
 end Gleason
