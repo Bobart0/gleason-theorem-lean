@@ -716,12 +716,43 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
     have hD2 : ∀ {ι : Type} [Fintype ι] (c : ι → ℝ) (B : ι → H n →ₗ[ℂ] H n),
         (∀ k, (B k).IsSymmetric) →
         g (∑ k, (↑(c k) : ℂ) • B k) = ∑ k, c k * g (B k) := by
-      sorry
+      intro ι _ c B hB
+      classical
+      have hsymm_smul : ∀ (r : ℝ) (T : H n →ₗ[ℂ] H n),
+          T.IsSymmetric → ((↑r : ℂ) • T).IsSymmetric :=
+        fun r T hT x y => by
+          simp only [LinearMap.smul_apply, inner_smul_left, inner_smul_right,
+                     Complex.conj_ofReal]
+          rw [hT x y]
+      have hsymm_sum : ∀ (s : Finset ι), (∑ k ∈ s, (↑(c k) : ℂ) • B k).IsSymmetric := by
+        intro s
+        induction s using Finset.induction_on with
+        | empty => rw [Finset.sum_empty]; exact LinearMap.IsSymmetric.zero
+        | @insert x s hx ih =>
+          rw [Finset.sum_insert hx]
+          exact (hsymm_smul _ _ (hB _)).add ih
+      have key : ∀ (s : Finset ι),
+          g (∑ k ∈ s, (↑(c k) : ℂ) • B k) = ∑ k ∈ s, c k * g (B k) := by
+        intro s
+        induction s using Finset.induction_on with
+        | empty => simp [hg_zero]
+        | @insert x s hx ih =>
+          rw [Finset.sum_insert hx, Finset.sum_insert hx,
+              hg_add _ _ (hsymm_smul (c x) (B x) (hB x)) (hsymm_sum s),
+              hg_smul (c x) (B x) (hB x), ih]
+      exact key Finset.univ
     -- D3 : idem pour Re∘tr∘(ρ∘ₗ·), sans hypothèse de symétrie (linéarité pure)
     have hD3 : ∀ {ι : Type} [Fintype ι] (c : ι → ℝ) (B : ι → H n →ₗ[ℂ] H n),
         (LinearMap.trace ℂ (H n) (ρ ∘ₗ ∑ k, (↑(c k) : ℂ) • B k)).re =
         ∑ k, c k * (LinearMap.trace ℂ (H n) (ρ ∘ₗ B k)).re := by
-      sorry
+      intro ι _ c B
+      have h1 : ρ ∘ₗ ∑ k, (↑(c k) : ℂ) • B k = ∑ k, (↑(c k) : ℂ) • (ρ ∘ₗ B k) := by
+        ext x; simp [LinearMap.sum_apply, map_sum]
+      rw [h1, map_sum, Complex.re_sum]
+      apply Finset.sum_congr rfl
+      intro k _
+      rw [map_smul, smul_eq_mul, Complex.mul_re]
+      simp
     -- D1 : décomposition de S symétrique sur la base {E i j, F i j} (facteur 1/2,
     -- vérifié sur le cas diagonal i = j : F i i = 0, E i i = 2·ro(bᵢ)(bᵢ))
     have hD1 : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
