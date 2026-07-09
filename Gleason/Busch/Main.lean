@@ -362,7 +362,75 @@ theorem EffectMeasure.extendSA_well_defined (F : EffectMeasure n)
     (heq : (↑c₁ : ℂ) • Ep₁ - (↑c₁ : ℂ) • Em₁ =
            (↑c₂ : ℂ) • Ep₂ - (↑c₂ : ℂ) • Em₂) :
     c₁ * F.f Ep₁ - c₁ * F.f Em₁ = c₂ * F.f Ep₂ - c₂ * F.f Em₂ := by
-  sorry
+  -- Normalize by C = c₁ + c₂
+  set C := c₁ + c₂
+  have hC : 0 < C := add_pos hc₁ hc₂
+  have hC_ne := ne_of_gt hC
+  set r₁ := c₁ / C with hr₁_def
+  set r₂ := c₂ / C with hr₂_def
+  have hr₁ : 0 ≤ r₁ := div_nonneg hc₁.le hC.le
+  have hr₁' : r₁ ≤ 1 := (div_le_one hC).mpr (by linarith)
+  have hr₂ : 0 ≤ r₂ := div_nonneg hc₂.le hC.le
+  have hr₂' : r₂ ≤ 1 := (div_le_one hC).mpr (by linarith)
+  have hrs : r₁ + r₂ = 1 := by
+    simp only [hr₁_def, hr₂_def]
+    rw [← add_div]
+    exact div_self hC_ne
+  -- Rearrange: c₁ Ep₁ + c₂ Em₂ = c₂ Ep₂ + c₁ Em₁
+  have hrearr : (↑c₁ : ℂ) • Ep₁ + (↑c₂ : ℂ) • Em₂ =
+                (↑c₂ : ℂ) • Ep₂ + (↑c₁ : ℂ) • Em₁ :=
+    calc (↑c₁ : ℂ) • Ep₁ + (↑c₂ : ℂ) • Em₂
+        = ((↑c₁ : ℂ) • Ep₁ - (↑c₁ : ℂ) • Em₁) +
+          ((↑c₁ : ℂ) • Em₁ + (↑c₂ : ℂ) • Em₂) := by abel
+      _ = ((↑c₂ : ℂ) • Ep₂ - (↑c₂ : ℂ) • Em₂) +
+          ((↑c₁ : ℂ) • Em₁ + (↑c₂ : ℂ) • Em₂) := by rw [heq]
+      _ = (↑c₂ : ℂ) • Ep₂ + (↑c₁ : ℂ) • Em₁ := by abel
+  -- Normalize: divide by C
+  have hnorm : (↑r₁ : ℂ) • Ep₁ + (↑r₂ : ℂ) • Em₂ =
+               (↑r₂ : ℂ) • Ep₂ + (↑r₁ : ℂ) • Em₁ := by
+    have h := congr_arg ((↑(C⁻¹ : ℝ) : ℂ) • ·) hrearr
+    simp only [smul_add, smul_smul, ← Complex.ofReal_mul] at h
+    rwa [show (C⁻¹ : ℝ) * c₁ = r₁ from by rw [inv_mul_eq_div],
+         show (C⁻¹ : ℝ) * c₂ = r₂ from by rw [inv_mul_eq_div]] at h
+  -- Individual scaled effects (B1)
+  have he₁ := isEffect_complexSmul hEp₁ hr₁ hr₁'
+  have he₂ := isEffect_complexSmul hEm₂ hr₂ hr₂'
+  have he₃ := isEffect_complexSmul hEp₂ hr₂ hr₂'
+  have he₄ := isEffect_complexSmul hEm₁ hr₁ hr₁'
+  -- Convex combination of effects is an effect
+  have heff_sum : IsEffect ((↑r₁ : ℂ) • Ep₁ + (↑r₂ : ℂ) • Em₂) := by
+    refine ⟨⟨he₁.1.1.add he₂.1.1, fun x => ?_⟩, ?_⟩
+    · rw [LinearMap.add_apply, inner_add_left, Complex.add_re]
+      exact add_nonneg (he₁.1.2 x) (he₂.1.2 x)
+    · have h1 : (1 : H n →ₗ[ℂ] H n) - ((↑r₁ : ℂ) • Ep₁ + (↑r₂ : ℂ) • Em₂) =
+                (↑r₁ : ℂ) • (1 - Ep₁) + (↑r₂ : ℂ) • (1 - Em₂) := by
+        have hsum : (↑r₁ : ℂ) • (1 : H n →ₗ[ℂ] H n) + (↑r₂ : ℂ) • 1 = 1 := by
+          rw [← add_smul, ← Complex.ofReal_add, hrs, Complex.ofReal_one, one_smul]
+        conv_lhs => rw [← hsum]
+        simp only [smul_sub]; abel
+      rw [h1]
+      refine ⟨(hEp₁.2.1.smul (Complex.conj_ofReal r₁)).add
+              (hEm₂.2.1.smul (Complex.conj_ofReal r₂)), fun x => ?_⟩
+      simp only [LinearMap.add_apply, LinearMap.smul_apply, inner_add_left, inner_smul_left,
+                  Complex.conj_ofReal, Complex.add_re, Complex.re_ofReal_mul]
+      exact add_nonneg (mul_nonneg hr₁ (hEp₁.2.2 x)) (mul_nonneg hr₂ (hEm₂.2.2 x))
+  have heff_sum' : IsEffect ((↑r₂ : ℂ) • Ep₂ + (↑r₁ : ℂ) • Em₁) := by rwa [← hnorm]
+  -- Apply additivity + map_realSmul (B5)
+  have key : r₁ * F.f Ep₁ + r₂ * F.f Em₂ = r₂ * F.f Ep₂ + r₁ * F.f Em₁ := by
+    have h := congr_arg F.f hnorm
+    rw [F.additive _ _ he₁ he₂ heff_sum, F.additive _ _ he₃ he₄ heff_sum'] at h
+    rw [F.map_realSmul hEp₁ hr₁ hr₁', F.map_realSmul hEm₂ hr₂ hr₂',
+        F.map_realSmul hEp₂ hr₂ hr₂', F.map_realSmul hEm₁ hr₁ hr₁'] at h
+    exact h
+  -- Multiply by C and conclude
+  have hCr₁ : C * r₁ = c₁ := by
+    rw [hr₁_def, ← mul_div_assoc, mul_div_cancel_left₀ c₁ hC_ne]
+  have hCr₂ : C * r₂ = c₂ := by
+    rw [hr₂_def, ← mul_div_assoc, mul_div_cancel_left₀ c₂ hC_ne]
+  have h_scaled := congr_arg (C * ·) (show r₁ * F.f Ep₁ - r₁ * F.f Em₁ =
+                                            r₂ * F.f Ep₂ - r₂ * F.f Em₂ from by linarith [key])
+  simp only [mul_sub, ← mul_assoc, hCr₁, hCr₂] at h_scaled
+  exact h_scaled
 
 -- ── (B7) Extension ℝ-linéaire aux auto-adjoints ─────────────────
 -- On définit g(S) := c · f(Ep) − c · f(Em) pour une décomposition
