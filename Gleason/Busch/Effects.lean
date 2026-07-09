@@ -61,7 +61,7 @@ est une mesure de projection. (Additivité : pour `A ⟂ B`,
 `projL (A ⊔ B) = projL A + projL B`.) -/
 def toProjMeasure (F : EffectMeasure n) : ProjMeasure n where
   μ A := F.f (projL A)
-  nonneg A := F.nonneg _ (isEffect_projL F A)
+  nonneg A := F.nonneg _ (isEffect_projL A)
   top_eq_one := by
     -- projL ⊤ = 1
     sorry

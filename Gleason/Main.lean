@@ -33,7 +33,7 @@ theorem no_dispersion_free {n : ℕ} (hn : 3 ≤ n) (m : ProjMeasure n) :
     ¬ (∀ A : Submodule ℂ (H n), m.μ A = 0 ∨ m.μ A = 1) := by
   sorry
 
-/-- Audit d'axiomes : décommenter en fin de projet. -/
+-- Audit d'axiomes : décommenter en fin de projet.
 -- #print axioms gleason
 -- #print axioms busch
 
