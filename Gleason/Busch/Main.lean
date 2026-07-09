@@ -88,10 +88,52 @@ theorem EffectMeasure.map_half_smul (F : EffectMeasure n)
 -- Induction sur k (B2) et sur m (additivité itérée).
 -- Précondition : m/2^k ≤ 1, de sorte que (m/2^k)·T est un effet.
 
+-- Helper : f((1/2^k) • T) = (1/2^k) * f T par itération de B2.
+private theorem one_le_two_pow_real (k : ℕ) : (1 : ℝ) ≤ 2 ^ k := by
+  calc (1 : ℝ) = 1 ^ k := (one_pow k).symm
+    _ ≤ 2 ^ k := pow_le_pow_left₀ (by norm_num) (by norm_num) k
+
+private theorem map_inv_pow2_smul (F : EffectMeasure n)
+    {T : H n →ₗ[ℂ] H n} (hT : IsEffect T) (k : ℕ) :
+    F.f ((↑(1 / 2 ^ k : ℝ) : ℂ) • T) = (1 / 2 ^ k : ℝ) * F.f T := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    have h2k_pos : (0 : ℝ) < 2 ^ k := by positivity
+    have heff_k : IsEffect ((↑(1 / 2 ^ k : ℝ) : ℂ) • T) :=
+      isEffect_complexSmul hT (by positivity)
+        ((div_le_one h2k_pos).mpr (one_le_two_pow_real k))
+    have hconv : (↑(1 / 2 ^ (k + 1) : ℝ) : ℂ) • T =
+        (↑(2⁻¹ : ℝ) : ℂ) • ((↑(1 / 2 ^ k : ℝ) : ℂ) • T) := by
+      rw [← mul_smul]; congr 1; push_cast; ring
+    rw [hconv, F.map_half_smul heff_k, ih]; ring
+
 theorem EffectMeasure.map_dyadic_smul (F : EffectMeasure n)
     {T : H n →ₗ[ℂ] H n} (hT : IsEffect T) (k m : ℕ) (hm : m ≤ 2 ^ k) :
     F.f ((↑(m / 2 ^ k : ℝ) : ℂ) • T) = (m / 2 ^ k : ℝ) * F.f T := by
-  sorry
+  have h2k_pos : (0 : ℝ) < 2 ^ k := by positivity
+  induction m with
+  | zero => simp [F.map_zero]
+  | succ m ih =>
+    have hm' : m ≤ 2 ^ k := Nat.le_of_succ_le hm
+    have hmq : (↑m / 2 ^ k : ℝ) ≤ 1 := by
+      rw [div_le_one h2k_pos]; exact_mod_cast hm'
+    have hmq1 : (↑(m + 1) / 2 ^ k : ℝ) ≤ 1 := by
+      rw [div_le_one h2k_pos]; exact_mod_cast hm
+    have hunit : (1 / 2 ^ k : ℝ) ≤ 1 :=
+      (div_le_one h2k_pos).mpr (one_le_two_pow_real k)
+    have heff_m : IsEffect ((↑(↑m / 2 ^ k : ℝ) : ℂ) • T) :=
+      isEffect_complexSmul hT (by positivity) hmq
+    have heff_unit : IsEffect ((↑(1 / 2 ^ k : ℝ) : ℂ) • T) :=
+      isEffect_complexSmul hT (by positivity) hunit
+    have heff_m1 : IsEffect ((↑(↑(m + 1) / 2 ^ k : ℝ) : ℂ) • T) :=
+      isEffect_complexSmul hT (by positivity) hmq1
+    have hdecomp : (↑(↑(m + 1) / 2 ^ k : ℝ) : ℂ) • T =
+        (↑(↑m / 2 ^ k : ℝ) : ℂ) • T + (↑(1 / 2 ^ k : ℝ) : ℂ) • T := by
+      rw [← add_smul]; congr 1; push_cast; ring
+    rw [hdecomp, F.additive _ _ heff_m heff_unit (by rw [← hdecomp]; exact heff_m1),
+        ih hm', map_inv_pow2_smul F hT k]
+    push_cast; ring
 
 -- ── (B4) Homogénéité rationnelle ─────────────────────────────────
 -- Tout rationnel q ∈ [0,1] s'écrit m/2^k après réduction au même
