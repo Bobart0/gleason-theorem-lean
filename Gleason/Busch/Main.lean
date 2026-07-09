@@ -760,7 +760,92 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
               (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ) • E p.1 p.2) +
             (∑ p : Fin n × Fin n,
               (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) • F p.1 p.2) := by
-      sorry
+      intro S hS
+      -- Réduction d'une somme sur Fin n × Fin n pondérée par un double δ de Kronecker
+      have hcollapse1 : ∀ (val : Fin n × Fin n → ℂ) (k l : Fin n),
+          (∑ p : Fin n × Fin n,
+            val p * ((if p.2 = k then (1:ℂ) else 0) * if l = p.1 then (1:ℂ) else 0)) =
+          val (l, k) := by
+        intro val k l
+        rw [Finset.sum_eq_single (l, k)]
+        · simp
+        · intro p _ hp
+          by_cases h1 : p.2 = k
+          · by_cases h2 : l = p.1
+            · exact absurd (Prod.ext h2.symm h1) hp
+            · simp [h2]
+          · simp [h1]
+        · simp
+      have hcollapse2 : ∀ (val : Fin n × Fin n → ℂ) (k l : Fin n),
+          (∑ p : Fin n × Fin n,
+            val p * ((if p.1 = k then (1:ℂ) else 0) * if l = p.2 then (1:ℂ) else 0)) =
+          val (k, l) := by
+        intro val k l
+        rw [Finset.sum_eq_single (k, l)]
+        · simp
+        · intro p _ hp
+          by_cases h1 : p.1 = k
+          · by_cases h2 : l = p.2
+            · exact absurd (Prod.ext h1 h2.symm) hp
+            · simp [h2]
+          · simp [h1]
+        · simp
+      -- Deux vecteurs de H n sont égaux si leurs produits scalaires contre tous les bₗ coïncident
+      have vec_ext : ∀ u v : H n, (∀ l, ⟪b l, u⟫_ℂ = ⟪b l, v⟫_ℂ) → u = v := by
+        intro u v h
+        simp only [b, EuclideanSpace.basisFun_inner] at h
+        exact PiLp.ext h
+      -- L'égalité sur les vecteurs de base bₖ
+      have hbk : ∀ k : Fin n, S (b k) =
+          (∑ p : Fin n × Fin n, (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ) • E p.1 p.2) (b k) +
+          (∑ p : Fin n × Fin n, (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) • F p.1 p.2) (b k) := by
+        intro k
+        apply vec_ext
+        intro l
+        rw [inner_add_right, LinearMap.sum_apply, LinearMap.sum_apply, inner_sum, inner_sum]
+        have hE : ∀ p : Fin n × Fin n,
+            ⟪b l, ((↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ) • E p.1 p.2) (b k)⟫_ℂ =
+            (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ) *
+              ((if p.2 = k then (1:ℂ) else 0) * (if l = p.1 then (1:ℂ) else 0) +
+               (if p.1 = k then (1:ℂ) else 0) * (if l = p.2 then (1:ℂ) else 0)) := by
+          intro p
+          simp only [LinearMap.smul_apply, inner_smul_right, E, ro, LinearMap.add_apply,
+                     ContinuousLinearMap.coe_coe, InnerProductSpace.rankOne_apply, inner_add_right,
+                     inner_smul_right, OrthonormalBasis.inner_eq_ite]
+        have hF : ∀ p : Fin n × Fin n,
+            ⟪b l, ((↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) • F p.1 p.2) (b k)⟫_ℂ =
+            (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) * Complex.I *
+              ((if p.2 = k then (1:ℂ) else 0) * (if l = p.1 then (1:ℂ) else 0) -
+               (if p.1 = k then (1:ℂ) else 0) * (if l = p.2 then (1:ℂ) else 0)) := by
+          intro p
+          simp only [LinearMap.smul_apply, inner_smul_right, F, ro, LinearMap.smul_apply,
+                     LinearMap.sub_apply, ContinuousLinearMap.coe_coe,
+                     InnerProductSpace.rankOne_apply, inner_smul_right, inner_sub_right,
+                     OrthonormalBasis.inner_eq_ite]
+          ring
+        simp_rw [hE, hF, mul_add, mul_sub]
+        rw [Finset.sum_add_distrib, Finset.sum_sub_distrib]
+        rw [hcollapse1 (fun p => (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ)) k l,
+            hcollapse2 (fun p => (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ)) k l,
+            hcollapse1 (fun p => (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) * Complex.I) k l,
+            hcollapse2 (fun p => (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) * Complex.I) k l]
+        -- Hermiticité de S dans la base b : S_{kl} = conj(S_{lk})
+        have hHerm : ⟪b k, S (b l)⟫_ℂ = starRingEnd ℂ ⟪b l, S (b k)⟫_ℂ := by
+          rw [inner_conj_symm]
+          exact (hS (b k) (b l)).symm
+        apply Complex.ext <;>
+          simp only [Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+                Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im,
+                Complex.ofReal_re, Complex.ofReal_im, hHerm, Complex.conj_re,
+                Complex.conj_im] <;>
+          ring
+      -- Extension de l'égalité aux vecteurs de bₖ à tout x, par ℂ-linéarité
+      apply LinearMap.ext
+      intro x
+      rw [← b.sum_repr' x, map_sum, map_sum]
+      apply Finset.sum_congr rfl
+      intro k _
+      rw [map_smul, map_smul, hbk k, LinearMap.add_apply]
     sorry -- assemblage final via D1, D2, D3, D4 (après remplissage de D1)
   -- Assemble
   exact ⟨ρ, ⟨⟨hρ_sym, hρ_rep⟩, fun ρ' ⟨hρ'_sym, hρ'_rep⟩ =>
