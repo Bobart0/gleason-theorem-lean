@@ -66,3 +66,10 @@ Tout renommage d'API : commentaire `-- Mathlib: ancien_nom → nouveau_nom`.
 ## Définition de « terminé »
 `lake build` vert, `./scripts/guard.sh` : 0 sorry, et
 `#print axioms Gleason.gleason` = `propext, Classical.choice, Quot.sound` uniquement.
+
+## Git
+Après chaque `sorry` fermé et `lake build` vert :
+1. `./scripts/guard.sh`
+2. `git add -A && git commit -m "<jalon>: <nom_du_lemme>"`
+3. `git push`
+Ne JAMAIS utiliser `git push --force` sans demander confirmation explicite à l'utilisateur.

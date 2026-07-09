@@ -30,10 +30,18 @@ variable {n : ℕ}
 -- PLAN DE PREUVE — LEMMES INTERMÉDIAIRES (tous sorry, à valider)
 -- ═══════════════════════════════════════════════════════════════════
 --
--- Convention scalaire : pour r : ℝ et T : H n →ₗ[ℂ] H n, on écrit
--- (↑r : ℂ) • T (action du ℂ-module, restreinte aux réels).
--- L'instance Module ℝ (H n →ₗ[ℂ] H n) existe (Module.complexToReal)
--- mais (↑r : ℂ) • T est plus explicite et évite les problèmes d'inférence.
+-- CONVENTION SCALAIRE (utilisée uniformément dans tout ce fichier) :
+--
+--   Pour r : ℝ et T : H n →ₗ[ℂ] H n, on écrit  (↑r : ℂ) • T.
+--
+-- C'est l'action ℂ-module de (Complex.ofReal r) sur T, c.-à-d.
+-- ((↑r : ℂ) • T) x = (↑r : ℂ) • (T x). Sémantiquement identique à
+-- l'action ℝ-module (r • T via Module.complexToReal), mais la forme
+-- explicite (↑r : ℂ) • T est préférée car :
+--   1. elle évite les ambiguïtés de résolution d'instance SMul ℝ _;
+--   2. elle rend visible le cast ℝ → ℂ dans les buts et les hypothèses ;
+--   3. elle se compose bien avec les lemmes smul_sub, smul_add, etc.
+--      du ℂ-module, qui sont déjà en scope.
 
 -- ── (B1) Préservation des effets par homothétie réelle ────────────
 -- Nécessaire pour que les énoncés B2–B4 aient un sens.
@@ -42,7 +50,20 @@ variable {n : ℕ}
 theorem isEffect_complexSmul {T : H n →ₗ[ℂ] H n} (hT : IsEffect T)
     {r : ℝ} (hr₀ : 0 ≤ r) (hr₁ : r ≤ 1) :
     IsEffect ((↑r : ℂ) • T) := by
-  sorry
+  refine ⟨⟨hT.1.1.smul (Complex.conj_ofReal r), fun x => ?_⟩,
+         ⟨LinearMap.IsSymmetric.one.sub (hT.1.1.smul (Complex.conj_ofReal r)), fun x => ?_⟩⟩
+  · simp only [LinearMap.smul_apply, inner_smul_left, Complex.conj_ofReal,
+               Complex.re_ofReal_mul]
+    exact mul_nonneg hr₀ (hT.1.2 x)
+  · simp only [LinearMap.sub_apply, Module.End.one_apply, LinearMap.smul_apply,
+               inner_sub_left, inner_smul_left, Complex.conj_ofReal, Complex.sub_re,
+               Complex.re_ofReal_mul]
+    have h1 : (⟪T x, x⟫_ℂ).re ≤ (⟪x, x⟫_ℂ).re := by
+      have := hT.2.2 x
+      simp only [LinearMap.sub_apply, Module.End.one_apply, inner_sub_left,
+                 Complex.sub_re] at this
+      linarith
+    linarith [mul_le_of_le_one_left (hT.1.2 x) hr₁]
 
 -- ── (B2) Pas dyadique : f(T/2) = f(T)/2 ─────────────────────────
 -- Base de l'induction dyadique.
@@ -112,12 +133,27 @@ theorem selfAdjoint_effect_decomp (S : H n →ₗ[ℂ] H n) (hS : S.IsSymmetric)
       S = (↑c : ℂ) • Ep - (↑c : ℂ) • Em := by
   sorry
 
+-- ── (B7a) Bonne définition de l'extension ────────────────────────
+-- Si deux décompositions c₁(Ep₁ − Em₁) = c₂(Ep₂ − Em₂) du même
+-- opérateur auto-adjoint sont données, les valeurs
+-- c₁ f(Ep₁) − c₁ f(Em₁) et c₂ f(Ep₂) − c₂ f(Em₂) coïncident.
+-- Preuve : réécrire c₁ Ep₁ + c₂ Em₂ = c₂ Ep₂ + c₁ Em₁, diviser par
+-- C = c₁ + c₂ pour obtenir des effets dans [0,1], appliquer B5
+-- (map_realSmul) + additivité, puis multiplier par C.
+
+theorem EffectMeasure.extendSA_well_defined (F : EffectMeasure n)
+    {Ep₁ Em₁ Ep₂ Em₂ : H n →ₗ[ℂ] H n} {c₁ c₂ : ℝ}
+    (hEp₁ : IsEffect Ep₁) (hEm₁ : IsEffect Em₁) (hc₁ : 0 < c₁)
+    (hEp₂ : IsEffect Ep₂) (hEm₂ : IsEffect Em₂) (hc₂ : 0 < c₂)
+    (heq : (↑c₁ : ℂ) • Ep₁ - (↑c₁ : ℂ) • Em₁ =
+           (↑c₂ : ℂ) • Ep₂ - (↑c₂ : ℂ) • Em₂) :
+    c₁ * F.f Ep₁ - c₁ * F.f Em₁ = c₂ * F.f Ep₂ - c₂ * F.f Em₂ := by
+  sorry
+
 -- ── (B7) Extension ℝ-linéaire aux auto-adjoints ─────────────────
--- On définit g(S) := c · f(E₊) − c · f(E₋) pour une décomposition
--- quelconque. Bonne définition : si S = c₁ E₁ − c₁ E₁' = c₂ E₂ − c₂ E₂',
--- alors c₁ E₁ + c₂ E₂' = c₂ E₂ + c₁ E₁' (somme d'effets pondérés),
--- et map_realSmul + additivité donne l'égalité des deux expressions.
--- Linéarité ℝ : par la même technique (décomposer S+T et r·S).
+-- On définit g(S) := c · f(Ep) − c · f(Em) pour une décomposition
+-- quelconque S = c(Ep − Em) (existence par B6, bonne définition par B7a).
+-- Linéarité ℝ : décomposer S+T et r·S, appliquer B7a.
 
 noncomputable def EffectMeasure.extendSA (F : EffectMeasure n) (hn : 1 ≤ n) :
     (H n →ₗ[ℂ] H n) → ℝ := by
