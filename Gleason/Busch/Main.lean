@@ -680,11 +680,38 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
   -- Representation
   have hρ_rep : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
       g S = (LinearMap.trace ℂ (H n) (ρ ∘ₗ S)).re := by
+    -- Entrées de ρ dans la base b : ⟪b i, ρ (b j)⟫ = M i j
+    have hMcol : ∀ i j : Fin n, ⟪b i, ρ (b j)⟫_ℂ = M i j := by
+      intro i j
+      simp [hρ_def, b, EuclideanSpace.basisFun_apply, EuclideanSpace.inner_single_left,
+            Matrix.ofLp_toLpLin, PiLp.ofLp_single, Matrix.col_apply]
+    -- Trace de ρ ∘ (rankOne x y)
+    have htr_ro : ∀ x y : H n, LinearMap.trace ℂ (H n) (ρ ∘ₗ ro x y) = ⟪y, ρ x⟫_ℂ := by
+      intro x y
+      rw [LinearMap.trace_eq_sum_inner (ρ ∘ₗ ro x y) b]
+      simp only [LinearMap.comp_apply, ro, ContinuousLinearMap.coe_coe,
+                 InnerProductSpace.rankOne_apply, map_smul, inner_smul_right]
+      exact b.sum_inner_mul_inner y (ρ x)
     -- D4 : accord de g et de Re∘tr∘(ρ∘ₗ·) sur les éléments de base E i j, F i j
     have hD4 : ∀ i j : Fin n,
         g (E i j) = (LinearMap.trace ℂ (H n) (ρ ∘ₗ E i j)).re ∧
         g (F i j) = (LinearMap.trace ℂ (H n) (ρ ∘ₗ F i j)).re := by
-      sorry
+      intro i j
+      have hcompE : ρ ∘ₗ E i j = ρ ∘ₗ ro (b i) (b j) + ρ ∘ₗ ro (b j) (b i) := by
+        simp only [E, LinearMap.comp_add]
+      have hcompF : ρ ∘ₗ F i j =
+          (Complex.I : ℂ) • (ρ ∘ₗ ro (b i) (b j) - ρ ∘ₗ ro (b j) (b i)) := by
+        simp only [F, LinearMap.comp_smul, LinearMap.comp_sub]
+      constructor
+      · rw [hcompE, map_add, htr_ro, htr_ro, hMcol j i, hMcol i j, hM_def]
+        simp only [hgE i j, hgF i j, Complex.add_re, Complex.mul_re,
+                   Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
+        ring
+      · rw [hcompF, map_smul, smul_eq_mul, map_sub, htr_ro, htr_ro, hMcol j i, hMcol i j, hM_def]
+        simp only [hgE i j, hgF i j, Complex.mul_re, Complex.sub_re, Complex.sub_im,
+                   Complex.add_re, Complex.add_im, Complex.mul_im,
+                   Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
+        ring
     -- D2 : g est ℝ-linéaire sur les sommes finies d'opérateurs symétriques
     have hD2 : ∀ {ι : Type} [Fintype ι] (c : ι → ℝ) (B : ι → H n →ₗ[ℂ] H n),
         (∀ k, (B k).IsSymmetric) →
