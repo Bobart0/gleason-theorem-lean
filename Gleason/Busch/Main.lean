@@ -175,12 +175,6 @@ theorem EffectMeasure.map_nat_smul (F : EffectMeasure n)
     rw [hdecomp, F.additive _ _ hm_eff hT (by rw [← hdecomp]; exact heff), ih hm_eff]
     push_cast; ring
 
-theorem EffectMeasure.map_rat_smul (F : EffectMeasure n)
-    {T : H n →ₗ[ℂ] H n} (hT : IsEffect T)
-    (q : ℚ) (hq₀ : 0 ≤ q) (hq₁ : (q : ℝ) ≤ 1) :
-    F.f ((↑(q : ℝ) : ℂ) • T) = (q : ℝ) * F.f T := by
-  sorry
-
 -- ── (B5) Homogénéité réelle (le cœur de Busch 2003) ─────────────
 -- Pour r ∈ [0,1] et T effet, on encadre r par des rationnels :
 -- q₁ ≤ r ≤ q₂. Alors q₁·T ≤ r·T ≤ q₂·T (opérateurs positifs),
@@ -211,7 +205,7 @@ theorem EffectMeasure.map_realSmul (F : EffectMeasure n)
     have : IsEffect (1 : H n →ₗ[ℂ] H n) :=
       ⟨⟨LinearMap.IsSymmetric.one, fun x => by
           simp only [Module.End.one_apply]; exact @inner_self_nonneg ℂ _ _ _ _ x⟩,
-       ⟨by simp [LinearMap.sub_apply, Module.End.one_apply], fun x => by simp⟩⟩
+       ⟨by simp [LinearMap.sub_apply], fun x => by simp⟩⟩
     linarith [F.mono hT this hT.2, F.map_one]
   suffices h : ∀ k : ℕ, |F.f ((↑r : ℂ) • T) - r * F.f T| ≤ (2⁻¹ : ℝ) ^ k by
     by_contra hne
@@ -251,6 +245,13 @@ theorem EffectMeasure.map_realSmul (F : EffectMeasure n)
   · nlinarith [F.nonneg T hT,
       mul_le_mul_of_nonneg_right h_gap (F.nonneg T hT),
       mul_le_of_le_one_right (div_nonneg one_pos.le h2k.le) hfT_le]
+
+-- ── (B4b) Corollaire : homogénéité rationnelle ─────────────────
+theorem EffectMeasure.map_rat_smul (F : EffectMeasure n)
+    {T : H n →ₗ[ℂ] H n} (hT : IsEffect T)
+    (q : ℚ) (hq₀ : 0 ≤ q) (hq₁ : (q : ℝ) ≤ 1) :
+    F.f ((↑(q : ℝ) : ℂ) • T) = (q : ℝ) * F.f T :=
+  F.map_realSmul hT (by exact_mod_cast hq₀) hq₁
 
 -- ── (B6) Décomposition des auto-adjoints en effets ───────────────
 -- Tout opérateur auto-adjoint S se décompose en

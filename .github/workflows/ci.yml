@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Garde anti-axiome
-        run: ./scripts/guard.sh
+        run: bash scripts/guard.sh
 
   build:
     runs-on: ubuntu-latest
