@@ -190,11 +190,67 @@ theorem EffectMeasure.map_rat_smul (F : EffectMeasure n)
 -- Note : la borne 0 ≤ f(T) ≤ 1 (de nonneg + map_one) assure que
 -- les inégalités ne dégénèrent pas.
 
+private theorem isPositiveOp_smul_sub {T : H n →ₗ[ℂ] H n}
+    (hT : IsPositiveOp T) {s t : ℝ} (hst : s ≤ t) :
+    IsPositiveOp ((↑t : ℂ) • T - (↑s : ℂ) • T) := by
+  have : (↑t : ℂ) • T - (↑s : ℂ) • T = (↑(t - s) : ℂ) • T := by
+    rw [← sub_smul, Complex.ofReal_sub]
+  rw [this]
+  exact ⟨hT.1.smul (Complex.conj_ofReal _), fun x => by
+    simp only [LinearMap.smul_apply, inner_smul_left, Complex.conj_ofReal, Complex.re_ofReal_mul]
+    exact mul_nonneg (sub_nonneg.mpr hst) (hT.2 x)⟩
+
 theorem EffectMeasure.map_realSmul (F : EffectMeasure n)
     {T : H n →ₗ[ℂ] H n} (hT : IsEffect T)
     {r : ℝ} (hr₀ : 0 ≤ r) (hr₁ : r ≤ 1) :
     F.f ((↑r : ℂ) • T) = r * F.f T := by
-  sorry
+  rcases eq_or_lt_of_le hr₁ with rfl | hr₁'
+  · simp [Complex.ofReal_one]
+  have hrT : IsEffect ((↑r : ℂ) • T) := isEffect_complexSmul hT hr₀ hr₁
+  have hfT_le : F.f T ≤ 1 := by
+    have : IsEffect (1 : H n →ₗ[ℂ] H n) :=
+      ⟨⟨LinearMap.IsSymmetric.one, fun x => by
+          simp only [Module.End.one_apply]; exact @inner_self_nonneg ℂ _ _ _ _ x⟩,
+       ⟨by simp [LinearMap.sub_apply, Module.End.one_apply], fun x => by simp⟩⟩
+    linarith [F.mono hT this hT.2, F.map_one]
+  suffices h : ∀ k : ℕ, |F.f ((↑r : ℂ) • T) - r * F.f T| ≤ (2⁻¹ : ℝ) ^ k by
+    by_contra hne
+    have hpos := abs_pos.mpr (sub_ne_zero.mpr hne)
+    obtain ⟨k, hk⟩ := exists_pow_lt_of_lt_one hpos (by norm_num : (2⁻¹ : ℝ) < 1)
+    linarith [h k]
+  intro k
+  have h2k : (0 : ℝ) < 2 ^ k := by positivity
+  set m := ⌊r * 2 ^ k⌋₊
+  have hmr : (↑m : ℝ) ≤ r * 2 ^ k := Nat.floor_le (mul_nonneg hr₀ h2k.le)
+  have hmr' : r * 2 ^ k < ↑m + 1 := Nat.lt_floor_add_one _
+  have hm_lt : m < 2 ^ k := by
+    exact_mod_cast (show (↑m : ℝ) < (2 : ℝ) ^ k from lt_of_le_of_lt hmr (by nlinarith))
+  have hm1_le : m + 1 ≤ 2 ^ k := hm_lt
+  have hlo : (↑m : ℝ) / 2 ^ k ≤ r := (div_le_iff₀ h2k).mpr hmr
+  have hhi : r ≤ (↑(m + 1) : ℝ) / 2 ^ k := by
+    rw [le_div_iff₀ h2k]; push_cast; linarith
+  have hlo_eff : IsEffect ((↑((m : ℝ) / 2 ^ k) : ℂ) • T) :=
+    isEffect_complexSmul hT (by positivity) ((div_le_one h2k).mpr (by exact_mod_cast hm_lt.le))
+  have hhi_eff : IsEffect ((↑(((m + 1 : ℕ) : ℝ) / 2 ^ k) : ℂ) • T) :=
+    isEffect_complexSmul hT (by positivity) ((div_le_one h2k).mpr (by exact_mod_cast hm1_le))
+  have h_lo_val := F.map_dyadic_smul hT k m hm_lt.le
+  have h_hi_val := F.map_dyadic_smul hT k (m + 1) hm1_le
+  have h_mono_lo := F.mono hlo_eff hrT (isPositiveOp_smul_sub hT.1 hlo)
+  rw [h_lo_val] at h_mono_lo
+  have h_mono_hi := F.mono hrT hhi_eff (isPositiveOp_smul_sub hT.1 hhi)
+  rw [h_hi_val] at h_mono_hi
+  have h_inv : (2⁻¹ : ℝ) ^ k = 1 / 2 ^ k := by rw [one_div, inv_pow]
+  have h_gap : (↑(m + 1) : ℝ) / 2 ^ k - r ≤ 1 / 2 ^ k := by
+    push_cast; rw [add_div]; linarith [hlo]
+  have h_gap' : r - (↑m : ℝ) / 2 ^ k ≤ 1 / 2 ^ k := by
+    rw [sub_le_iff_le_add, ← add_div, le_div_iff₀ h2k]; linarith
+  rw [abs_le]; constructor
+  · nlinarith [F.nonneg T hT,
+      mul_le_mul_of_nonneg_right h_gap' (F.nonneg T hT),
+      mul_le_of_le_one_right (div_nonneg one_pos.le h2k.le) hfT_le]
+  · nlinarith [F.nonneg T hT,
+      mul_le_mul_of_nonneg_right h_gap (F.nonneg T hT),
+      mul_le_of_le_one_right (div_nonneg one_pos.le h2k.le) hfT_le]
 
 -- ── (B6) Décomposition des auto-adjoints en effets ───────────────
 -- Tout opérateur auto-adjoint S se décompose en
