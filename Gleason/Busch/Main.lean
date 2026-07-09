@@ -74,7 +74,15 @@ theorem isEffect_complexSmul {T : H n →ₗ[ℂ] H n} (hT : IsEffect T)
 theorem EffectMeasure.map_half_smul (F : EffectMeasure n)
     {T : H n →ₗ[ℂ] H n} (hT : IsEffect T) :
     F.f ((↑(2⁻¹ : ℝ) : ℂ) • T) = 2⁻¹ * F.f T := by
-  sorry
+  have heff : IsEffect ((↑(2⁻¹ : ℝ) : ℂ) • T) :=
+    isEffect_complexSmul hT (by norm_num) (by norm_num)
+  have hsum : (↑(2⁻¹ : ℝ) : ℂ) • T + (↑(2⁻¹ : ℝ) : ℂ) • T = T := by
+    rw [← add_smul]
+    have : (↑(2⁻¹ : ℝ) : ℂ) + (↑(2⁻¹ : ℝ) : ℂ) = 1 := by push_cast; norm_num
+    rw [this, one_smul]
+  have h := F.additive _ _ heff heff (by rw [hsum]; exact hT)
+  rw [hsum] at h
+  linarith
 
 -- ── (B3) Homogénéité dyadique : f((m/2^k) · T) = (m/2^k) · f(T) ─
 -- Induction sur k (B2) et sur m (additivité itérée).
