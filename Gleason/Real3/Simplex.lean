@@ -430,7 +430,19 @@ private theorem warmup_II_D4 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
 (l'ensemble `C ∪ {x | 1 - x ∈ C}` est dénombrable, ne peut recouvrir `(0,1)`). -/
 private theorem warmup_II_D6_exists {C : Set ℝ} (hC : C.Countable) :
     ∃ b ∈ Set.Ioo (0 : ℝ) 1, b ∉ C ∧ 1 - b ∉ C := by
-  sorry
+  set C' : Set ℝ := C ∪ (fun x => 1 - x) '' C with hC'_def
+  have hC' : C'.Countable := hC.union (hC.image _)
+  have hUncount : ¬ (Set.Ioo (0 : ℝ) 1).Countable := by
+    intro hcount
+    have h1 : Cardinal.mk (Set.Ioo (0 : ℝ) 1) ≤ Cardinal.aleph0 :=
+      Cardinal.le_aleph0_iff_set_countable.mpr hcount
+    rw [Cardinal.mk_Ioo_real (by norm_num : (0 : ℝ) < 1)] at h1
+    exact absurd h1 (not_le.mpr Cardinal.aleph0_lt_continuum)
+  have hnotsub : ¬ Set.Ioo (0 : ℝ) 1 ⊆ C' := fun hsub => hUncount (hC'.mono hsub)
+  obtain ⟨b, hbmem, hbnotin⟩ := Set.not_subset.mp hnotsub
+  refine ⟨b, hbmem, fun hbC => hbnotin (Set.mem_union_left _ hbC), fun h1bC => ?_⟩
+  apply hbnotin
+  exact Set.mem_union_right _ ⟨1 - b, h1bC, by ring⟩
 
 /-- **D5 (le cœur, squeeze).** Pour `a ∈ [0,1) \ C`, `f a = (f a₀ / a₀) · a`.
 Par `le_antisymm`, chaque sens via `∀ ε > 0` : `exists_rat_btwn` donne des
