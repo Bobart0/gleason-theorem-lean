@@ -243,5 +243,112 @@ private theorem piron_chain_equator_case {p : E3} {b : OrthonormalBasis (Fin 3) 
       rw [hazimuth_n] at hstep
       rwa [hb0] at hstep
 
+/-- E4bis (cas général, `0 < θt < π/2`) : `n` pas de phase A (spirale de rayon
+`tan θ` amenant `tan θs` à un rayon `Xn ≤ tan θt`, angle net `ψt`) puis 2 pas de
+phase B d'azimuts opposés `±φB` (`cos²φB = Xn/tan θt`) qui remontent le rayon
+exactement à `tan θt` en azimut net nul, atterrissant sur `spherePoint b θt ψt`. -/
+private theorem piron_chain_main_case {p : E3} {b : OrthonormalBasis (Fin 3) ℝ E3}
+    (hb0 : b 0 = p) {θs θt : ℝ} (hθs0 : 0 < θs) (hθs1 : θs < π / 2)
+    (hθt0 : 0 < θt) (hθt1 : θt < π / 2) (hθorder : θs < θt) (ψt : ℝ) :
+    ∃ (n : ℕ) (c : ℕ → E3), c 0 = spherePoint b θs 0 ∧ c (n + 2) = spherePoint b θt ψt ∧
+      ∀ i < n + 2, c i ≠ p ∧ c (i + 1) ∈ descent p (c i) := by
+  set x : ℝ := Real.tan θs with hx_def
+  set y : ℝ := Real.tan θt with hy_def
+  have hx0 : 0 < x := Real.tan_pos_of_pos_of_lt_pi_div_two hθs0 hθs1
+  have hy0 : 0 < y := Real.tan_pos_of_pos_of_lt_pi_div_two hθt0 hθt1
+  have harctan_s : Real.arctan x = θs := Real.arctan_tan (by linarith) hθs1
+  have hxy : x < y := by
+    rw [hx_def, hy_def]
+    exact Real.tan_lt_tan_of_lt_of_lt_pi_div_two (by linarith) hθt1 hθorder
+  have hρ : 1 < y / x := (one_lt_div hx0).mpr hxy
+  obtain ⟨n, hn0, hangle, hamp⟩ := spiral_amplification ψt hρ
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
+  set φ : ℝ := ψt / n with hφ_def
+  have hφabs : |φ| < π / 2 := by
+    rw [hφ_def, abs_div, abs_of_pos hnR]
+    exact hangle
+  have hcosφpos : 0 < Real.cos φ := Real.cos_pos_of_mem_Ioo (abs_lt.mp hφabs)
+  set radius : ℕ → ℝ := fun i => x * (Real.cos φ)⁻¹ ^ i with hradius_def
+  set azimuth : ℕ → ℝ := fun i => (i : ℝ) * φ with hazimuth_def
+  have hradius_pos : ∀ i, 0 < radius i := fun i => mul_pos hx0 (by positivity)
+  have hstepA : ∀ i < n, radius (i + 1) * Real.cos (azimuth (i + 1) - azimuth i) = radius i := by
+    intro i _
+    have hazi : azimuth (i + 1) - azimuth i = φ := by rw [hazimuth_def]; push_cast; ring
+    rw [hazi]
+    simp only [hradius_def]
+    rw [pow_succ]
+    field_simp
+  have hchain := tan_chain_step b radius azimuth hradius_pos hstepA
+  have hazimuth_n : azimuth n = ψt := by rw [hazimuth_def, hφ_def]; field_simp
+  set Xn : ℝ := radius n with hXn_def
+  have hXnpos : 0 < Xn := hradius_pos n
+  have hXnley : Xn ≤ y := by
+    have h := mul_le_mul_of_nonneg_left hamp hx0.le
+    have hcalc : x * (y / x) = y := by field_simp
+    rw [hcalc] at h
+    rw [hXn_def, hradius_def]
+    exact h
+  have hXnynn : 0 ≤ Xn / y := div_nonneg hXnpos.le hy0.le
+  have hXnyle1 : Xn / y ≤ 1 := (div_le_one hy0).mpr hXnley
+  set φB : ℝ := Real.arccos (Real.sqrt (Xn / y)) with hφB_def
+  have hsqrt_nn : 0 ≤ Real.sqrt (Xn / y) := Real.sqrt_nonneg _
+  have hsqrt_le1 : Real.sqrt (Xn / y) ≤ 1 := by
+    rw [show (1 : ℝ) = Real.sqrt 1 from (Real.sqrt_one).symm]
+    exact Real.sqrt_le_sqrt hXnyle1
+  have hcosφB : Real.cos φB = Real.sqrt (Xn / y) := Real.cos_arccos (by linarith) hsqrt_le1
+  have hφB0 : 0 ≤ φB := Real.arccos_nonneg _
+  have hφB1 : φB ≤ π / 2 := Real.arccos_le_pi_div_two.mpr hsqrt_nn
+  have hcosφB_pos : 0 < Real.cos φB := by
+    rw [hcosφB]; exact Real.sqrt_pos.mpr (by positivity)
+  have hcos2φB : Real.cos φB ^ 2 = Xn / y := by rw [hcosφB, Real.sq_sqrt hXnynn]
+  set θn : ℝ := Real.arctan Xn with hθn_def
+  have hθn0 : 0 < θn := Real.arctan_pos.mpr hXnpos
+  have hθn1 : θn < π / 2 := Real.arctan_lt_pi_div_two _
+  set θn1 : ℝ := Real.arctan (Xn / Real.cos φB) with hθn1_def
+  have hXn_div_cosφB_pos : 0 < Xn / Real.cos φB := div_pos hXnpos hcosφB_pos
+  have hθn1_0 : 0 < θn1 := Real.arctan_pos.mpr hXn_div_cosφB_pos
+  have hθn1_1 : θn1 < π / 2 := Real.arctan_lt_pi_div_two _
+  set c : ℕ → E3 := fun i =>
+    if i ≤ n then spherePoint b (Real.arctan (radius i)) (azimuth i)
+    else if i = n + 1 then spherePoint b θn1 (ψt + φB)
+    else spherePoint b θt ψt with hc_def
+  refine ⟨n, c, ?_, ?_, ?_⟩
+  · rw [hc_def]
+    simp only [Nat.zero_le, if_true]
+    rw [hradius_def, hazimuth_def]
+    norm_num [harctan_s]
+  · rw [hc_def]
+    simp only [if_neg (show ¬ (n + 2 ≤ n) from by omega),
+      if_neg (show ¬ (n + 2 = n + 1) from by omega)]
+  · intro i hi
+    rcases lt_trichotomy i n with hilt | hieq | higt
+    · rw [hc_def]
+      simp only [if_pos hilt.le, if_pos (show i + 1 ≤ n from by omega)]
+      rw [← hb0]
+      exact hchain i hilt
+    · subst hieq
+      rw [hc_def]
+      simp only [if_pos (le_refl i), if_neg (show ¬ (i + 1 ≤ i) from by omega)]
+      refine ⟨hb0 ▸ ne_pole_spherePoint b hθn0 hθn1.le _, ?_⟩
+      apply hb0 ▸ spherePoint_mem_descent_of_tan b hθn0 hθn1 hθn1_0 hθn1_1
+      rw [hθn1_def, hθn_def, Real.tan_arctan, Real.tan_arctan, hazimuth_n]
+      have hcancel : ψt + φB - ψt = φB := by ring
+      rw [hcancel]
+      field_simp
+    · have hival : i = n + 1 := by omega
+      subst hival
+      rw [hc_def]
+      simp only [if_neg (show ¬ (n + 1 ≤ n) from by omega),
+        if_neg (show ¬ (n + 1 + 1 ≤ n) from by omega),
+        if_neg (show ¬ (n + 1 + 1 = n + 1) from by omega)]
+      refine ⟨hb0 ▸ ne_pole_spherePoint b hθn1_0 hθn1_1.le _, ?_⟩
+      apply hb0 ▸ spherePoint_mem_descent_of_tan b hθn1_0 hθn1_1 hθt0 hθt1
+      rw [hθn1_def, Real.tan_arctan, ← hy_def]
+      have haz : ψt - (ψt + φB) = -φB := by ring
+      rw [haz, Real.cos_neg, eq_div_iff hcosφB_pos.ne']
+      have hringstep : y * Real.cos φB * Real.cos φB = y * Real.cos φB ^ 2 := by ring
+      rw [hringstep, hcos2φB]
+      field_simp
+
 end
 end Gleason
