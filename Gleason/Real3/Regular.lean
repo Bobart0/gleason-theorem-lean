@@ -69,13 +69,96 @@ theorem exists_extremal_frame {φ : E3 → ℝ} {Wφ : ℝ} (hφ : IsFrameFuncti
   have hUeq : φ U = φ R0 := by linarith [hsum3, hS1eq]
   exact ⟨S1, U, hS1, hU, hPS1, hPU, hS1U, hS1eq, hUeq⟩
 
+/- ═══════════════════════════════════════════════════════════════════
+   H2 (préliminaires). Forme quadratique de la norme au carré (outil
+   partagé par les cas dégénérés et l'assemblage final).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **H2 (outil).** `∑ᵢ ⟪bᵢ,s⟫²` comme forme quadratique, valant `‖s‖²`. -/
+def normSqQF (b : OrthonormalBasis (Fin 3) ℝ E3) : QuadraticForm ℝ E3 :=
+  QuadraticMap.linMulLin (innerₗ E3 (b 0)) (innerₗ E3 (b 0)) +
+  QuadraticMap.linMulLin (innerₗ E3 (b 1)) (innerₗ E3 (b 1)) +
+  QuadraticMap.linMulLin (innerₗ E3 (b 2)) (innerₗ E3 (b 2))
+
+theorem normSqQF_apply (b : OrthonormalBasis (Fin 3) ℝ E3) (s : E3) :
+    normSqQF b s = ‖s‖ ^ 2 := by
+  simp only [normSqQF, QuadraticMap.add_apply, QuadraticMap.linMulLin_apply, innerₗ_apply_apply]
+  rw [← b.sum_sq_inner_right s, Fin.sum_univ_three]
+  ring
+
 /-- **Régularité (Gleason réel, dimension 3).** Toute frame function positive
 est quadratique sur la sphère (`heven` retirée : dérivable via
 `frameFunction_even`, cf. le commentaire d'en-tête). -/
 theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
     (hf : IsFrameFunction f W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ f x) :
     ∃ q : QuadraticForm ℝ E3, ∀ x, ‖x‖ = 1 → f x = q x := by
-  sorry
+  have hle : ∀ x : E3, ‖x‖ = 1 → f x ≤ W := fun x hx => hf.le_of_nonneg hnn hx
+  obtain ⟨p, hp, hpmax⟩ := frameFunction_attains_sup hf hle
+  obtain ⟨r0, hr0, hr0lb⟩ := frameFunction_attains_inf hf hnn
+  set b0 := EuclideanSpace.basisFun (Fin 3) ℝ with hb0_def
+  by_cases hMm : f p = f r0
+  · -- **H2a.** M = m : f est constante.
+    refine ⟨f p • normSqQF b0, fun x hx => ?_⟩
+    have hle1 : f x ≤ f p := hpmax x hx
+    have hge1 : f r0 ≤ f x := hr0lb x hx
+    have hfx : f x = f p := by linarith [hMm ▸ hge1]
+    rw [QuadraticMap.smul_apply, normSqQF_apply, hx]
+    norm_num [hfx]
+  · -- H1 fournit le triple extrémal (p, q, r) avec f(q) = W - f(p) - f(r0).
+    obtain ⟨q, r, hq, hr, hpq, hpr, hqr, hqeq, hreq⟩ :=
+      exists_extremal_frame hf hp hpmax hr0 hr0lb hMm
+    set M : ℝ := f p with hM_def
+    set α : ℝ := f q with hα_def
+    set m : ℝ := f r0 with hm_def
+    by_cases hαm : α = m
+    · -- **H2b.** α = m ⟺ W = M + 2m : f ≡ m sur l'équateur de p, F conclut.
+      have hWeq : W = M + 2 * m := by linarith [hqeq, hαm]
+      have hconst : ∀ e ∈ equator p, f e = m := by
+        intro e he
+        obtain ⟨e', he', hpe', hee'⟩ := exists_third_orthogonal p e hp he.1 he.2
+        obtain ⟨b, hb0, hb1, hb2⟩ :=
+          exists_orthonormalBasis_of_triple' p e e' hp he.1 he' he.2 hpe' hee'
+        have hsum := hf b
+        rw [Fin.sum_univ_three, hb0, hb1, hb2] at hsum
+        have hem : m ≤ f e := hr0lb e he.1
+        have he'm : m ≤ f e' := hr0lb e' he'
+        linarith [hsum, hWeq, hem, he'm]
+      have hexact := frameFunction_exact_pole hf hp hpmax hconst
+      refine ⟨m • normSqQF b0 + (M - m) • QuadraticMap.linMulLin (innerₗ E3 p) (innerₗ E3 p),
+        fun x hx => ?_⟩
+      have hex := hexact x hx
+      unfold lat at hex
+      rw [hex, QuadraticMap.add_apply, QuadraticMap.smul_apply, QuadraticMap.smul_apply,
+        normSqQF_apply, hx, QuadraticMap.linMulLin_apply, innerₗ_apply_apply]
+      ring
+    · by_cases hαM : α = M
+      · -- **H2c.** α = M ⟺ W = 2M + m : f ≡ M sur l'équateur de r0, F sur −f.
+        have hWeq : W = 2 * M + m := by linarith [hqeq, hαM]
+        have hconst : ∀ e ∈ equator r0, f e = M := by
+          intro e he
+          obtain ⟨e', he', hr0e', hee'⟩ := exists_third_orthogonal r0 e hr0 he.1 he.2
+          obtain ⟨b, hb0, hb1, hb2⟩ :=
+            exists_orthonormalBasis_of_triple' r0 e e' hr0 he.1 he' he.2 hr0e' hee'
+          have hsum := hf b
+          rw [Fin.sum_univ_three, hb0, hb1, hb2] at hsum
+          have hem : f e ≤ M := hpmax e he.1
+          have he'm : f e' ≤ M := hpmax e' he'
+          linarith [hsum, hWeq, hem, he'm]
+        have hconst_neg : ∀ e ∈ equator r0, (fun x => -f x) e = -M := by
+          intro e he; simp only; rw [hconst e he]
+        have hmax_neg : ∀ t : E3, ‖t‖ = 1 → (fun x => -f x) t ≤ (fun x => -f x) r0 := by
+          intro t ht; simp only; linarith [hr0lb t ht]
+        have hexact := frameFunction_exact_pole hf.neg hr0 hmax_neg hconst_neg
+        refine ⟨M • normSqQF b0 - (M - m) • QuadraticMap.linMulLin (innerₗ E3 r0) (innerₗ E3 r0),
+          fun x hx => ?_⟩
+        have hex := hexact x hx
+        unfold lat at hex
+        rw [QuadraticMap.sub_apply, QuadraticMap.smul_apply, QuadraticMap.smul_apply,
+          normSqQF_apply, hx, QuadraticMap.linMulLin_apply, innerₗ_apply_apply, smul_eq_mul,
+          smul_eq_mul]
+        linarith [hex]
+      · -- Cas principal : m < α < M strictement (H3-H9).
+        sorry
 
 end
 end Gleason
