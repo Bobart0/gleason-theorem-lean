@@ -398,5 +398,19 @@ example (p s : E3) (hc : ⟪p, s⟫ = 0) : sperp p s = p := by
   rw [hc]
   simp
 
+/-- **B3.** La somme des latitudes sur une base orthonormée vaut `1` (Parseval,
+`x = y = p`, puis `real_inner_comm` pour recoller `⟪p,b i⟫²`). -/
+theorem sum_lat_eq_one {p : E3} (hp : ‖p‖ = 1) (b : OrthonormalBasis (Fin 3) ℝ E3) :
+    ∑ i, lat p (b i) = 1 := by
+  have h := b.sum_inner_mul_inner p p
+  rw [real_inner_self_eq_norm_sq, hp] at h
+  norm_num at h
+  unfold lat
+  rw [← h]
+  apply Finset.sum_congr rfl
+  intro i _
+  rw [real_inner_comm p (b i)]
+  ring
+
 end
 end Gleason
