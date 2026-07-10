@@ -19,7 +19,16 @@ Mathlib : chercher l'extension d'une famille orthonormée en `OrthonormalBasis`
 (`Orthonormal` + `exists_orthonormalBasis_extension` ou équivalent). -/
 theorem exists_orthonormalBasis_fst (x : E3) (hx : ‖x‖ = 1) :
     ∃ b : OrthonormalBasis (Fin 3) ℝ E3, b 0 = x := by
-  sorry
+  have hcard : Module.finrank ℝ E3 = Fintype.card (Fin 3) := by simp
+  have hv : Orthonormal ℝ (({0} : Set (Fin 3)).restrict (fun _ : Fin 3 => x)) := by
+    constructor
+    · rintro ⟨i, hi⟩
+      simp [Set.restrict_apply, hx]
+    · rintro ⟨i, hi⟩ ⟨j, hj⟩ hij
+      simp only [Set.mem_singleton_iff] at hi hj
+      exact absurd (Subtype.ext (hi.trans hj.symm)) hij
+  obtain ⟨b, hb⟩ := hv.exists_orthonormalBasis_extension_of_card_eq hcard
+  exact ⟨b, hb 0 rfl⟩
 
 /-- Toute paire orthonormée se complète en base orthonormée de ℝ³. -/
 theorem exists_orthonormalBasis_pair (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
