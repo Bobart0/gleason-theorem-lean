@@ -129,6 +129,67 @@ theorem exists_unit_orthogonal_to_pair (a b : E3) :
   · rw [real_inner_smul_left, hwa, mul_zero]
   · rw [real_inner_smul_left, hwb, mul_zero]
 
+/-- **Unicité (à signe près) de l'orthogonal d'une paire indépendante.**
+Si `a,b` sont indépendants (`a ≠ 0`, `b` non multiple de `a`), l'orthogonal de
+`span{a,b}` est de rang 1 (`finrank_add_finrank_orthogonal` + rang 2 du span,
+via l'indépendance linéaire) : deux vecteurs unitaires qui y vivent sont égaux
+ou opposés. Complète `exists_unit_orthogonal_to_pair` (existence) : nécessaire
+en bloc H (Regular.lean) pour montrer que deux grands cercles distincts se
+coupent en EXACTEMENT une paire antipodale (pas plus). -/
+theorem unique_unit_orthogonal_to_pair {a b u v : E3} (ha0 : a ≠ 0)
+    (hindep : ∀ c : ℝ, c • a ≠ b)
+    (hua : ⟪u, a⟫ = 0) (hub : ⟪u, b⟫ = 0) (hu : ‖u‖ = 1)
+    (hva : ⟪v, a⟫ = 0) (hvb : ⟪v, b⟫ = 0) (hv : ‖v‖ = 1) :
+    v = u ∨ v = -u := by
+  classical
+  set K : Submodule ℝ E3 := Submodule.span ℝ ({a, b} : Set E3) with hK_def
+  have hindepv : LinearIndependent ℝ ![a, b] := (LinearIndependent.pair_iff' ha0).mpr hindep
+  have hrange : ({a, b} : Set E3) = Set.range ![a, b] := by
+    ext x
+    simp [eq_comm, or_comm]
+  have hKfin : Module.finrank ℝ K = 2 := by
+    rw [hK_def, hrange]
+    have h := finrank_span_eq_card hindepv
+    simpa using h
+  have hE3 : Module.finrank ℝ E3 = 3 := by simp
+  have hsum : Module.finrank ℝ K + Module.finrank ℝ Kᗮ = Module.finrank ℝ E3 :=
+    Submodule.finrank_add_finrank_orthogonal K
+  have hKperp1 : Module.finrank ℝ Kᗮ = 1 := by omega
+  have huK : u ∈ Kᗮ := by
+    have hiso : (Submodule.span ℝ ({u} : Set E3)) ⟂ K := by
+      rw [hK_def, Submodule.isOrtho_span]
+      intro x hx y hy
+      simp only [Set.mem_singleton_iff] at hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+      subst hx
+      rcases hy with hy | hy <;> subst hy
+      · exact hua
+      · exact hub
+    exact Submodule.isOrtho_iff_le.mp hiso (Submodule.mem_span_singleton_self u)
+  have hvK : v ∈ Kᗮ := by
+    have hiso : (Submodule.span ℝ ({v} : Set E3)) ⟂ K := by
+      rw [hK_def, Submodule.isOrtho_span]
+      intro x hx y hy
+      simp only [Set.mem_singleton_iff] at hx
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hy
+      subst hx
+      rcases hy with hy | hy <;> subst hy
+      · exact hva
+      · exact hvb
+    exact Submodule.isOrtho_iff_le.mp hiso (Submodule.mem_span_singleton_self v)
+  have hu0 : u ≠ 0 := by
+    intro h; rw [h, norm_zero] at hu; exact absurd hu (by norm_num)
+  have hspan : Kᗮ = Submodule.span ℝ ({u} : Set E3) :=
+    eq_span_singleton_of_mem_of_finrank_eq_one hKperp1 huK hu0
+  rw [hspan] at hvK
+  obtain ⟨c, hc⟩ := Submodule.mem_span_singleton.mp hvK
+  have hcabs : |c| = 1 := by
+    have hnorm : ‖c • u‖ = 1 := by rw [hc]; exact hv
+    rwa [norm_smul, Real.norm_eq_abs, hu, mul_one] at hnorm
+  rcases (abs_eq (by norm_num : (0:ℝ) ≤ 1)).mp hcabs with h1 | h1
+  · left; rw [← hc, h1, one_smul]
+  · right; rw [← hc, h1, neg_one_smul]
+
 /-- Deux bases partageant un vecteur : la somme de `f` sur les deux autres vecteurs
 est la même (conséquence directe de la définition de frame function ; utilisé
 partout dans la descente). -/
