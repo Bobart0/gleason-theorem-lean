@@ -213,5 +213,44 @@ theorem frameFunction_P4 {f : E3 → ℝ} {W M m : ℝ} (hf : IsFrameFunction f 
   rw [hδ_def] at ht'lt
   linarith
 
+/- ═══════════════════════════════════════════════════════════════════
+   Géométrie du pôle (CKM 1985 §4). Le pôle `p` reste un ARGUMENT
+   EXPLICITE de chaque définition (pas de `variable` fixée globalement au
+   sens mathématique) : le §7 utilisera trois pôles différents.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+section PoleGeometry
+
+variable (p : E3)
+
+/-- **Latitude** de `s` relative au pôle `p` : `⟪p,s⟫²`. -/
+def lat (s : E3) : ℝ := ⟪p, s⟫ ^ 2
+
+/-- **Hémisphère nord** : vecteurs unitaires du côté du pôle (`⟪p,·⟫ ≥ 0`). -/
+def northern : Set E3 := {t : E3 | ‖t‖ = 1 ∧ 0 ≤ ⟪p, t⟫}
+
+/-- **Équateur** : vecteurs unitaires orthogonaux au pôle. -/
+def equator : Set E3 := {t : E3 | ‖t‖ = 1 ∧ ⟪p, t⟫ = 0}
+
+/-- Point de l'équateur (à normalisation près) déterminé par `p` et `s` : la
+projection de `s` sur `pᗮ`, complétée par la composante `√(1-⟪p,s⟫²)` sur `p`
+pour former un vecteur unitaire orthogonal à `s` dans le plan `(p,s)`.
+Valeur poubelle en `s = p` (jamais utilisée : voir les hypothèses de B2). -/
+noncomputable def sperp (s : E3) : E3 :=
+  Real.sqrt (1 - ⟪p, s⟫ ^ 2) • p - ⟪p, s⟫ • (‖s - ⟪p, s⟫ • p‖⁻¹ • (s - ⟪p, s⟫ • p))
+
+/-- **Cercle de descente** de `s` relatif au pôle `p` : les points de
+l'hémisphère nord orthogonaux à `sperp p s`. -/
+def descent (s : E3) : Set E3 := {t : E3 | t ∈ northern p ∧ ⟪sperp p s, t⟫ = 0}
+
+@[simp] theorem mem_northern_iff {t : E3} : t ∈ northern p ↔ ‖t‖ = 1 ∧ 0 ≤ ⟪p, t⟫ := Iff.rfl
+
+@[simp] theorem mem_equator_iff {t : E3} : t ∈ equator p ↔ ‖t‖ = 1 ∧ ⟪p, t⟫ = 0 := Iff.rfl
+
+@[simp] theorem mem_descent_iff {s t : E3} :
+    t ∈ descent p s ↔ t ∈ northern p ∧ ⟪sperp p s, t⟫ = 0 := Iff.rfl
+
+end PoleGeometry
+
 end
 end Gleason
