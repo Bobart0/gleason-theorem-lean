@@ -127,7 +127,28 @@ private theorem simplex_nat_mul (g : ℝ → ℝ)
     (hsplit : ∀ x u : ℝ, u ∈ Set.Icc (0 : ℝ) 1 → x ∈ Set.Icc (0 : ℝ) 1 → u ≤ x →
       g x = g u + g (x - u)) :
     ∀ (k : ℕ) (t : ℝ), 0 ≤ t → (k : ℝ) * t ≤ 1 → g ((k : ℝ) * t) = (k : ℝ) * g t := by
-  sorry
+  have hg0 : g 0 = 0 := by
+    have := hsplit 0 0 ⟨le_refl 0, zero_le_one⟩ ⟨le_refl 0, zero_le_one⟩ (le_refl 0)
+    simpa using this
+  intro k
+  induction k with
+  | zero => intro t _ _; simp [hg0]
+  | succ k ih =>
+    intro t ht0 ht1
+    push_cast at ht1 ⊢
+    have hkt1 : (k : ℝ) * t ≤ 1 :=
+      le_trans (mul_le_mul_of_nonneg_right (by linarith : (k : ℝ) ≤ (k : ℝ) + 1) ht0) ht1
+    have hmem_kt : (k : ℝ) * t ∈ Set.Icc (0 : ℝ) 1 :=
+      ⟨mul_nonneg (Nat.cast_nonneg k) ht0, hkt1⟩
+    have hmem_succ : ((k : ℝ) + 1) * t ∈ Set.Icc (0 : ℝ) 1 :=
+      ⟨mul_nonneg (by positivity) ht0, ht1⟩
+    have hle : (k : ℝ) * t ≤ ((k : ℝ) + 1) * t :=
+      mul_le_mul_of_nonneg_right (by linarith) ht0
+    have heq := hsplit (((k : ℝ) + 1) * t) ((k : ℝ) * t) hmem_kt hmem_succ hle
+    have hdiff : ((k : ℝ) + 1) * t - (k : ℝ) * t = t := by ring
+    rw [hdiff, ih t ht0 hkt1] at heq
+    rw [heq]
+    ring
 
 /-- **Étape 3 (assemblage, corollaire dyadique de `simplex_nat_mul`).** Combine
 `simplex_halve` en `x = 1` (donnant `g (1/2^n) = g 1 / 2^n = 0`) avec
