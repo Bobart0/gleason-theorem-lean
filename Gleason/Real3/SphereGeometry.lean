@@ -137,5 +137,20 @@ theorem frameFunction_even {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
   rw [hb0] at h1 h2
   linarith
 
+/-- **P3.** Si `(u,s,t)` et `(u,s',t')` sont deux triplets orthonormés partageant
+`u`, alors `f s + f t = f s' + f t'` — corollaire direct de `frame_pair_sum_eq`
+appliqué aux bases construites sur `(u,s,t)` et `(u,s',t')`. -/
+theorem frameFunction_pair_swap {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
+    {u s t s' t' : E3}
+    (hu : ‖u‖ = 1) (hs : ‖s‖ = 1) (ht : ‖t‖ = 1) (hs' : ‖s'‖ = 1) (ht' : ‖t'‖ = 1)
+    (hus : ⟪u, s⟫ = 0) (hut : ⟪u, t⟫ = 0) (hst : ⟪s, t⟫ = 0)
+    (hus' : ⟪u, s'⟫ = 0) (hut' : ⟪u, t'⟫ = 0) (hs't' : ⟪s', t'⟫ = 0) :
+    f s + f t = f s' + f t' := by
+  obtain ⟨b, hb0, hb1, hb2⟩ := exists_orthonormalBasis_of_triple' u s t hu hs ht hus hut hst
+  obtain ⟨b', hb0', hb1', hb2'⟩ :=
+    exists_orthonormalBasis_of_triple' u s' t' hu hs' ht' hus' hut' hs't'
+  have h := frame_pair_sum_eq hf b b' (by rw [hb0, hb0'])
+  rwa [hb1, hb2, hb1', hb2'] at h
+
 end
 end Gleason
