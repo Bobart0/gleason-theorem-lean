@@ -27,7 +27,10 @@
       SphereGeometry.lean) — sperp_core groupe norme/orthogonalité/lat ;
       B6 lat_le_of_mem_descent (Parseval polarisé) ; B7 réalisabilité des
       latitudes (transport d'isométrie, sans matrices)
-- [ ] C. basic_lemma + version approchée (§4 ; courts une fois A+B faits)
+- [x] C. Basic Lemma (§4, Descent.lean) — architecture inversée : C0 (retire
+      l'énoncé provisoire exists_continuity_point), C1 (exists_third_orthogonal,
+      SphereGeometry.lean), C2 (equator_value_lt), C3 (basic_lemma_approx, le
+      cœur), C4 (basic_lemma, exact), C5 (equator_value_le, pour F)
 - [x] D. warmup_II : monotone + co-dénombrable + additif-à-1 ⇒ identité (§3)
       — Simplex.lean, 7 sous-lemmes (D1..D6-existence, D5) + assemblage,
       route cardinale pour la non-dénombrabilité de Ioo 0 1

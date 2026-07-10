@@ -91,5 +91,24 @@ theorem basic_lemma {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction f W)
   have h := basic_lemma_approx hf hp hmax hmlb hm hconst hfp hs hsN hsp hs'd
   linarith
 
+/-- **C5 (corollaire, pour le bloc F).** Sous les hypothèses de C4, la valeur
+constante `c` sur l'équateur de `p` est un minorant global de `f` : `c ≤ m₀`
+par C2 appliqué à `M := f p` pour tout `ξ > 0` (même mécanisme que C4), puis
+`c ≤ m₀ ≤ f t` (`hmlb`). -/
+theorem equator_value_le {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction f W)
+    {p : E3} (hp : ‖p‖ = 1)
+    (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
+    (hmlb : ∀ t : E3, ‖t‖ = 1 → m₀ ≤ f t)
+    (hm : ∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m₀ + ε)
+    (hconst : ∀ e ∈ equator p, f e = c) :
+    ∀ t : E3, ‖t‖ = 1 → c ≤ f t := by
+  have hcm : c ≤ m₀ := by
+    apply le_of_forall_pos_lt_add
+    intro ξ hξ
+    have hfp : f p - ξ < f p := by linarith
+    exact equator_value_lt hf hp hmax hm hconst hfp
+  intro t ht
+  linarith [hcm, hmlb t ht]
+
 end
 end Gleason
