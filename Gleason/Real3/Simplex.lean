@@ -159,7 +159,22 @@ private theorem simplex_dyadic_vanish (g : ℝ → ℝ) (hg1 : g 1 = 0)
     (hhalve : ∀ x ∈ Set.Icc (0 : ℝ) 1, ∀ n : ℕ, g (x / 2 ^ n) = g x / 2 ^ n)
     (hmul : ∀ (k : ℕ) (t : ℝ), 0 ≤ t → (k : ℝ) * t ≤ 1 → g ((k : ℝ) * t) = (k : ℝ) * g t) :
     ∀ n k : ℕ, k ≤ 2 ^ n → g ((k : ℝ) / 2 ^ n) = 0 := by
-  sorry
+  intro n k hk
+  have hmem1 : (1 : ℝ) ∈ Set.Icc (0 : ℝ) 1 := ⟨zero_le_one, le_refl 1⟩
+  have ht0 : (0 : ℝ) ≤ 1 / 2 ^ n := by positivity
+  have hgt : g (1 / 2 ^ n) = 0 := by
+    have := hhalve 1 hmem1 n
+    rw [hg1] at this
+    simpa using this
+  have hkcast : (k : ℝ) ≤ (2 : ℝ) ^ n := by exact_mod_cast hk
+  have hkt1 : (k : ℝ) * (1 / 2 ^ n) ≤ 1 := by
+    rw [mul_one_div, div_le_one (by positivity)]
+    exact hkcast
+  have heq := hmul k (1 / 2 ^ n) ht0 hkt1
+  rw [hgt, mul_zero] at heq
+  have hcast : (k : ℝ) / 2 ^ n = (k : ℝ) * (1 / 2 ^ n) := by rw [mul_one_div]
+  rw [hcast]
+  exact heq
 
 /-- **Étape 4 (le cœur analytique).** Pour `x ∈ [0,1]` et tout `n`, en posant
 `k = ⌊x·2^n⌋` et `r = x - k/2^n ∈ [0, 1/2^n)`, `simplex_split` donne
