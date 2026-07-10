@@ -303,7 +303,41 @@ hors de cet ensemble a la propriété (sinon `a₀` s'écrirait `(q/p)·c` ou
 private theorem warmup_II_D2 {C : Set ℝ} (hC : C.Countable) (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) :
     ∃ a₀ ∈ Set.Ioo (0 : ℝ) 1, ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
       (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C := by
-  sorry
+  set S1 : Set ℝ := ⋃ c ∈ C, Set.range (fun r : ℚ => (r : ℝ) * c) with hS1_def
+  set S2 : Set ℝ := ⋃ c ∈ C, Set.range (fun r : ℚ => (r : ℝ) * (1 - c)) with hS2_def
+  have hS1 : S1.Countable := hC.biUnion (fun c _ => Set.countable_range _)
+  have hS2 : S2.Countable := hC.biUnion (fun c _ => Set.countable_range _)
+  have hSC : (S1 ∪ S2).Countable := hS1.union hS2
+  have hUncount : ¬ (Set.Ioo (0 : ℝ) 1).Countable := by
+    intro hcount
+    have h1 : Cardinal.mk (Set.Ioo (0 : ℝ) 1) ≤ Cardinal.aleph0 :=
+      Cardinal.le_aleph0_iff_set_countable.mpr hcount
+    rw [Cardinal.mk_Ioo_real (by norm_num : (0 : ℝ) < 1)] at h1
+    exact absurd h1 (not_le.mpr Cardinal.aleph0_lt_continuum)
+  have hnotsub : ¬ Set.Ioo (0 : ℝ) 1 ⊆ S1 ∪ S2 := fun hsub => hUncount (hSC.mono hsub)
+  obtain ⟨a₀, ha₀mem, ha₀notin⟩ := Set.not_subset.mp hnotsub
+  refine ⟨a₀, ha₀mem, ?_⟩
+  intro p q hq hle
+  have hqR : (q : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hq.ne'
+  constructor
+  · intro hcmem
+    apply ha₀notin
+    have hppos : 0 < (p : ℝ) / q * a₀ := (hCsub hcmem).1
+    have hp0 : p ≠ 0 := by intro h; subst h; simp at hppos
+    have hpR : (p : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hp0
+    refine Set.mem_union_left _ (Set.mem_biUnion hcmem ⟨(q : ℚ) / (p : ℚ), ?_⟩)
+    push_cast
+    field_simp
+  · intro hcmem
+    apply ha₀notin
+    have hclt : 1 - (p : ℝ) / q * a₀ < 1 := (hCsub hcmem).2
+    have hppos : 0 < (p : ℝ) / q * a₀ := by linarith
+    have hp0 : p ≠ 0 := by intro h; subst h; simp at hppos
+    have hpR : (p : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr hp0
+    refine Set.mem_union_right _ (Set.mem_biUnion hcmem ⟨(q : ℚ) / (p : ℚ), ?_⟩)
+    push_cast
+    field_simp
+    ring
 
 /-- **D3.** Additivité sur l'orbite de `a₀` : deux applications de `htriple`
 (`(p/q·a₀, p'/q·a₀, 1-(p+p')/q·a₀)` puis `((p+p')/q·a₀, 1-(p+p')/q·a₀, 0)`),
