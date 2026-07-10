@@ -56,6 +56,15 @@ theorem exists_orthonormalBasis_pair (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖
   · have := hb 1 (by simp)
     simpa using this
 
+/-- **C1.** Étant donné une paire orthonormée, il existe un troisième vecteur
+unitaire orthogonal aux deux (le 3ᵉ vecteur d'une base les complétant). -/
+theorem exists_third_orthogonal (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) (hxy : ⟪x, y⟫ = 0) :
+    ∃ z, ‖z‖ = 1 ∧ ⟪x, z⟫ = 0 ∧ ⟪y, z⟫ = 0 := by
+  obtain ⟨b, hb0, hb1⟩ := exists_orthonormalBasis_pair x y hx hy hxy
+  refine ⟨b 2, b.norm_eq_one 2, ?_, ?_⟩
+  · rw [← hb0]; exact b.inner_eq_zero (by decide)
+  · rw [← hb1]; exact b.inner_eq_zero (by decide)
+
 /-- Un triplet EXPLICITEMENT prescrit (les trois vecteurs, pas seulement deux) qui
 est orthonormé coïncide avec une base orthonormée — cas `s = univ` de l'extension.
 Outil de base pour construire des bases par manipulation directe de triplets
