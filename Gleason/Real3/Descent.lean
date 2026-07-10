@@ -71,5 +71,25 @@ theorem basic_lemma_approx {f : E3 → ℝ} {W M m₀ c ξ : ℝ} (hf : IsFrameF
   have hcltm : c < m₀ + ξ := equator_value_lt hf hp hM hm hconst hfp
   linarith [h, hft, hft', hcltm]
 
+/-- **C4 (exact, corollaire de C3).** Mêmes hypothèses que C3 avec `hfp`
+remplacé par `hmax : ∀ t unitaire, f t ≤ f p` (`p` réalise le sup) : la
+descente ne fait jamais AUGMENTER `f`. Preuve : pour tout `ξ > 0`, C3 avec
+`M := f p` (`f p - ξ < f p` trivialement) donne `f s' < f s + ξ` ;
+`le_of_forall_pos_lt_add` conclut. -/
+theorem basic_lemma {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction f W)
+    {p : E3} (hp : ‖p‖ = 1)
+    (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
+    (hmlb : ∀ t : E3, ‖t‖ = 1 → m₀ ≤ f t)
+    (hm : ∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m₀ + ε)
+    (hconst : ∀ e ∈ equator p, f e = c)
+    {s : E3} (hs : ‖s‖ = 1) (hsN : s ∈ northern p) (hsp : s ≠ p)
+    {s' : E3} (hs'd : s' ∈ descent p s) :
+    f s' ≤ f s := by
+  apply le_of_forall_pos_lt_add
+  intro ξ hξ
+  have hfp : f p - ξ < f p := by linarith
+  have h := basic_lemma_approx hf hp hmax hmlb hm hconst hfp hs hsN hsp hs'd
+  linarith
+
 end
 end Gleason
