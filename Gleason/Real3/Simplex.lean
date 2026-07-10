@@ -350,7 +350,34 @@ private theorem warmup_II_D3 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
       (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C) :
     ∀ p p' q : ℕ, 0 < q → ((p + p' : ℕ) : ℝ) / q * a₀ ≤ 1 →
       f ((p : ℝ) / q * a₀) + f ((p' : ℝ) / q * a₀) = f (((p + p' : ℕ) : ℝ) / q * a₀) := by
-  sorry
+  intro p p' q hq hle
+  have ha₀pos : 0 < a₀ := ha₀.1
+  set x : ℝ := (p : ℝ) / q * a₀ with hx_def
+  set y : ℝ := (p' : ℝ) / q * a₀ with hy_def
+  set z : ℝ := ((p + p' : ℕ) : ℝ) / q * a₀ with hz_def
+  have hxy : x + y = z := by rw [hx_def, hy_def, hz_def]; push_cast; ring
+  have hx0 : 0 ≤ x := by rw [hx_def]; positivity
+  have hy0 : 0 ≤ y := by rw [hy_def]; positivity
+  have hz0 : 0 ≤ z := by rw [← hxy]; linarith
+  have hxz : x ≤ z := by rw [← hxy]; linarith
+  have hyz : y ≤ z := by rw [← hxy]; linarith
+  have hx1 : x ≤ 1 := le_trans hxz hle
+  have hy1 : y ≤ 1 := le_trans hyz hle
+  have hxC : x ∉ C := (hgen p q hq hx1).1
+  have hyC : y ∉ C := (hgen p' q hq hy1).1
+  have hzC : z ∉ C := (hgen (p + p') q hq hle).1
+  have hwC : 1 - z ∉ C := (hgen (p + p') q hq hle).2
+  have h0aux := hgen 0 1 one_pos (by norm_num)
+  have h0C : (0 : ℝ) ∉ C := by simpa using h0aux.1
+  have hxmem : x ∈ Set.Icc (0 : ℝ) 1 \ C := ⟨⟨hx0, hx1⟩, hxC⟩
+  have hymem : y ∈ Set.Icc (0 : ℝ) 1 \ C := ⟨⟨hy0, hy1⟩, hyC⟩
+  have hzmem : z ∈ Set.Icc (0 : ℝ) 1 \ C := ⟨⟨hz0, hle⟩, hzC⟩
+  have hwmem : (1 - z) ∈ Set.Icc (0 : ℝ) 1 \ C := ⟨⟨by linarith, by linarith⟩, hwC⟩
+  have h0mem : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 1 \ C := ⟨⟨le_refl 0, zero_le_one⟩, h0C⟩
+  have heq1 := htriple x y (1 - z) hxmem hymem hwmem (by linarith)
+  have heq2 := htriple z (1 - z) 0 hzmem hwmem h0mem (by ring)
+  rw [hf0] at heq2
+  linarith
 
 /-- **D4.** Homogénéité rationnelle sur l'orbite : `f((p/q)·a₀) = (p/q)·f(a₀)`.
 Deux temps : (i) récurrence sur `p` via D3 pour `f(p·(a₀/q)) = p·f(a₀/q)` tant
