@@ -664,5 +664,17 @@ theorem frameFunction_attains_sup {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFuncti
   refine ⟨p, hp, fun t ht => ?_⟩
   rw [hfp_eq]; exact hM₀_ub t ht
 
+/-- **G9 (corollaire).** Attention de l'inf, via `frameFunction_attains_sup`
+appliqué à `-f` (G1d, `IsFrameFunction.neg`). -/
+theorem frameFunction_attains_inf {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
+    {m : ℝ} (hm : ∀ t : E3, ‖t‖ = 1 → m ≤ f t) :
+    ∃ r₀ : E3, ‖r₀‖ = 1 ∧ ∀ t : E3, ‖t‖ = 1 → f r₀ ≤ f t := by
+  have hnegM : ∀ t : E3, ‖t‖ = 1 → (fun x => -f x) t ≤ -m := by
+    intro t ht; simp only; linarith [hm t ht]
+  obtain ⟨p₀, hp₀, hp₀max⟩ := frameFunction_attains_sup hf.neg hnegM
+  refine ⟨p₀, hp₀, fun t ht => ?_⟩
+  have h := hp₀max t ht
+  linarith
+
 end
 end Gleason

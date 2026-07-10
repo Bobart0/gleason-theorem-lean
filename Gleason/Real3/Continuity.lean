@@ -1,23 +1,23 @@
 import Gleason.Real3.Descent
 
 /-!
-# De la continuité en un point à la continuité partout (CKM §2 fin)
+# (Historique) De la continuité en un point à la continuité partout
 
-Une frame function continue en UN point de la sphère est continue PARTOUT : la
-structure de frame function transporte la continuité le long des bases orthonormées.
+Ce fichier contenait un énoncé provisoire (M2, `frameFunction_continuousOn`,
+jamais prouvé) supposant qu'on pourrait obtenir les valeurs extrémales d'une
+frame function via un argument de continuité transportée le long des bases
+orthonormées. Ce n'est PAS la structure réelle de CKM 1985 §6 : l'attention du
+sup/inf s'obtient par un argument d'ULTRAFILTRE (l'espace produit `[2m,2M]^S`
+n'étant pas métrisable, pas de sous-suites ni de continuité globale
+nécessaire) — voir `Gleason.Real3.Attainment` (`frameFunction_attains_sup`,
+`frameFunction_attains_inf`), qui remplace entièrement ce fichier. Conservé
+comme point d'import intermédiaire (`Regular.lean` l'importe encore) ; acté
+dans `SORRIES.md`, bloc G.
 -/
 
 namespace Gleason
 
 noncomputable section
-
-/-- (Provisoire, M2) Continuité globale sur la sphère à partir d'un point de
-continuité. -/
-theorem frameFunction_continuousOn (f : E3 → ℝ) (W : ℝ)
-    (hf : IsFrameFunction f W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ f x)
-    (heven : ∀ x, f (-x) = f x) :
-    ContinuousOn f (Metric.sphere (0 : E3) 1) := by
-  sorry
 
 end
 end Gleason
