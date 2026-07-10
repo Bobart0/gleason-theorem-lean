@@ -94,7 +94,27 @@ private theorem simplex_halve (g : ℝ → ℝ)
     (hsplit : ∀ x u : ℝ, u ∈ Set.Icc (0 : ℝ) 1 → x ∈ Set.Icc (0 : ℝ) 1 → u ≤ x →
       g x = g u + g (x - u)) :
     ∀ x ∈ Set.Icc (0 : ℝ) 1, ∀ n : ℕ, g (x / 2 ^ n) = g x / 2 ^ n := by
-  sorry
+  have hhalf : ∀ x ∈ Set.Icc (0 : ℝ) 1, g (x / 2) = g x / 2 := by
+    intro x hx
+    obtain ⟨hx0, hx1⟩ := hx
+    have hu : x / 2 ∈ Set.Icc (0 : ℝ) 1 := ⟨by linarith, by linarith⟩
+    have heq := hsplit x (x / 2) hu ⟨hx0, hx1⟩ (by linarith)
+    have hsub : x - x / 2 = x / 2 := by ring
+    rw [hsub] at heq
+    linarith
+  have main : ∀ n : ℕ, ∀ x ∈ Set.Icc (0 : ℝ) 1, g (x / 2 ^ n) = g x / 2 ^ n := by
+    intro n
+    induction n with
+    | zero => intro x _; simp
+    | succ n ih =>
+      intro x hx
+      obtain ⟨hx0, hx1⟩ := hx
+      have hx2 : x / 2 ∈ Set.Icc (0 : ℝ) 1 := ⟨by linarith, by linarith⟩
+      have step1 : x / 2 ^ (n + 1) = (x / 2) / 2 ^ n := by rw [pow_succ]; ring
+      rw [step1, ih (x / 2) hx2, hhalf x ⟨hx0, hx1⟩, pow_succ]
+      ring
+  intro x hx n
+  exact main n x hx
 
 /-- **Étape 3b (multiples entiers, base réelle arbitraire).** Récurrence sur `k`
 via `simplex_split` (avec `u = k * t`, `x = (k+1) * t`) : `g (k * t) = k * g t`
