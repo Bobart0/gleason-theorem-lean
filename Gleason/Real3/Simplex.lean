@@ -79,7 +79,14 @@ private theorem simplex_split (g : ℝ → ℝ) (hg0 : g 0 = 0)
       g x + g y = g u + g v) :
     ∀ x u : ℝ, u ∈ Set.Icc (0 : ℝ) 1 → x ∈ Set.Icc (0 : ℝ) 1 → u ≤ x →
       g x = g u + g (x - u) := by
-  sorry
+  intro x u hu hx hux
+  obtain ⟨hu0, hu1⟩ := hu
+  obtain ⟨hx0, hx1⟩ := hx
+  have hv : x - u ∈ Set.Icc (0 : ℝ) 1 := ⟨by linarith, by linarith⟩
+  have h0mem : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 1 := ⟨le_refl 0, zero_le_one⟩
+  have heq := hgadd x 0 u (x - u) ⟨hx0, hx1⟩ h0mem ⟨hu0, hu1⟩ hv (by ring)
+  rw [hg0] at heq
+  linarith
 
 /-- **Étape 3a (halving).** Récurrence sur `n` via `simplex_split` (avec
 `u = x / 2`) : `g (x / 2^n) = g x / 2^n` pour `x ∈ [0,1]`. -/
