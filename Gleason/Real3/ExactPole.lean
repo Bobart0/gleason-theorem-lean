@@ -39,6 +39,7 @@ variable {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction f W) {p : E3} (
   (hmlb : ∀ t : E3, ‖t‖ = 1 → m₀ ≤ f t)
   (hm : ∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m₀ + ε)
   (hconst : ∀ e ∈ equator p, f e = c)
+  (hcm : c < f p)
 
 include hf hmax in
 /-- **F1a.** `hmax` fournit gratuitement un minorant explicite (non optimal) :
@@ -313,6 +314,172 @@ theorem latInf_additive_of_not_mem_gap {l₁ l₂ l₃ : ℝ}
     latClass_const_of_not_mem_gap hp hmax hmlb h3 hl3le h3C hs2N (hls2.trans hb2)
   rw [← e0, ← e1, ← e2]
   exact hsum_f
+
+/-- **F5 (préliminaire, cardinalité).** Un sous-ensemble dénombrable de ℝ ne
+peut couvrir un intervalle `(a,b)` non vide (`Cardinal.mk_Ioo_real` = continuum
+`> ℵ₀`). Fait général, indépendant du paquet d'hypothèses de la section. -/
+theorem exists_not_mem_of_countable {D : Set ℝ} (hD : D.Countable) {a b : ℝ} (hab : a < b) :
+    ∃ x ∈ Set.Ioo a b, x ∉ D := by
+  have hUncount : ¬ (Set.Ioo a b).Countable := by
+    intro hcount
+    have h1 : Cardinal.mk (Set.Ioo a b) ≤ Cardinal.aleph0 :=
+      Cardinal.le_aleph0_iff_set_countable.mpr hcount
+    rw [Cardinal.mk_Ioo_real hab] at h1
+    exact absurd h1 (not_le.mpr Cardinal.aleph0_lt_continuum)
+  have hnotsub : ¬ Set.Ioo a b ⊆ D := fun hsub => hUncount (hD.mono hsub)
+  exact Set.not_subset.mp hnotsub
+
+include hp hconst in
+/-- **F5 (préliminaire).** `l ∉ C` entraîne `¬(latInf l < latSup l)` : cas
+`l = 0`, `l = 1` (F2d/F2e, égalité directe) ou `l ∈ (0,1)` (extraction directe
+depuis `l ∉ C`). -/
+theorem not_gap_of_not_mem_C {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1)
+    (hlC : l ∉ {l ∈ Set.Ioo (0 : ℝ) 1 | latInf f p l < latSup f p l}) :
+    ¬(latInf f p l < latSup f p l) := by
+  rcases hl0.eq_or_lt with h0 | h0
+  · rw [← h0, latInf_zero hp hconst, latSup_zero hp hconst]; exact lt_irrefl c
+  rcases hl1.eq_or_lt with h1 | h1
+  · rw [h1, latInf_one hp, latSup_one hp]; exact lt_irrefl (f p)
+  · intro hcon
+    exact hlC ⟨⟨h0, h1⟩, hcon⟩
+
+include hf hp hmax hmlb hm hconst in
+/-- **F5 (monotonie globale de `latInf`).** `l ≤ l' → latInf l ≤ latInf l'`
+(sans restriction hors-`C` : `latInf l ≤ latSup l ≤ latInf l'` par F4a puis
+F2b). -/
+theorem latInf_mono {l l' : ℝ} (hl0 : 0 ≤ l) (hl'1 : l' ≤ 1) (hle : l ≤ l') :
+    latInf f p l ≤ latInf f p l' := by
+  rcases hle.eq_or_lt with heq | hlt
+  · rw [heq]
+  · have h1 := latInf_le_latSup hp hmax hmlb hl0 (hlt.le.trans hl'1)
+    have h2 := latSup_le_latInf_of_lt hf hp hmax hmlb hm hconst hl0 hl'1 hlt
+    linarith
+
+include hf hp hmax hmlb hm hconst in
+/-- **F5 (monotonie globale de `latSup`, symétrique).** -/
+theorem latSup_mono {l l' : ℝ} (hl0 : 0 ≤ l) (hl'1 : l' ≤ 1) (hle : l ≤ l') :
+    latSup f p l ≤ latSup f p l' := by
+  rcases hle.eq_or_lt with heq | hlt
+  · rw [heq]
+  · have hl'0 : 0 ≤ l' := hl0.trans hle
+    have h1 := latSup_le_latInf_of_lt hf hp hmax hmlb hm hconst hl0 hl'1 hlt
+    have h2 := latInf_le_latSup hp hmax hmlb hl'0 hl'1
+    linarith
+
+include hf hp hmax hmlb hm hconst hcm in
+/-- **F5 (Warmup II).** Hors de `C` (l'écart dénombrable, F3), `latInf` est
+exactement affine : application de `warmup_II` (bloc D) à
+`G(l) := (latInf l - c)/(f p - c)`, avec `G 0 = 0` (F2d), monotonie (F4a+F2b)
+et additivité-à-1 (F4c + F5-not_gap). -/
+theorem latInf_eq_affine_of_not_mem_C :
+    ∀ l ∈ Set.Icc (0 : ℝ) 1 \ {l ∈ Set.Ioo (0 : ℝ) 1 | latInf f p l < latSup f p l},
+      latInf f p l = c + (f p - c) * l := by
+  have hne : f p - c ≠ 0 := by linarith
+  set C : Set ℝ := {l ∈ Set.Ioo (0 : ℝ) 1 | latInf f p l < latSup f p l} with hC_def
+  set G : ℝ → ℝ := fun l => (latInf f p l - c) / (f p - c) with hG_def
+  have hG0 : G 0 = 0 := by simp only [hG_def, latInf_zero hp hconst, sub_self, zero_div]
+  have hGmono : ∀ a b, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C → a ≤ b →
+      G a ≤ G b := by
+    intro a b ha hb hab
+    have hle := latInf_mono hf hp hmax hmlb hm hconst ha.1.1 hb.1.2 hab
+    have hcm' : 0 < f p - c := by linarith
+    simp only [hG_def]
+    gcongr
+  have hGtriple : ∀ a b d, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
+      d ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + d = 1 → G a + G b + G d = 1 := by
+    intro a b d ha hb hd hsum
+    have hadd := latInf_additive_of_not_mem_gap hf hp hmax hmlb ha.1.1 hb.1.1 hd.1.1 hsum
+      (not_gap_of_not_mem_C hp hconst ha.1.1 ha.1.2 ha.2)
+      (not_gap_of_not_mem_C hp hconst hb.1.1 hb.1.2 hb.2)
+      (not_gap_of_not_mem_C hp hconst hd.1.1 hd.1.2 hd.2)
+    have hweight := weight_eq_pole_add_equator hf hp hconst
+    simp only [hG_def]
+    rw [← add_div, ← add_div, div_eq_one_iff_eq hne]
+    linarith [hadd, hweight]
+  have hwarm := warmup_II C (countable_latGap hf hp hmax hmlb hm hconst)
+    (fun l hl => hl.1) G hG0 hGmono hGtriple
+  intro l hl
+  have hG := hwarm l hl
+  simp only [hG_def] at hG
+  rw [div_eq_iff hne] at hG
+  linear_combination hG
+
+include hf hp hmax hmlb hm hconst hcm in
+/-- **F5 (densité, direction basse).** `target l ≤ latInf l` pour tout
+`l ∈ [0,1]` : approche par `l₁ < l` hors de `C` (`exists_not_mem_of_countable`),
+`latInf l₁ = target l₁` (F5 précédent), `latInf l₁ ≤ latInf l` (monotonie),
+`target l₁ → target l` quand `l₁ → l`. -/
+theorem target_le_latInf {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1) :
+    c + (f p - c) * l ≤ latInf f p l := by
+  rcases hl0.eq_or_lt with hl00 | hlpos
+  · rw [← hl00, latInf_zero hp hconst, mul_zero, add_zero]
+  refine le_of_forall_pos_lt_add (fun ε hε => ?_)
+  set η : ℝ := min (ε / (2 * (f p - c))) (l / 2) with hη_def
+  have hηpos : 0 < η := lt_min (by positivity) (by linarith)
+  have hηl : η < l := lt_of_le_of_lt (min_le_right _ _) (by linarith)
+  have hηε : (f p - c) * η ≤ ε / 2 := by
+    have h1 : η ≤ ε / (2 * (f p - c)) := min_le_left _ _
+    have h2 := mul_le_mul_of_nonneg_left h1 (by linarith : (0 : ℝ) ≤ f p - c)
+    have h3 : (f p - c) * (ε / (2 * (f p - c))) = ε / 2 := by
+      have hcm'' : f p - c ≠ 0 := by linarith
+      field_simp
+    linarith [h2, h3]
+  obtain ⟨l₁, hl₁mem, hl₁notC⟩ :=
+    exists_not_mem_of_countable (countable_latGap hf hp hmax hmlb hm hconst)
+      (show l - η < l by linarith)
+  have hl₁0 : 0 ≤ l₁ := by linarith [hl₁mem.1]
+  have hl₁1 : l₁ ≤ 1 := by linarith [hl₁mem.2]
+  have hl₁C : l₁ ∈ Set.Icc (0 : ℝ) 1 \ {l ∈ Set.Ioo (0 : ℝ) 1 | latInf f p l < latSup f p l} :=
+    ⟨⟨hl₁0, hl₁1⟩, hl₁notC⟩
+  have haffine := latInf_eq_affine_of_not_mem_C hf hp hmax hmlb hm hconst hcm l₁ hl₁C
+  have hmono : latInf f p l₁ ≤ latInf f p l :=
+    latInf_mono hf hp hmax hmlb hm hconst hl₁0 hl1 hl₁mem.2.le
+  have hcm' : 0 < f p - c := by linarith
+  nlinarith [haffine, hmono, hηε, hl₁mem.1, hcm']
+
+include hf hp hmax hmlb hm hconst hcm in
+/-- **F5 (densité, direction haute, symétrique).** `latSup l ≤ target l`. -/
+theorem latSup_le_target {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1) :
+    latSup f p l ≤ c + (f p - c) * l := by
+  rcases hl1.eq_or_lt with hl11 | hlpos
+  · rw [hl11, latSup_one hp, mul_one]; linarith
+  refine le_of_forall_pos_lt_add (fun ε hε => ?_)
+  set η : ℝ := min (ε / (2 * (f p - c))) ((1 - l) / 2) with hη_def
+  have hηpos : 0 < η := lt_min (by positivity) (by linarith)
+  have hηl : η < 1 - l := lt_of_le_of_lt (min_le_right _ _) (by linarith)
+  have hηε : (f p - c) * η ≤ ε / 2 := by
+    have h1 : η ≤ ε / (2 * (f p - c)) := min_le_left _ _
+    have h2 := mul_le_mul_of_nonneg_left h1 (by linarith : (0 : ℝ) ≤ f p - c)
+    have h3 : (f p - c) * (ε / (2 * (f p - c))) = ε / 2 := by
+      have hcm'' : f p - c ≠ 0 := by linarith
+      field_simp
+    linarith [h2, h3]
+  obtain ⟨l₂, hl₂mem, hl₂notC⟩ :=
+    exists_not_mem_of_countable (countable_latGap hf hp hmax hmlb hm hconst)
+      (show l < l + η by linarith)
+  have hl₂0 : 0 ≤ l₂ := by linarith [hl₂mem.1]
+  have hl₂1 : l₂ ≤ 1 := by linarith [hl₂mem.2]
+  have hl₂C : l₂ ∈ Set.Icc (0 : ℝ) 1 \ {l ∈ Set.Ioo (0 : ℝ) 1 | latInf f p l < latSup f p l} :=
+    ⟨⟨hl₂0, hl₂1⟩, hl₂notC⟩
+  have haffine := latInf_eq_affine_of_not_mem_C hf hp hmax hmlb hm hconst hcm l₂ hl₂C
+  have hle₂ : latSup f p l₂ = latInf f p l₂ := by
+    have h1 := latInf_le_latSup hp hmax hmlb hl₂0 hl₂1
+    have h2 := not_gap_of_not_mem_C hp hconst hl₂0 hl₂1 hl₂notC
+    linarith [not_lt.mp h2]
+  have hmono : latSup f p l ≤ latSup f p l₂ :=
+    latSup_mono hf hp hmax hmlb hm hconst hl0 hl₂1 hl₂mem.1.le
+  have hcm' : 0 < f p - c := by linarith
+  nlinarith [haffine, hmono, hle₂, hηε, hl₂mem.2, hcm']
+
+include hf hp hmax hmlb hm hconst hcm in
+/-- **F5 (assemblage).** `latInf l = latSup l = c + (f p - c)·l` pour tout
+`l ∈ [0,1]` (sandwich `target l ≤ latInf l ≤ latSup l ≤ target l`). -/
+theorem latInf_eq_latSup_eq_affine {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1) :
+    latInf f p l = c + (f p - c) * l ∧ latSup f p l = c + (f p - c) * l := by
+  have h1 := target_le_latInf hf hp hmax hmlb hm hconst hcm hl0 hl1
+  have h2 := latInf_le_latSup hp hmax hmlb hl0 hl1
+  have h3 := latSup_le_target hf hp hmax hmlb hm hconst hcm hl0 hl1
+  exact ⟨by linarith, by linarith⟩
 
 end ExactPoleSetup
 
