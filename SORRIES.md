@@ -26,7 +26,9 @@
 - [ ] B. Géométrie du pôle : latitude, E, N, s^⊥ explicite, D_s + 3 faits
       (point⊥s de D_s ∈ E ; latitudes d'un frame Σ=1 ; réalisabilité des latitudes)
 - [ ] C. basic_lemma + version approchée (§4 ; courts une fois A+B faits)
-- [ ] D. warmup_II : monotone + co-dénombrable + additif-à-1 ⇒ identité (§3)
+- [x] D. warmup_II : monotone + co-dénombrable + additif-à-1 ⇒ identité (§3)
+      — Simplex.lean, 7 sous-lemmes (D1..D6-existence, D5) + assemblage,
+      route cardinale pour la non-dénombrabilité de Ioo 0 1
 - [ ] E. piron_chain : chaîne de descentes, l(s)>l(t) (§5, spirale tan/cos) [DUR]
 - [ ] F. frameFunction_exact_pole : f̄/f_, C dénombrable, Warmup II, C=∅ (§5)
 - [ ] G. frameFunction_attains_extrema : Tychonoff + rotations + cas radial (§6) [DUR]

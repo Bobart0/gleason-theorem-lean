@@ -547,11 +547,27 @@ donne `β·b + β·(1-b) = β = 1`. -/
 private theorem warmup_II_D6 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
     (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
       c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1)
-    {a₀ : ℝ} (ha₀ : a₀ ∈ Set.Ioo (0 : ℝ) 1)
+    {a₀ : ℝ} (hgen : ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
+      (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C)
     (hD5 : ∀ a ∈ Set.Ico (0 : ℝ) 1 \ C, f a = (f a₀ / a₀) * a)
     {b : ℝ} (hb : b ∈ Set.Ioo (0 : ℝ) 1) (hbC : b ∉ C) (hbC' : 1 - b ∉ C) :
     f a₀ / a₀ = 1 := by
-  sorry
+  have h0C : (0 : ℝ) ∉ C := by simpa using (hgen 0 1 one_pos (by norm_num)).1
+  have h0mem : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 1 \ C := ⟨⟨le_refl 0, zero_le_one⟩, h0C⟩
+  have hbmem : b ∈ Set.Icc (0 : ℝ) 1 \ C := ⟨⟨hb.1.le, hb.2.le⟩, hbC⟩
+  have hb'mem : (1 - b) ∈ Set.Icc (0 : ℝ) 1 \ C :=
+    ⟨⟨by linarith [hb.2], by linarith [hb.1]⟩, hbC'⟩
+  have htr := htriple b (1 - b) 0 hbmem hb'mem h0mem (by ring)
+  rw [hf0] at htr
+  have hbIco : b ∈ Set.Ico (0 : ℝ) 1 \ C := ⟨⟨hb.1.le, hb.2⟩, hbC⟩
+  have hb'Ico : (1 - b) ∈ Set.Ico (0 : ℝ) 1 \ C :=
+    ⟨⟨by linarith [hb.2], by linarith [hb.1]⟩, hbC'⟩
+  have hfb := hD5 b hbIco
+  have hfb' := hD5 (1 - b) hb'Ico
+  rw [hfb, hfb'] at htr
+  have hfactor : f a₀ / a₀ * b + f a₀ / a₀ * (1 - b) = f a₀ / a₀ := by ring
+  rw [hfactor] at htr
+  linarith
 
 /-- **D7 / Warmup Theorem II (CKM 1985 §3).** Si `f` est monotone et
 « additive-à-1 » sur `[0,1] \ C` (`C` dénombrable, `C ⊆ (0,1)`), avec `f 0 = 0`,
@@ -567,7 +583,7 @@ theorem warmup_II (C : Set ℝ) (hC : C.Countable) (hCsub : C ⊆ Set.Ioo (0 : �
   have hD4 := warmup_II_D4 f hf0 htriple ha₀ hgen
   have hD5 := warmup_II_D5 f hf0 hmono ha₀ hgen hD4
   obtain ⟨b, hb, hbC, hbC'⟩ := warmup_II_D6_exists hC
-  have hβ := warmup_II_D6 f hf0 htriple ha₀ hD5 hb hbC hbC'
+  have hβ := warmup_II_D6 f hf0 htriple hgen hD5 hb hbC hbC'
   intro a ha
   obtain ⟨ha01, haC⟩ := ha
   rcases ha01.2.lt_or_eq with hlt | heq
