@@ -93,5 +93,30 @@ theorem IsFrameFunction.le_of_nonneg {f : E3 → ℝ} {W : ℝ}
   have hn2 : 0 ≤ f (b 2) := hnn (b 2) (b.norm_eq_one 2)
   linarith
 
+/-- **P2 (parité).** `f(-s) = f(s)` : on remplace `b 0` par `-(b 0)` dans une base
+contenant `s`, les deux triplets sont orthonormés (retournement de signe préserve
+normes et orthogonalité). -/
+theorem frameFunction_even {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
+    (s : E3) (hs : ‖s‖ = 1) : f (-s) = f s := by
+  obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst s hs
+  have hnorm : ∀ i, ‖(![-(b 0), b 1, b 2] : Fin 3 → E3) i‖ = 1 := by
+    intro i; fin_cases i <;> simp [b.norm_eq_one]
+  have hperp : Pairwise (fun i j =>
+      ⟪(![-(b 0), b 1, b 2] : Fin 3 → E3) i, (![-(b 0), b 1, b 2] : Fin 3 → E3) j⟫ = 0) := by
+    intro i j hij
+    fin_cases i <;> fin_cases j <;>
+      first
+        | exact absurd rfl hij
+        | simp [inner_neg_left, inner_neg_right, b.inner_eq_ite]
+  obtain ⟨b', hb'⟩ := exists_orthonormalBasis_of_triple _ hnorm hperp
+  have h1 := hf b
+  have h2 := hf b'
+  rw [Fin.sum_univ_three] at h1 h2
+  rw [hb' 0, hb' 1, hb' 2] at h2
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+             Matrix.cons_val_two, Matrix.tail_cons] at h2
+  rw [hb0] at h1 h2
+  linarith
+
 end
 end Gleason
