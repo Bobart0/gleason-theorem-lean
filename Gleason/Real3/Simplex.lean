@@ -23,8 +23,7 @@ namespace Gleason
    GLOBAL), ne s'applique pas ici car `g` n'est défini que sur `[0,1]` avec
    une additivité restreinte (pas un morphisme sur `ℝ` tout entier) : l'argument
    classique « f(nx) mod 1 » suppose un domaine global. Il faut donc l'argument
-   dyadique à la main (étapes ci-dessous). Statut : SQUELETTE, tout est `sorry`
-   sauf l'assemblage final qui compose les lemmes (validé par `lake build`).
+   dyadique à la main (étapes ci-dessous, toutes prouvées : 0 `sorry`).
    ═══════════════════════════════════════════════════════════════════ -/
 
 /-- **Étape 1.** `g x := h x - h 0 - x * (h 1 - h 0)` s'annule en `0` et en `1`,
@@ -178,18 +177,75 @@ private theorem simplex_dyadic_vanish (g : ℝ → ℝ) (hg1 : g 1 = 0)
 
 /-- **Étape 4 (le cœur analytique).** Pour `x ∈ [0,1]` et tout `n`, en posant
 `k = ⌊x·2^n⌋` et `r = x - k/2^n ∈ [0, 1/2^n)`, `simplex_split` donne
-`g x = g (k/2^n) + g r = g r` (dyadique nul). Puis `simplex_halve` appliqué à
-`y = r·2^n ∈ [0,1)` donne `g r = g y / 2^n`, donc `|g x| ≤ C / 2^n` pour tout `n` :
-`g x = 0` par la propriété d'Archimède. C'est ici, et seulement ici, que la
-bornitude de `g` est utilisée. -/
+`g x = g (k/2^n) + g r = g r` (dyadique nul). Puis `simplex_nat_mul` en
+`k' = 2^n`, `t = r` (licite car `2^n · r < 1`) donne
+`g (2^n · r) = 2^n · g r`, donc `|g r| ≤ C / 2^n` (bornitude de `g (2^n r)`
+via `hb`), d'où `|g x| ≤ C / 2^n` pour tout `n` : `g x = 0` par la propriété
+d'Archimède. C'est ici, et seulement ici, que la bornitude de `g` est
+utilisée. -/
 private theorem simplex_vanish (g : ℝ → ℝ) (C : ℝ)
     (hb : ∀ x ∈ Set.Icc (0 : ℝ) 1, |g x| ≤ C)
     (hsplit : ∀ x u : ℝ, u ∈ Set.Icc (0 : ℝ) 1 → x ∈ Set.Icc (0 : ℝ) 1 → u ≤ x →
       g x = g u + g (x - u))
-    (hhalve : ∀ x ∈ Set.Icc (0 : ℝ) 1, ∀ n : ℕ, g (x / 2 ^ n) = g x / 2 ^ n)
+    (hmul : ∀ (k : ℕ) (t : ℝ), 0 ≤ t → (k : ℝ) * t ≤ 1 → g ((k : ℝ) * t) = (k : ℝ) * g t)
     (hdyadic : ∀ n k : ℕ, k ≤ 2 ^ n → g ((k : ℝ) / 2 ^ n) = 0) :
     ∀ x ∈ Set.Icc (0 : ℝ) 1, g x = 0 := by
-  sorry
+  intro x hx
+  obtain ⟨hx0, hx1⟩ := hx
+  have hC0 : 0 ≤ C := le_trans (abs_nonneg _) (hb 0 ⟨le_refl 0, zero_le_one⟩)
+  have hbound : ∀ n : ℕ, |g x| ≤ C / 2 ^ n := by
+    intro n
+    have hpow_pos : (0:ℝ) < 2 ^ n := by positivity
+    set y : ℝ := (2 : ℝ) ^ n * x with hy_def
+    have hy0 : 0 ≤ y := by positivity
+    have hm0 : 0 ≤ ⌊y⌋ := Int.le_floor.mpr (by simpa using hy0)
+    set k : ℕ := ⌊y⌋.toNat with hk_def
+    have hk_cast : (k : ℤ) = ⌊y⌋ := Int.toNat_of_nonneg hm0
+    have hk_cast' : (k : ℝ) = (⌊y⌋ : ℝ) := by exact_mod_cast hk_cast
+    have hyle : y ≤ (2 : ℝ) ^ n := by rw [hy_def]; nlinarith
+    have hkle : k ≤ 2 ^ n := by
+      have h1 : ⌊y⌋ ≤ ⌊(2 : ℝ) ^ n⌋ := Int.floor_le_floor hyle
+      rw [show ((2 : ℝ) ^ n) = ((2 ^ n : ℕ) : ℝ) by push_cast; ring,
+          Int.floor_natCast] at h1
+      have h2 : (k : ℤ) ≤ (2 ^ n : ℕ) := hk_cast ▸ h1
+      exact_mod_cast h2
+    have hd_le_x : (k : ℝ) / 2 ^ n ≤ x := by
+      rw [hk_cast', div_le_iff₀ hpow_pos]
+      have := Int.floor_le y
+      rw [hy_def] at this
+      linarith
+    have hd_mem : (k : ℝ) / 2 ^ n ∈ Set.Icc (0 : ℝ) 1 :=
+      ⟨by positivity, by linarith⟩
+    have hgd : g ((k : ℝ) / 2 ^ n) = 0 := hdyadic n k hkle
+    have hsplit_eq := hsplit x ((k : ℝ) / 2 ^ n) hd_mem ⟨hx0, hx1⟩ hd_le_x
+    rw [hgd, zero_add] at hsplit_eq
+    set r : ℝ := x - (k : ℝ) / 2 ^ n with hr_def
+    have hr0 : 0 ≤ r := by rw [hr_def]; linarith
+    have hr_lt : (2 : ℝ) ^ n * r < 1 := by
+      have hlt := Int.lt_floor_add_one y
+      rw [hy_def] at hlt
+      have hexpand : (2 : ℝ) ^ n * r = (2 : ℝ) ^ n * x - (k : ℝ) := by
+        rw [hr_def, hk_cast']; field_simp
+      rw [hexpand]
+      linarith
+    have hr_le : (2 : ℝ) ^ n * r ≤ 1 := le_of_lt hr_lt
+    have hmul_eq := hmul (2 ^ n) r hr0 (by push_cast; exact hr_le)
+    rw [show ((2 ^ n : ℕ) : ℝ) = (2 : ℝ) ^ n by push_cast; ring] at hmul_eq
+    have hmem2r : (2 : ℝ) ^ n * r ∈ Set.Icc (0 : ℝ) 1 := ⟨by positivity, hr_le⟩
+    have hb2r : |g ((2 : ℝ) ^ n * r)| ≤ C := hb _ hmem2r
+    have hgr_bound : |g r| ≤ C / 2 ^ n := by
+      rw [hmul_eq, abs_mul, abs_of_pos hpow_pos] at hb2r
+      rw [le_div_iff₀ hpow_pos]
+      linarith
+    rw [hsplit_eq]
+    exact hgr_bound
+  by_contra hne
+  have hpos : 0 < |g x| := abs_pos.mpr hne
+  obtain ⟨n, hn⟩ := pow_unbounded_of_one_lt (C / |g x|) (by norm_num : (1:ℝ) < 2)
+  rw [div_lt_iff₀ hpos] at hn
+  have hb2 := hbound n
+  rw [le_div_iff₀ (by positivity : (0:ℝ) < 2 ^ n)] at hb2
+  linarith
 
 /-- **Étape 5 / Lemme du simplexe (assemblage final).** `g ≡ 0` sur `[0,1]` se
 retraduit en `h x = a * x + b` avec `a = h 1 - h 0`, `b = h 0`. Si `h` est bornée
@@ -207,7 +263,7 @@ theorem bounded_additive_affine (h : ℝ → ℝ) (C : ℝ)
   have hmul := simplex_nat_mul (fun x => h x - h 0 - x * (h 1 - h 0)) hsplit
   have hdyadic := simplex_dyadic_vanish (fun x => h x - h 0 - x * (h 1 - h 0)) hg1 hhalve hmul
   have hvanish := simplex_vanish (fun x => h x - h 0 - x * (h 1 - h 0)) (4 * C) hgb hsplit
-    hhalve hdyadic
+    hmul hdyadic
   refine ⟨h 1 - h 0, h 0, fun x hx => ?_⟩
   have hgx : h x - h 0 - x * (h 1 - h 0) = 0 := hvanish x hx
   linarith
