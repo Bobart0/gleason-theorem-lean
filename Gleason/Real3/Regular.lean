@@ -586,7 +586,55 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
           rw [hq2zero] at hclaim_h
           have hr2'M2 : h r2' = -(h p2) := by rw [hr2'eq]; linarith [hMm2eq]
           -- `hclaim_h : ∀ s, ‖s‖=1 → (6 cond en p2,q2,r2') → h s = h(p2)*⟪p2,s⟫² - h(p2)*⟪r2',s⟫²`
-          sorry -- H9
+          -- **H9 (CKM §7, fin).** `M2 := h p2 > 0` (strict) et deux points diagonaux
+          -- NON PRIMÉS `u,w` (combinaisons de p,q,r) forcés dans le cercle primé
+          -- `Γ := {x2 = y2}` par un argument de tiroirs (2 issues possibles pour
+          -- chaque zéro de `h` sur `Γ`, cf. `hclaim_h` + `hh_zero`), donnant
+          -- `r2' ∈ span{u,w} ⊆ {y = z}` (non primé) donc `h r2' = 0`, contredisant
+          -- `h r2' = -M2 ≠ 0`.
+          set M2 : ℝ := h p2 with hM2_def
+          have hM2pos : 0 < M2 := by
+            rcases hM2nonneg.lt_or_eq with hM20 | hM20
+            · exact hM20
+            · exact absurd (by linarith [hMm2eq, hM20, hM2_def] : h p2 = h r2) hMm2
+          -- Rend `g`, `h`, `Q0`, `M2` opaques : leur définition ne sert plus, seules
+          -- les propriétés déjà établies (hhframe, hh_zero, hclaim_h, hQ0_apply...)
+          -- sont utilisées à partir d'ici (cf. CLAUDE.md, pattern anti-lenteur).
+          clear_value Q0 M2 h g
+          have hqp : ⟪q, p⟫ = 0 := by rw [real_inner_comm]; exact hpq
+          have hrp : ⟪r, p⟫ = 0 := by rw [real_inner_comm]; exact hpr
+          have hrq : ⟪r, q⟫ = 0 := by rw [real_inner_comm]; exact hqr
+          set u : E3 := (Real.sqrt 3)⁻¹ • (p + q + r) with hu_def
+          set w : E3 := (Real.sqrt 3)⁻¹ • (p - q - r) with hw_def
+          have h3sq : Real.sqrt 3 * Real.sqrt 3 = 3 := Real.mul_self_sqrt (by norm_num)
+          have hinner_uu : ⟪p + q + r, p + q + r⟫ = 3 := by
+            simp only [inner_add_left, inner_add_right, real_inner_self_eq_norm_sq, hp, hq, hr,
+              hpq, hpr, hqr, hqp, hrp, hrq]
+            norm_num
+          have hinner_ww : ⟪p - q - r, p - q - r⟫ = 3 := by
+            simp only [inner_sub_left, inner_sub_right, real_inner_self_eq_norm_sq, hp, hq, hr,
+              hpq, hpr, hqr, hqp, hrp, hrq]
+            norm_num
+          have hsqrt3_eq : (Real.sqrt 3)⁻¹ * ((Real.sqrt 3)⁻¹ * 3) = 1 := by
+            rw [← mul_assoc, ← mul_inv, h3sq]
+            norm_num
+          have hu_norm : ‖u‖ = 1 := by
+            have h2 : ‖u‖ ^ 2 = 1 := by
+              rw [← real_inner_self_eq_norm_sq, hu_def, real_inner_smul_left,
+                real_inner_smul_right, hinner_uu]
+              exact hsqrt3_eq
+            have hh := Real.sqrt_sq (norm_nonneg u)
+            rw [h2, Real.sqrt_one] at hh
+            exact hh.symm
+          have hw_norm : ‖w‖ = 1 := by
+            have h2 : ‖w‖ ^ 2 = 1 := by
+              rw [← real_inner_self_eq_norm_sq, hw_def, real_inner_smul_left,
+                real_inner_smul_right, hinner_ww]
+              exact hsqrt3_eq
+            have hh := Real.sqrt_sq (norm_nonneg w)
+            rw [h2, Real.sqrt_one] at hh
+            exact hh.symm
+          sorry -- H9 (suite)
 
 end
 end Gleason
