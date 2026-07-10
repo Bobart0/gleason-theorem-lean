@@ -285,7 +285,15 @@ private theorem warmup_II_D1 {C : Set ℝ} (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) (
     (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
       c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1) :
     f 1 = 1 := by
-  sorry
+  have h0 : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 1 \ C := by
+    refine ⟨⟨le_refl 0, zero_le_one⟩, fun hc => ?_⟩
+    exact absurd (hCsub hc).1 (lt_irrefl 0)
+  have h1 : (1 : ℝ) ∈ Set.Icc (0 : ℝ) 1 \ C := by
+    refine ⟨⟨zero_le_one, le_refl 1⟩, fun hc => ?_⟩
+    exact absurd (hCsub hc).2 (lt_irrefl 1)
+  have h := htriple 0 0 1 h0 h0 h1 (by ring)
+  rw [hf0] at h
+  linarith
 
 /-- **D2.** Il existe un point `a₀ ∈ (0,1)` « générique » : pour tous `p q : ℕ`
 avec `q > 0` et `(p/q)·a₀ ≤ 1`, ni `(p/q)·a₀` ni `1 - (p/q)·a₀` ne sont dans `C`.
