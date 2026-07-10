@@ -248,6 +248,72 @@ theorem countable_latGap :
       exact (by exact_mod_cast hlt' : q l₂ < q l₁).ne heq.symm
   exact Set.MapsTo.countable_of_injOn (Set.mapsTo_univ q C) hInj Set.countable_univ
 
+include hp hmax hmlb in
+/-- **F4a (préliminaire).** `latInf l ≤ latSup l` toujours (`csInf_le_csSup`). -/
+theorem latInf_le_latSup {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1) :
+    latInf f p l ≤ latSup f p l := by
+  unfold latInf latSup
+  exact csInf_le_csSup (Set.Nonempty.image f (nonempty_latClass hp hl0 hl1))
+    (bddBelow_latClass_image hmlb l) (bddAbove_latClass_image hmax l)
+
+include hp hmax hmlb in
+/-- **F4b.** Hors de l'écart (`¬(latInf l < latSup l)`), tous les points de la
+classe de latitude `l` ont la même valeur de `f`, encadrée par `latInf l` et
+`latSup l` qui coïncident (antisymétrie). -/
+theorem latClass_const_of_not_mem_gap {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1)
+    (hlC : ¬(latInf f p l < latSup f p l)) {s : E3} (hsN : s ∈ northern p) (hls : lat p s = l) :
+    f s = latInf f p l := by
+  have hle : latInf f p l ≤ latSup f p l := latInf_le_latSup hp hmax hmlb hl0 hl1
+  have heq : latInf f p l = latSup f p l := le_antisymm hle (not_lt.mp hlC)
+  have h1 : latInf f p l ≤ f s := csInf_le (bddBelow_latClass_image hmlb l) ⟨s, ⟨hsN, hls⟩, rfl⟩
+  have h2 : f s ≤ latSup f p l := le_csSup (bddAbove_latClass_image hmax l) ⟨s, ⟨hsN, hls⟩, rfl⟩
+  linarith
+
+include hf hp hmax hmlb in
+/-- **F4c (additivité-à-1 hors de l'écart).** Pour `l₁+l₂+l₃ = 1` tous hors de
+l'écart, `latInf l₁ + latInf l₂ + latInf l₃ = W` : base de B7
+(`exists_frame_with_lat`) réalisant ces latitudes, représentants nord
+(`exists_northern_rep`), parité (`frameFunction_even`, P2) pour ramener la
+somme de trame à ces représentants, puis F4b pour identifier chaque terme. -/
+theorem latInf_additive_of_not_mem_gap {l₁ l₂ l₃ : ℝ}
+    (h1 : 0 ≤ l₁) (h2 : 0 ≤ l₂) (h3 : 0 ≤ l₃) (hsum : l₁ + l₂ + l₃ = 1)
+    (h1C : ¬(latInf f p l₁ < latSup f p l₁))
+    (h2C : ¬(latInf f p l₂ < latSup f p l₂))
+    (h3C : ¬(latInf f p l₃ < latSup f p l₃)) :
+    latInf f p l₁ + latInf f p l₂ + latInf f p l₃ = W := by
+  have hl1le : l₁ ≤ 1 := by linarith
+  have hl2le : l₂ ≤ 1 := by linarith
+  have hl3le : l₃ ≤ 1 := by linarith
+  obtain ⟨b, hb0, hb1, hb2⟩ := exists_frame_with_lat hp h1 h2 h3 hsum
+  obtain ⟨s0, hs0N, hls0, hs0eq⟩ := exists_northern_rep (p := p) (b.norm_eq_one 0)
+  obtain ⟨s1, hs1N, hls1, hs1eq⟩ := exists_northern_rep (p := p) (b.norm_eq_one 1)
+  obtain ⟨s2, hs2N, hls2, hs2eq⟩ := exists_northern_rep (p := p) (b.norm_eq_one 2)
+  have hfs0 : f s0 = f (b 0) := by
+    rcases hs0eq with h | h
+    · rw [h]
+    · rw [h]; exact frameFunction_even hf (b 0) (b.norm_eq_one 0)
+  have hfs1 : f s1 = f (b 1) := by
+    rcases hs1eq with h | h
+    · rw [h]
+    · rw [h]; exact frameFunction_even hf (b 1) (b.norm_eq_one 1)
+  have hfs2 : f s2 = f (b 2) := by
+    rcases hs2eq with h | h
+    · rw [h]
+    · rw [h]; exact frameFunction_even hf (b 2) (b.norm_eq_one 2)
+  have hsum_f : f s0 + f s1 + f s2 = W := by
+    have hb := hf b
+    rw [Fin.sum_univ_three] at hb
+    rw [hfs0, hfs1, hfs2]
+    exact hb
+  have e0 : f s0 = latInf f p l₁ :=
+    latClass_const_of_not_mem_gap hp hmax hmlb h1 hl1le h1C hs0N (hls0.trans hb0)
+  have e1 : f s1 = latInf f p l₂ :=
+    latClass_const_of_not_mem_gap hp hmax hmlb h2 hl2le h2C hs1N (hls1.trans hb1)
+  have e2 : f s2 = latInf f p l₃ :=
+    latClass_const_of_not_mem_gap hp hmax hmlb h3 hl3le h3C hs2N (hls2.trans hb2)
+  rw [← e0, ← e1, ← e2]
+  exact hsum_f
+
 end ExactPoleSetup
 
 end
