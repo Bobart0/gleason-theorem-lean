@@ -182,5 +182,66 @@ theorem spiral_amplification (Δ : ℝ) {ρ : ℝ} (hρ : 1 < ρ) :
   rw [inv_pow, inv_eq_one_div, div_le_iff₀ (by positivity : (0 : ℝ) < Real.cos x ^ n)]
   linarith [step1, step2, step3]
 
+/-- **E4 (assemblage, cas où la cible est sur l'équateur).** `n` pas de phase A
+(ajustement d'azimut à rayon `tan θs` croissant géométriquement, via
+`spiral_amplification` sur l'azimut cible `ψt - π/2` avec `ρ := 2` arbitraire —
+seul l'angle de pas compte ici, pas l'amplification) puis un pas équatorial
+terminal (`spherePoint_mem_descent_equatorial`) atterrissant exactement sur
+`spherePoint b (π/2) ψt`. -/
+private theorem piron_chain_equator_case {p : E3} {b : OrthonormalBasis (Fin 3) ℝ E3}
+    (hb0 : b 0 = p) {θs : ℝ} (hθs0 : 0 < θs) (hθs1 : θs < π / 2) (ψt : ℝ) :
+    ∃ (n : ℕ) (c : ℕ → E3), c 0 = spherePoint b θs 0 ∧ c n = spherePoint b (π / 2) ψt ∧
+      ∀ i < n, c i ≠ p ∧ c (i + 1) ∈ descent p (c i) := by
+  have hx0 : 0 < Real.tan θs := Real.tan_pos_of_pos_of_lt_pi_div_two hθs0 hθs1
+  have harctan_s : Real.arctan (Real.tan θs) = θs := Real.arctan_tan (by linarith) hθs1
+  set Δ' : ℝ := ψt - π / 2 with hΔ'_def
+  obtain ⟨n, hn0, hangle, -⟩ := spiral_amplification Δ' (show (1 : ℝ) < 2 by norm_num)
+  have hnR : (0 : ℝ) < n := by exact_mod_cast hn0
+  have hnne : (n : ℝ) ≠ 0 := hnR.ne'
+  set φ : ℝ := Δ' / n with hφ_def
+  have hφabs : |φ| < π / 2 := by
+    rw [hφ_def, abs_div, abs_of_pos hnR]
+    exact hangle
+  have hcosφpos : 0 < Real.cos φ := Real.cos_pos_of_mem_Ioo (abs_lt.mp hφabs)
+  set radius : ℕ → ℝ := fun i => Real.tan θs * (Real.cos φ)⁻¹ ^ i with hradius_def
+  set azimuth : ℕ → ℝ := fun i => (i : ℝ) * φ with hazimuth_def
+  have hradius_pos : ∀ i, 0 < radius i := fun i => mul_pos hx0 (by positivity)
+  have hstepA : ∀ i < n, radius (i + 1) * Real.cos (azimuth (i + 1) - azimuth i) = radius i := by
+    intro i _
+    have hazi : azimuth (i + 1) - azimuth i = φ := by rw [hazimuth_def]; push_cast; ring
+    rw [hazi]
+    simp only [hradius_def]
+    rw [pow_succ]
+    field_simp
+  have hchain := tan_chain_step b radius azimuth hradius_pos hstepA
+  have hazimuth_n : azimuth n + π / 2 = ψt := by
+    have hcancel : azimuth n = Δ' := by rw [hazimuth_def, hφ_def]; field_simp
+    rw [hcancel, hΔ'_def]; ring
+  set c : ℕ → E3 := fun i =>
+    if i ≤ n then spherePoint b (Real.arctan (radius i)) (azimuth i)
+    else spherePoint b (π / 2) ψt with hc_def
+  refine ⟨n + 1, c, ?_, ?_, ?_⟩
+  · rw [hc_def]
+    simp only [Nat.zero_le, if_true]
+    rw [hradius_def, hazimuth_def]
+    norm_num [harctan_s]
+  · rw [hc_def]
+    simp only [if_neg (show ¬ (n + 1 ≤ n) from by omega)]
+  · intro i hi
+    rcases Nat.lt_succ_iff_lt_or_eq.mp hi with hilt | hieq
+    · rw [hc_def]
+      simp only [if_pos hilt.le, if_pos (show i + 1 ≤ n from by omega)]
+      rw [← hb0]
+      exact hchain i hilt
+    · subst hieq
+      rw [hc_def]
+      simp only [if_pos (le_refl i), if_neg (show ¬ (i + 1 ≤ i) from by omega)]
+      have hθn0 : 0 < Real.arctan (radius i) := Real.arctan_pos.mpr (hradius_pos i)
+      have hθn1 : Real.arctan (radius i) < π / 2 := Real.arctan_lt_pi_div_two _
+      refine ⟨hb0 ▸ ne_pole_spherePoint b hθn0 hθn1.le _, ?_⟩
+      have hstep := spherePoint_mem_descent_equatorial b hθn0 hθn1 (azimuth i)
+      rw [hazimuth_n] at hstep
+      rwa [hb0] at hstep
+
 end
 end Gleason
