@@ -412,5 +412,21 @@ theorem sum_lat_eq_one {p : E3} (hp : ‖p‖ = 1) (b : OrthonormalBasis (Fin 3)
   rw [real_inner_comm p (b i)]
   ring
 
+/-- **B4a (lemme-outil).** Complète `sperp p s` et `s` en base orthonormée dont
+le 3ᵉ vecteur est sur l'équateur : par B3, `lat(b 0) + lat(b 1) + lat(b 2) = 1`
+avec `lat(b 0) = 1 - lat s` (B2) et `lat(b 1) = lat s`, donc `lat(b 2) = 0`. -/
+theorem exists_descent_basis {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ northern p)
+    (hsp : s ≠ p) :
+    ∃ b : OrthonormalBasis (Fin 3) ℝ E3, b 0 = sperp p s ∧ b 1 = s ∧ b 2 ∈ equator p := by
+  have hortho : ⟪sperp p s, s⟫ = 0 := by
+    have h := inner_sperp_self hp hs hsN hsp
+    rwa [real_inner_comm (sperp p s) s] at h
+  obtain ⟨b, hb0, hb1⟩ :=
+    exists_orthonormalBasis_pair (sperp p s) s (norm_sperp hp hs hsN hsp) hs hortho
+  have hsum := sum_lat_eq_one hp b
+  rw [Fin.sum_univ_three, hb0, hb1, lat_sperp hp hs hsN hsp] at hsum
+  have hlat2 : lat p (b 2) = 0 := by linarith
+  exact ⟨b, hb0, hb1, (mem_equator_iff_lat_eq_zero p (b 2)).mpr ⟨b.norm_eq_one 2, hlat2⟩⟩
+
 end
 end Gleason
