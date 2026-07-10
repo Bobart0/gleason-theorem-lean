@@ -483,5 +483,42 @@ theorem latInf_eq_latSup_eq_affine {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1) :
 
 end ExactPoleSetup
 
+/-- **F6 (théorème principal, CKM 1985 §5).** Si `f` atteint son sup en `p`
+(hypothèse (1) de CKM) et est constante sur l'équateur de `p` (hypothèse (2)),
+alors `f` est exactement quadratique sur TOUTE la sphère :
+`f(s) = c + (f(p)-c)·lat p s`. Dérive `(m₀, hmlb, hm)` via F1b (`m₀` n'est pas
+une hypothèse du théorème, contrairement à `basic_lemma`/E5) ; cas dégénéré
+`c = f p` (f constante) traité séparément du cas principal `c < f p`
+(F2-F5) ; extension de l'hémisphère nord à la sphère entière via
+`exists_northern_rep` + parité (P2). -/
+theorem frameFunction_exact_pole {f : E3 → ℝ} {W c : ℝ} (hf : IsFrameFunction f W)
+    {p : E3} (hp : ‖p‖ = 1) (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
+    (hconst : ∀ e ∈ equator p, f e = c) :
+    ∀ s : E3, ‖s‖ = 1 → f s = c + (f p - c) * lat p s := by
+  obtain ⟨m₀, hmlb, hm⟩ := exists_inf_approx hf hp hmax
+  have hcm_le : c ≤ f p := c_le_f hf hp hmax hmlb hm hconst p hp
+  rcases hcm_le.eq_or_lt with hceq | hcm
+  · intro s hs
+    have h1 : f s ≤ f p := hmax s hs
+    have h2 : c ≤ f s := c_le_f hf hp hmax hmlb hm hconst s hs
+    rw [← hceq] at h1
+    have heq : f s = c := le_antisymm h1 h2
+    rw [heq, ← hceq]; ring
+  · intro s hs
+    obtain ⟨s', hs'N, hls', hs'eq⟩ := exists_northern_rep (p := p) hs
+    have hl0 : 0 ≤ lat p s' := lat_nonneg p s'
+    have hl1 : lat p s' ≤ 1 := lat_le_one p hp hs'N.1
+    have heqs := latInf_eq_latSup_eq_affine hf hp hmax hmlb hm hconst hcm hl0 hl1
+    have hlb : latInf f p (lat p s') ≤ f s' :=
+      csInf_le (bddBelow_latClass_image hmlb (lat p s')) ⟨s', ⟨hs'N, rfl⟩, rfl⟩
+    have hub : f s' ≤ latSup f p (lat p s') :=
+      le_csSup (bddAbove_latClass_image hmax (lat p s')) ⟨s', ⟨hs'N, rfl⟩, rfl⟩
+    have hfs' : f s' = c + (f p - c) * lat p s' := by linarith [heqs.1, heqs.2, hlb, hub]
+    have hfs'eqfs : f s' = f s := by
+      rcases hs'eq with h | h
+      · rw [h]
+      · rw [h]; exact frameFunction_even hf s hs
+    rw [← hfs'eqfs, hfs', hls']
+
 end
 end Gleason
