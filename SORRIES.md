@@ -43,7 +43,27 @@
       dispatch via exists_basis_aligned/exists_sphereCoords) ; E5
       chain_decreasing + frameFunction_le_of_lat_lt (corollaire pour f,
       récurrence sur la chaîne via basic_lemma)
-- [ ] F. frameFunction_exact_pole : f̄/f_, C dénombrable, Warmup II, C=∅ (§5)
+- [x] F. frameFunction_exact_pole : f̄/f_, C dénombrable, Warmup II, densité (§5)
+      — ExactPole.lean (nouveau fichier). F0 (SphereGeometry.lean) : lat_neg,
+      eq_pole_of_lat_eq_one, exists_northern_rep. F1 : crude_lower_bound,
+      exists_inf_approx (m₀ := sInf, réutilisable sans hypothèse externe),
+      weight_eq_pole_add_equator (W = f p + 2c), c_le_f (réutilise C5). F2 :
+      latSup/latInf (enveloppes sup/inf par classe de latitude),
+      latSup_le_latInf_of_lt (monotonie croisée, cœur, via E5
+      frameFunction_le_of_lat_lt + eq_pole_of_lat_eq_one pour le cas l'=1),
+      extrémités l=0 (équateur, hconst) / l=1 (singleton {p}). F3 :
+      countable_latGap (C := écart latInf<latSup dénombrable, injection dans
+      ℚ via intervalles ordonnés-disjoints). F4 : latInf_le_latSup,
+      latClass_const_of_not_mem_gap, latInf_additive_of_not_mem_gap (base de
+      B7 + représentants nord + parité P2). F5 : latInf_mono/latSup_mono
+      (monotonie globale, sans restriction), latInf_eq_affine_of_not_mem_C
+      (application de warmup_II à G := (latInf-c)/(f p-c)), density
+      (target_le_latInf / latSup_le_target via exists_not_mem_of_countable
+      + le_of_forall_pos_lt_add, extension de l'affinité à TOUT [0,1], pas
+      seulement hors de C) ⇒ latInf_eq_latSup_eq_affine. F6 :
+      frameFunction_exact_pole (assemblage : cas dégénéré c=f p à part, cas
+      général via exists_northern_rep + parité pour couvrir la sphère
+      entière, pas seulement l'hémisphère nord)
 - [ ] G. frameFunction_attains_extrema : Tychonoff + rotations + cas radial (§6) [DUR]
 - [ ] H. frameFunction_regular : p̂/q̂/r̂, claim, h=g−f, 6 grands cercles (§7)
 
