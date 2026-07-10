@@ -70,6 +70,77 @@ theorem exists_extremal_frame {φ : E3 → ℝ} {Wφ : ℝ} (hφ : IsFrameFuncti
   exact ⟨S1, U, hS1, hU, hPS1, hPU, hS1U, hS1eq, hUeq⟩
 
 /- ═══════════════════════════════════════════════════════════════════
+   H3 (préliminaire). Rotation de 90° autour d'un axe `A`, envoyant une
+   paire équatoriale prescrite `(X,Y) ↦ (Y,-X)`. Généralise `exists_rotate90`
+   (bloc G) qui construisait sa propre paire ; ici `(X,Y)` est DONNÉE (on a
+   besoin de coordonnées liées à un triple extrémal spécifique). Réutilisé
+   deux fois : `p̂` (axe P, paire (Q,R)) et `r̂` (axe R, paire (P,Q)), puis à
+   nouveau en H8 pour `h`.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **H3 (préliminaire).** Même preuve que `exists_rotate90`, avec `(X,Y)`
+prescrits au lieu d'auto-générés. -/
+private theorem exists_axis_rotate {A X Y : E3} (hA : ‖A‖ = 1) (hX : ‖X‖ = 1) (hY : ‖Y‖ = 1)
+    (hAX : ⟪A, X⟫ = 0) (hAY : ⟪A, Y⟫ = 0) (hXY : ⟪X, Y⟫ = 0) :
+    ∃ ρ : E3 ≃ₗᵢ[ℝ] E3, ρ A = A ∧ ρ X = Y ∧ ρ Y = -X ∧
+      ∀ s ∈ equator A, ρ s ∈ equator A ∧ ⟪s, ρ s⟫ = 0 := by
+  have hYX : ⟪Y, X⟫ = 0 := by rw [real_inner_comm]; exact hXY
+  have hAnX : ⟪A, -X⟫ = 0 := by rw [inner_neg_right, hAX]; ring
+  have hYnX : ⟪Y, -X⟫ = 0 := by rw [inner_neg_right, hYX]; ring
+  have hnX : ‖(-X : E3)‖ = 1 := by rw [norm_neg]; exact hX
+  obtain ⟨ρ, hρA, hρX, hρY⟩ :=
+    isometry_of_orthonormal_triples hA hX hY hAX hAY hXY hA hY hnX hAY hAnX hYnX
+  refine ⟨ρ, hρA, hρX, hρY, ?_⟩
+  intro s hs
+  have hsu : ‖s‖ = 1 := hs.1
+  have hsA : ⟪A, s⟫ = 0 := hs.2
+  have hρsA : ⟪A, ρ s⟫ = 0 := by rw [← hρA, ρ.inner_map_map]; exact hsA
+  have hρsnorm : ‖ρ s‖ = 1 := by rw [ρ.norm_map]; exact hsu
+  refine ⟨⟨hρsnorm, hρsA⟩, ?_⟩
+  obtain ⟨b, hb0, hb1, hb2⟩ := exists_orthonormalBasis_of_triple' A X Y hA hX hY hAX hAY hXY
+  have hdecomp : ⟪X, s⟫ • X + ⟪Y, s⟫ • Y = s := by
+    have h := b.sum_repr' s
+    rw [Fin.sum_univ_three, hb0, hsA, zero_smul, zero_add, hb1, hb2] at h
+    exact h
+  set a : ℝ := ⟪X, s⟫ with ha_def
+  set c : ℝ := ⟪Y, s⟫ with hc_def
+  have hρs_eq : ρ s = a • Y - c • X := by
+    rw [← hdecomp, ρ.map_add, ρ.map_smul, ρ.map_smul, hρX, hρY, smul_neg]
+    abel
+  rw [hρs_eq, ← hdecomp]
+  simp only [inner_add_left, inner_sub_right, real_inner_smul_left, real_inner_smul_right,
+    real_inner_self_eq_norm_sq, hX, hY, hXY, hYX]
+  ring
+
+/-- **H3 (préliminaire).** Action de `ρ` (issue de `exists_axis_rotate`) sur
+les coordonnées `⟪A,·⟫, ⟪X,·⟫, ⟪Y,·⟫` : `⟪a,ρs⟫ = ⟪ρ⁻¹a,s⟫` (isométrie),
+puis `ρ⁻¹A=A, ρ⁻¹Y=X, ρ⁻¹X=-Y` (inverse de `ρA=A,ρX=Y,ρY=-X`). -/
+private theorem axis_rotate_coords {A X Y : E3} {ρ : E3 ≃ₗᵢ[ℝ] E3}
+    (hρA : ρ A = A) (hρX : ρ X = Y) (hρY : ρ Y = -X) (s : E3) :
+    ⟪A, ρ s⟫ = ⟪A, s⟫ ∧ ⟪X, ρ s⟫ = -⟪Y, s⟫ ∧ ⟪Y, ρ s⟫ = ⟪X, s⟫ := by
+  have hsymm : ∀ a : E3, ⟪a, ρ s⟫ = ⟪ρ.symm a, s⟫ := by
+    intro a
+    rw [← ρ.inner_map_map (ρ.symm a) s, ρ.apply_symm_apply]
+  have hsymmA : ρ.symm A = A := by
+    have h := congrArg ρ.symm hρA
+    rw [ρ.symm_apply_apply] at h
+    exact h.symm
+  have hsymmY : ρ.symm Y = X := by
+    have h := congrArg ρ.symm hρX
+    rw [ρ.symm_apply_apply] at h
+    exact h.symm
+  have hsymmX : ρ.symm X = -Y := by
+    have h := congrArg ρ.symm hρY
+    rw [ρ.symm_apply_apply, map_neg] at h
+    have h2 := congrArg Neg.neg h
+    rw [neg_neg] at h2
+    exact h2.symm
+  refine ⟨?_, ?_, ?_⟩
+  · rw [hsymm A, hsymmA]
+  · rw [hsymm X, hsymmX, inner_neg_left]
+  · rw [hsymm Y, hsymmY]
+
+/- ═══════════════════════════════════════════════════════════════════
    H2 (préliminaires). Forme quadratique de la norme au carré (outil
    partagé par les cas dégénérés et l'assemblage final).
    ═══════════════════════════════════════════════════════════════════ -/
