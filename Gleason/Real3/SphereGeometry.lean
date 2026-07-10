@@ -823,5 +823,59 @@ theorem tan_chain_step (b : OrthonormalBasis (Fin 3) ℝ E3) (radius azimuth : �
   rw [Real.tan_arctan, Real.tan_arctan]
   exact hstep i hi
 
+/-- **E4 (point de départ).** Toute paire `(p, s)` avec `s ∈ northern p \ {p}`
+admet une base `b` avec `b 0 = p` et `s` d'azimut nul (`s = spherePoint b θ 0`).
+Même construction que `sperp_core`/`exists_sphereCoords` (projection
+équatoriale normalisée de `s`), mais construisant `b` plutôt que décomposant
+dans un `b` donné. -/
+theorem exists_basis_aligned {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
+    (hsN : s ∈ northern p) (hsp : s ≠ p) :
+    ∃ (b : OrthonormalBasis (Fin 3) ℝ E3) (θ : ℝ), b 0 = p ∧ 0 < θ ∧ θ ≤ π / 2 ∧
+      s = spherePoint b θ 0 := by
+  set c : ℝ := ⟪p, s⟫ with hc_def
+  have hc0 : 0 ≤ c := hsN.2
+  have hc1 : c ≤ 1 := by
+    have h := abs_real_inner_le_norm p s
+    rw [hp, hs, mul_one] at h
+    exact (abs_le.mp h).2
+  have hnormsq : ‖s - c • p‖ ^ 2 = 1 - c ^ 2 := norm_sq_sub_inner_smul hp hs
+  have hcne1 : c ≠ 1 := by
+    intro heq
+    apply hsp
+    have hns := hnormsq
+    rw [heq, one_smul] at hns
+    norm_num at hns
+    exact sub_eq_zero.mp hns
+  set θ : ℝ := Real.arccos c with hθ_def
+  have hθ0 : 0 < θ := by rw [hθ_def]; exact Real.arccos_pos.mpr (lt_of_le_of_ne hc1 hcne1)
+  have hθ1 : θ ≤ π / 2 := by rw [hθ_def]; exact Real.arccos_le_pi_div_two.mpr hc0
+  have hcosθ : Real.cos θ = c := Real.cos_arccos (by linarith) hc1
+  have hsinθnn : Real.sin θ = Real.sqrt (1 - c ^ 2) := by rw [hθ_def]; exact Real.sin_arccos c
+  have hvne : s - c • p ≠ 0 := by
+    intro h
+    apply hcne1
+    rw [h, norm_zero] at hnormsq
+    have heq0 : (c - 1) * (c + 1) = 0 := by linear_combination hnormsq
+    rcases mul_eq_zero.mp heq0 with h1 | h1
+    · linarith
+    · linarith [hc0]
+  have hvnormpos : 0 < ‖s - c • p‖ := norm_pos_iff.mpr hvne
+  set e : E3 := ‖s - c • p‖⁻¹ • (s - c • p) with he_def
+  have he_norm : ‖e‖ = 1 := by
+    rw [he_def, norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.mpr hvnormpos)]
+    field_simp
+  have hpe : ⟪p, e⟫ = 0 := by
+    have hstep : ⟪p, s - c • p⟫ = 0 := by
+      rw [inner_sub_right, real_inner_smul_right, real_inner_self_eq_norm_sq, hp, ← hc_def]
+      ring
+    rw [he_def, real_inner_smul_right, hstep, mul_zero]
+  obtain ⟨b, hb0, hb1⟩ := exists_orthonormalBasis_pair p e hp he_norm hpe
+  refine ⟨b, θ, hb0, hθ0, hθ1, ?_⟩
+  unfold spherePoint
+  simp only [Real.cos_zero, Real.sin_zero, mul_one, mul_zero, zero_smul, add_zero]
+  rw [hcosθ, hb0, hsinθnn, ← hnormsq, Real.sqrt_sq (norm_nonneg _), hb1, he_def, smul_smul,
+      mul_inv_cancel₀ hvnormpos.ne', one_smul]
+  abel
+
 end
 end Gleason
