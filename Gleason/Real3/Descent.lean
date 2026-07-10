@@ -350,5 +350,49 @@ private theorem piron_chain_main_case {p : E3} {b : OrthonormalBasis (Fin 3) ℝ
       rw [hringstep, hcos2φB]
       field_simp
 
+/-- **E4 (assemblage final).** Chaîne de descente de Piron : si `t` est
+strictement plus proche de l'équateur de `p` que `s` (`lat p t < lat p s`),
+il existe une chaîne finie de descentes reliant `s` à `t`. On aligne `s` en
+azimut nul via `exists_basis_aligned`, on lit les coordonnées de `t` dans la
+même base via `exists_sphereCoords`, on convertit `lat p t < lat p s` en
+`θs < θt` (`cos` strictement décroissante sur `[0,π]`), puis on dispatche
+entre `piron_chain_equator_case` (`θt = π/2`) et `piron_chain_main_case`
+(`θt < π/2`). -/
+theorem piron_chain {p : E3} (hp : ‖p‖ = 1) {s t : E3}
+    (hs : ‖s‖ = 1) (hsN : s ∈ northern p) (hsp : s ≠ p)
+    (ht : ‖t‖ = 1) (htN : t ∈ northern p) (htp : t ≠ p)
+    (hlt : lat p t < lat p s) :
+    ∃ (n : ℕ) (c : ℕ → E3), c 0 = s ∧ c n = t ∧
+      ∀ i < n, c i ≠ p ∧ c (i + 1) ∈ descent p (c i) := by
+  obtain ⟨b, θs, hb0, hθs0, hθs1, hs_eq⟩ := exists_basis_aligned hp hs hsN hsp
+  have htN' : t ∈ northern (b 0) := hb0 ▸ htN
+  have htp' : t ≠ b 0 := hb0 ▸ htp
+  obtain ⟨θt, ψt, hθt0, hθt1, ht_eq⟩ := exists_sphereCoords b ht htN' htp'
+  have hlat_s : lat p s = Real.cos θs ^ 2 := by rw [hs_eq, ← hb0, lat_spherePoint]
+  have hlat_t : lat p t = Real.cos θt ^ 2 := by rw [ht_eq, ← hb0, lat_spherePoint]
+  have hcos_sq_lt : Real.cos θt ^ 2 < Real.cos θs ^ 2 := by rw [← hlat_s, ← hlat_t]; exact hlt
+  have hcosθt_nn : 0 ≤ Real.cos θt := Real.cos_nonneg_of_mem_Icc ⟨by linarith [Real.pi_pos], hθt1⟩
+  have hcosθs_nn : 0 ≤ Real.cos θs := Real.cos_nonneg_of_mem_Icc ⟨by linarith [Real.pi_pos], hθs1⟩
+  have hcos_lt : Real.cos θt < Real.cos θs := (sq_lt_sq₀ hcosθt_nn hcosθs_nn).mp hcos_sq_lt
+  have hθs_lt_θt : θs < θt := by
+    by_contra hcon
+    push Not at hcon
+    rcases hcon.lt_or_eq with hcon' | hcon'
+    · have hh := Real.cos_lt_cos_of_nonneg_of_le_pi (by linarith : (0 : ℝ) ≤ θt)
+        (by linarith [Real.pi_pos] : θs ≤ π) hcon'
+      linarith
+    · rw [hcon'] at hcos_lt; linarith
+  have hθs1' : θs < π / 2 := lt_of_lt_of_le hθs_lt_θt hθt1
+  rcases hθt1.lt_or_eq with hθt_lt | hθt_eq
+  · obtain ⟨n, c, hc0, hcn, hstep⟩ :=
+      piron_chain_main_case hb0 hθs0 hθs1' hθt0 hθt_lt hθs_lt_θt ψt
+    refine ⟨n + 2, c, ?_, ?_, hstep⟩
+    · rw [hc0, hs_eq]
+    · rw [hcn, ht_eq]
+  · obtain ⟨n, c, hc0, hcn, hstep⟩ := piron_chain_equator_case hb0 hθs0 hθs1' ψt
+    refine ⟨n, c, ?_, ?_, hstep⟩
+    · rw [hc0, hs_eq]
+    · rw [hcn, ht_eq, hθt_eq]
+
 end
 end Gleason
