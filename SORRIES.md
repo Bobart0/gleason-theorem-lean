@@ -64,7 +64,34 @@
       frameFunction_exact_pole (assemblage : cas dégénéré c=f p à part, cas
       général via exists_northern_rep + parité pour couvrir la sphère
       entière, pas seulement l'hémisphère nord)
-- [ ] G. frameFunction_attains_extrema : Tychonoff + rotations + cas radial (§6) [DUR]
+- [x] G. frameFunction_attains_sup/inf : ultrafiltre + rotations + descente à
+      2 pas (§6) — Attainment.lean (nouveau fichier) + exists_two_step_descent
+      (Descent.lean). G1 : boîte à outils isométries
+      (isometry_of_orthonormal_triples/pair, exists_isometry_of_unit,
+      exists_isometry_pair — cas colinéaire via Cauchy-Schwarz dérivé
+      directement de norm_sq_sub_inner_smul plutôt qu'un lemme Mathlib nommé —
+      comp_isometry, add/neg/const/sub). G2 : exists_rotate90 (rotation 90°
+      autour de p, expose u1/u2 pour G3/G8/G9). G3 : recenter + recenter_prop/
+      northern + exists_recenter_isometry. G4 : symmetrize_frame/bounds/
+      equator (h_q := g+g∘phat). G5 : exists_ultrafilter_tendsto_sphere/Icc
+      (limites le long de `Ultrafilter.of atTop`, motif isCompact_iff_
+      ultrafilter_le_nhds), suite maximisante (exists_seq_tendsto_sSup),
+      q_n (représentant nord, parité), c'_n → 1. G6 : limite ponctuelle h
+      (choix point par point le long de l'ultrafiltre), frame function de
+      poids 2W (Tendsto.add sur la somme de trame + tendsto_nhds_unique),
+      bornes, h(p)=2M₀, constante W−M₀ sur l'équateur — attention : les bornes
+      de h_n doivent utiliser M₀ (sSup exact), pas la borne M fournie en
+      hypothèse, sous peine de casser le budget d'epsilon de G9. G7 :
+      application de frameFunction_exact_pole à h (ne demande PAS la
+      positivité, contrairement à la crainte initiale). G8
+      (exists_two_step_descent, Descent.lean) : descente radiale à 2 pas dans
+      le plan méridien (p,e0), nécessaire car piron_chain (E4) a un nombre de
+      pas variable — a nécessité clear_value/clear pour un contexte local
+      devenu trop lourd (timeouts d'élaboration) et maxHeartbeats 1000000
+      local justifié. G9 : assemblage avec budget d'epsilon explicite (2
+      applications de basic_lemma_approx via exists_inf_approx_of_le sur
+      h_n) ; frameFunction_attains_inf via -f. Remplace l'énoncé provisoire
+      de Continuity.lean (jamais la structure réelle de CKM).
 - [ ] H. frameFunction_regular : p̂/q̂/r̂, claim, h=g−f, 6 grands cercles (§7)
 
 ## M3 — réduction complexe
