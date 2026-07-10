@@ -141,6 +141,197 @@ private theorem axis_rotate_coords {A X Y : E3} {ρ : E3 ≃ₗᵢ[ℝ] E3}
   · rw [hsymm Y, hsymmY]
 
 /- ═══════════════════════════════════════════════════════════════════
+   H3-H4 (Claim, lemme générique réutilisable en H8 pour h).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **H3-H4 (Claim).** Étant `φ` frame function de poids `Wφ`, un triple
+orthonormé `(P,Q,R)` avec `P` réalisant le sup, `R` l'inf, et
+`φ(Q) = Wφ-φ(P)-φ(R)` (H1), la forme `g(s) := φ(P)⟪P,s⟫²+φ(Q)⟪Q,s⟫²+φ(R)⟪R,s⟫²`
+coïncide avec `φ` sur les six grands cercles `⟪P,·⟫=±⟪Q,·⟫`, `⟪P,·⟫=±⟪R,·⟫`,
+`⟪Q,·⟫=±⟪R,·⟫`. Deux rotations d'axe `P`/`R` (`p̂`,`r̂`) donnent deux identités
+(I) `φ+φ∘p̂ = g+g∘p̂` et (II) `φ+φ∘r̂ = g+g∘r̂` (F appliqué à `φ+φ∘p̂` au pôle `P`,
+à `-(φ+φ∘r̂)` au pôle `R`) ; les cas `x=y`/`y=z` sont primaires
+(`p̂(p̂(r̂s))=-s` / `p̂(r̂(r̂s))=-s` sous ces conditions précises, + parité), les
+quatre autres s'y ramènent via l'action de `p̂`/`r̂` sur les coordonnées. -/
+theorem frame_eq_quadratic_of_extremal_triple {φ : E3 → ℝ} {Wφ : ℝ} (hφ : IsFrameFunction φ Wφ)
+    {P Q R : E3} (hP : ‖P‖ = 1) (hQ : ‖Q‖ = 1) (hR : ‖R‖ = 1)
+    (hPQ : ⟪P, Q⟫ = 0) (hPR : ⟪P, R⟫ = 0) (hQR : ⟪Q, R⟫ = 0)
+    (hPmax : ∀ t : E3, ‖t‖ = 1 → φ t ≤ φ P) (hRmin : ∀ t : E3, ‖t‖ = 1 → φ R ≤ φ t)
+    (hQeq : φ Q = Wφ - φ P - φ R) :
+    ∀ s : E3, ‖s‖ = 1 →
+      (⟪P, s⟫ = ⟪Q, s⟫ ∨ ⟪P, s⟫ = -⟪Q, s⟫ ∨ ⟪P, s⟫ = ⟪R, s⟫ ∨ ⟪P, s⟫ = -⟪R, s⟫ ∨
+        ⟪Q, s⟫ = ⟪R, s⟫ ∨ ⟪Q, s⟫ = -⟪R, s⟫) →
+      φ s = φ P * ⟪P, s⟫ ^ 2 + φ Q * ⟪Q, s⟫ ^ 2 + φ R * ⟪R, s⟫ ^ 2 := by
+  set g : E3 → ℝ := fun s => φ P * ⟪P, s⟫ ^ 2 + φ Q * ⟪Q, s⟫ ^ 2 + φ R * ⟪R, s⟫ ^ 2 with hg_def
+  have hRP : ⟪R, P⟫ = 0 := by rw [real_inner_comm]; exact hPR
+  have hRQ : ⟪R, Q⟫ = 0 := by rw [real_inner_comm]; exact hQR
+  obtain ⟨phat, hphatP, hphatQ, hphatR, hphat_equator⟩ := exists_axis_rotate hP hQ hR hPQ hPR hQR
+  obtain ⟨rhat, hrhatR, hrhatP, hrhatQ, hrhat_equator⟩ := exists_axis_rotate hR hP hQ hRP hRQ hPQ
+  have hp_coords : ∀ s : E3, ⟪P, phat s⟫ = ⟪P, s⟫ ∧ ⟪Q, phat s⟫ = -⟪R, s⟫ ∧
+      ⟪R, phat s⟫ = ⟪Q, s⟫ := fun s => axis_rotate_coords hphatP hphatQ hphatR s
+  have hr_coords : ∀ s : E3, ⟪R, rhat s⟫ = ⟪R, s⟫ ∧ ⟪P, rhat s⟫ = -⟪Q, s⟫ ∧
+      ⟪Q, rhat s⟫ = ⟪P, s⟫ := fun s => axis_rotate_coords hrhatR hrhatP hrhatQ s
+  have hParseval : ∀ s : E3, ⟪P, s⟫ ^ 2 + ⟪Q, s⟫ ^ 2 + ⟪R, s⟫ ^ 2 = ‖s‖ ^ 2 := by
+    intro s
+    obtain ⟨b, hb0, hb1, hb2⟩ := exists_orthonormalBasis_of_triple' P Q R hP hQ hR hPQ hPR hQR
+    rw [real_inner_comm s P, real_inner_comm s Q, real_inner_comm s R]
+    have h := b.sum_sq_inner_left s
+    rw [Fin.sum_univ_three, hb0, hb1, hb2] at h
+    exact h
+  have hbasis_decomp : ∀ v : E3, ⟪P, v⟫ • P + ⟪Q, v⟫ • Q + ⟪R, v⟫ • R = v := by
+    intro v
+    obtain ⟨b, hb0, hb1, hb2⟩ := exists_orthonormalBasis_of_triple' P Q R hP hQ hR hPQ hPR hQR
+    have h := b.sum_repr' v
+    rw [Fin.sum_univ_three, hb0, hb1, hb2] at h
+    exact h
+  have hg_even : ∀ s : E3, g (-s) = g s := by
+    intro s; simp only [hg_def, inner_neg_right]; ring
+  -- **Identité (I)** : φ + φ∘p̂ = g + g∘p̂.
+  have hI : ∀ s : E3, ‖s‖ = 1 → φ s + φ (phat s) = g s + g (phat s) := by
+    intro s hs
+    have hψframe : IsFrameFunction (fun x => φ x + φ (phat x)) (2 * Wφ) := by
+      have h := hφ.add (hφ.comp_isometry phat)
+      rwa [two_mul]
+    have hψequator : ∀ e ∈ equator P, (fun x => φ x + φ (phat x)) e = Wφ - φ P := by
+      intro e he
+      obtain ⟨hpe_mem, hpe_orth⟩ := hphat_equator e he
+      obtain ⟨b, hb0, hb1, hb2⟩ := exists_orthonormalBasis_of_triple' P e (phat e) hP he.1
+        hpe_mem.1 he.2 hpe_mem.2 hpe_orth
+      have hsum := hφ b
+      rw [Fin.sum_univ_three, hb0, hb1, hb2] at hsum
+      simp only
+      linarith [hsum]
+    have hψmax : ∀ t : E3, ‖t‖ = 1 →
+        (fun x => φ x + φ (phat x)) t ≤ (fun x => φ x + φ (phat x)) P := by
+      intro t ht
+      have h2 : ‖phat t‖ = 1 := by rw [phat.norm_map]; exact ht
+      simp only [hphatP]
+      linarith [hPmax t ht, hPmax (phat t) h2]
+    have hex := frameFunction_exact_pole hψframe hP hψmax hψequator s hs
+    simp only [hphatP] at hex
+    unfold lat at hex
+    have hgcomp : g s + g (phat s) = (Wφ - φ P) + (φ P + φ P - (Wφ - φ P)) * ⟪P, s⟫ ^ 2 := by
+      obtain ⟨e1, e2, e3⟩ := hp_coords s
+      have hPar := hParseval s
+      rw [hs] at hPar
+      have hqr : φ Q + φ R = Wφ - φ P := by linarith [hQeq]
+      simp only [hg_def, e1, e2, e3]
+      linear_combination (Wφ - φ P) * hPar + (⟪Q, s⟫ ^ 2 + ⟪R, s⟫ ^ 2) * hqr
+    linarith [hex, hgcomp]
+  -- **Identité (II)** : φ + φ∘r̂ = g + g∘r̂.
+  have hII : ∀ s : E3, ‖s‖ = 1 → φ s + φ (rhat s) = g s + g (rhat s) := by
+    intro s hs
+    have hψ'frame : IsFrameFunction (fun x => -(φ x + φ (rhat x))) (-(2 * Wφ)) := by
+      have h := (hφ.add (hφ.comp_isometry rhat)).neg
+      rwa [two_mul]
+    have hψ'equator : ∀ e ∈ equator R, (fun x => -(φ x + φ (rhat x))) e = -(Wφ - φ R) := by
+      intro e he
+      obtain ⟨hre_mem, hre_orth⟩ := hrhat_equator e he
+      obtain ⟨b, hb0, hb1, hb2⟩ := exists_orthonormalBasis_of_triple' R e (rhat e) hR he.1
+        hre_mem.1 he.2 hre_mem.2 hre_orth
+      have hsum := hφ b
+      rw [Fin.sum_univ_three, hb0, hb1, hb2] at hsum
+      simp only
+      linarith [hsum]
+    have hψ'max : ∀ t : E3, ‖t‖ = 1 →
+        (fun x => -(φ x + φ (rhat x))) t ≤ (fun x => -(φ x + φ (rhat x))) R := by
+      intro t ht
+      have h2 : ‖rhat t‖ = 1 := by rw [rhat.norm_map]; exact ht
+      simp only [hrhatR]
+      linarith [hRmin t ht, hRmin (rhat t) h2]
+    have hex := frameFunction_exact_pole hψ'frame hR hψ'max hψ'equator s hs
+    simp only [hrhatR] at hex
+    unfold lat at hex
+    have hgcomp : g s + g (rhat s) = (Wφ - φ R) + (φ R + φ R - (Wφ - φ R)) * ⟪R, s⟫ ^ 2 := by
+      obtain ⟨e1, e2, e3⟩ := hr_coords s
+      have hPar := hParseval s
+      rw [hs] at hPar
+      have hpq : φ P + φ Q = Wφ - φ R := by linarith [hQeq]
+      simp only [hg_def, e1, e2, e3]
+      linear_combination (Wφ - φ R) * hPar + (⟪P, s⟫ ^ 2 + ⟪Q, s⟫ ^ 2) * hpq
+    linarith [hex, hgcomp]
+  -- Cas primaire [x=y].
+  have hcase_xy : ∀ s : E3, ‖s‖ = 1 → ⟪P, s⟫ = ⟪Q, s⟫ → φ s = g s := by
+    intro s hs hxy
+    have hs1 : ‖rhat s‖ = 1 := by rw [rhat.norm_map]; exact hs
+    have hs2 : ‖phat (rhat s)‖ = 1 := by rw [phat.norm_map]; exact hs1
+    have heq3 : phat (phat (rhat s)) = -s := by
+      have hP3 : ⟪P, phat (phat (rhat s))⟫ = -⟪Q, s⟫ := by
+        rw [(hp_coords (phat (rhat s))).1, (hp_coords (rhat s)).1, (hr_coords s).2.1]
+      have hQ3 : ⟪Q, phat (phat (rhat s))⟫ = -⟪P, s⟫ := by
+        rw [(hp_coords (phat (rhat s))).2.1, (hp_coords (rhat s)).2.2, (hr_coords s).2.2]
+      have hR3 : ⟪R, phat (phat (rhat s))⟫ = -⟪R, s⟫ := by
+        rw [(hp_coords (phat (rhat s))).2.2, (hp_coords (rhat s)).2.1, (hr_coords s).1]
+      have hLHS := (hbasis_decomp (phat (phat (rhat s)))).symm
+      rw [hP3, hQ3, hR3] at hLHS
+      have hRHS : (-s : E3) = -(⟪P, s⟫ • P + ⟪Q, s⟫ • Q + ⟪R, s⟫ • R) := by rw [hbasis_decomp]
+      rw [hLHS, hRHS, hxy]
+      module
+    have hII1 := hII s hs
+    have hI2 := hI (rhat s) hs1
+    have hI3 := hI (phat (rhat s)) hs2
+    have hchain : φ s + φ (phat (phat (rhat s))) = g s + g (phat (phat (rhat s))) := by
+      linarith [hII1, hI2, hI3]
+    rw [heq3, frameFunction_even hφ s hs, hg_even s] at hchain
+    linarith [hchain]
+  -- Cas primaire [y=z].
+  have hcase_yz : ∀ s : E3, ‖s‖ = 1 → ⟪Q, s⟫ = ⟪R, s⟫ → φ s = g s := by
+    intro s hs hyz
+    have hs1 : ‖rhat s‖ = 1 := by rw [rhat.norm_map]; exact hs
+    have hs2 : ‖rhat (rhat s)‖ = 1 := by rw [rhat.norm_map]; exact hs1
+    have heq3 : phat (rhat (rhat s)) = -s := by
+      have hP3 : ⟪P, phat (rhat (rhat s))⟫ = -⟪P, s⟫ := by
+        rw [(hp_coords (rhat (rhat s))).1, (hr_coords (rhat s)).2.1, (hr_coords s).2.2]
+      have hQ3 : ⟪Q, phat (rhat (rhat s))⟫ = -⟪R, s⟫ := by
+        rw [(hp_coords (rhat (rhat s))).2.1, (hr_coords (rhat s)).1, (hr_coords s).1]
+      have hR3 : ⟪R, phat (rhat (rhat s))⟫ = -⟪Q, s⟫ := by
+        rw [(hp_coords (rhat (rhat s))).2.2, (hr_coords (rhat s)).2.2, (hr_coords s).2.1]
+      have hLHS := (hbasis_decomp (phat (rhat (rhat s)))).symm
+      rw [hP3, hQ3, hR3] at hLHS
+      have hRHS : (-s : E3) = -(⟪P, s⟫ • P + ⟪Q, s⟫ • Q + ⟪R, s⟫ • R) := by rw [hbasis_decomp]
+      rw [hLHS, hRHS, hyz]
+      module
+    have hII1 := hII s hs
+    have hII2 := hII (rhat s) hs1
+    have hI1 := hI (rhat (rhat s)) hs2
+    have hchain : φ s + φ (phat (rhat (rhat s))) = g s + g (phat (rhat (rhat s))) := by
+      linarith [hII1, hII2, hI1]
+    rw [heq3, frameFunction_even hφ s hs, hg_even s] at hchain
+    linarith [hchain]
+  intro s hs hcond
+  rcases hcond with hxy | hxny | hxz | hxnz | hyz | hynz
+  · exact hcase_xy s hs hxy
+  · -- x = -y : r̂s satisfait x'=y' (coords (-y,x,z), -y=x).
+    have hrs : ‖rhat s‖ = 1 := by rw [rhat.norm_map]; exact hs
+    have hcond' : ⟪P, rhat s⟫ = ⟪Q, rhat s⟫ := by
+      rw [(hr_coords s).2.1, (hr_coords s).2.2, ← hxny]
+    have hgr := hcase_xy (rhat s) hrs hcond'
+    have hII1 := hII s hs
+    linarith [hII1, hgr]
+  · -- x = z : ramené à y = z sur r̂s.
+    have hrs : ‖rhat s‖ = 1 := by rw [rhat.norm_map]; exact hs
+    have hcond' : ⟪Q, rhat s⟫ = ⟪R, rhat s⟫ := by
+      rw [(hr_coords s).2.2, (hr_coords s).1, ← hxz]
+    have hgr := hcase_yz (rhat s) hrs hcond'
+    have hII1 := hII s hs
+    linarith [hII1, hgr]
+  · -- x = -z : p̂s satisfait x'=y' (coords (x,-z,y), x=-z).
+    have hps : ‖phat s‖ = 1 := by rw [phat.norm_map]; exact hs
+    have hcond' : ⟪P, phat s⟫ = ⟪Q, phat s⟫ := by
+      rw [(hp_coords s).1, (hp_coords s).2.1, ← hxnz]
+    have hgp := hcase_xy (phat s) hps hcond'
+    have hI1 := hI s hs
+    linarith [hI1, hgp]
+  · exact hcase_yz s hs hyz
+  · -- y = -z : p̂s satisfait y'=z' (coords (x,-z,y), -z=y).
+    have hps : ‖phat s‖ = 1 := by rw [phat.norm_map]; exact hs
+    have hcond' : ⟪Q, phat s⟫ = ⟪R, phat s⟫ := by
+      rw [(hp_coords s).2.1, (hp_coords s).2.2, ← hynz]
+    have hgp := hcase_yz (phat s) hps hcond'
+    have hI1 := hI s hs
+    linarith [hI1, hgp]
+
+/- ═══════════════════════════════════════════════════════════════════
    H2 (préliminaires). Forme quadratique de la norme au carré (outil
    partagé par les cas dégénérés et l'assemblage final).
    ═══════════════════════════════════════════════════════════════════ -/
