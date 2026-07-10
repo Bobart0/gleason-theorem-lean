@@ -911,7 +911,103 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
               · rw [← heq]; exact hB2_Γ
               · have : ⟪p2, -w⟫ = ⟪q2, -w⟫ := heq ▸ hB2_Γ
                 rw [inner_neg_right, inner_neg_right] at this; linarith [this]
-          sorry -- H9e (span final)
+          -- **H9e.** `u ≠ ±w` (indépendants) ; `u,w ∈ span{u,w} = (span{p2-q2})ᗮ` (rangs 2 = 2)
+          -- contient `r2'` (trivialement orthogonal à `p2-q2`), qui hérite donc de `y=z`
+          -- (satisfaite par `u` et `w`) par linéarité — contredit `h r2' = -M2 ≠ 0`.
+          have huw_inner : ⟪u, w⟫ = -(3 : ℝ)⁻¹ := by
+            rw [hu_def, hw_def, real_inner_smul_left, real_inner_smul_right]
+            have hinner : ⟪p + q + r, p - q - r⟫ = -1 := by
+              simp only [inner_add_left, inner_sub_right, real_inner_self_eq_norm_sq, hp, hq, hr,
+                hpq, hpr, hqr, hqp, hrp, hrq]
+              ring
+            have hinv_sq : (Real.sqrt 3)⁻¹ * (Real.sqrt 3)⁻¹ = (3 : ℝ)⁻¹ := by
+              rw [← mul_inv, h3sq]
+            rw [hinner, show (Real.sqrt 3)⁻¹ * ((Real.sqrt 3)⁻¹ * (-1))
+              = (Real.sqrt 3)⁻¹ * (Real.sqrt 3)⁻¹ * (-1) from by ring, hinv_sq]
+            ring
+          -- `u`, `w` deviennent opaques : leur définition explicite (combinaison de
+          -- p,q,r) ne sert plus, seules leurs propriétés déjà établies sont utilisées
+          -- (évite un sur-filtrage de `rw` via le dépliage de `set`, CLAUDE.md).
+          clear_value u w
+          have hune_w : u ≠ w := by
+            intro heq
+            rw [← heq, real_inner_self_eq_norm_sq, hu_norm] at huw_inner
+            norm_num at huw_inner
+          have hune_negw : u ≠ -w := by
+            intro heq
+            rw [heq, inner_neg_left, real_inner_self_eq_norm_sq, hw_norm] at huw_inner
+            norm_num at huw_inner
+          have hu_ne0 : u ≠ 0 := by
+            intro hh; rw [hh, norm_zero] at hu_norm; norm_num at hu_norm
+          have huw_ne : ∀ c : ℝ, c • u ≠ w := by
+            intro c hc
+            have hcabs : |c| = 1 := by
+              have hnorm : ‖c • u‖ = 1 := by rw [hc]; exact hw_norm
+              rwa [norm_smul, Real.norm_eq_abs, hu_norm, mul_one] at hnorm
+            rcases (abs_eq (by norm_num : (0:ℝ) ≤ 1)).mp hcabs with h1 | h1
+            · rw [h1, one_smul] at hc; exact hune_w hc
+            · rw [h1, neg_one_smul] at hc
+              exact hune_negw (by rw [← hc, neg_neg])
+          have huw_indep : LinearIndependent ℝ ![u, w] := (LinearIndependent.pair_iff' hu_ne0).mpr huw_ne
+          set K : Submodule ℝ E3 := (Submodule.span ℝ ({p2 - q2} : Set E3))ᗮ with hK_def
+          have hKfin : Module.finrank ℝ K = 2 := by
+            have h1 : Module.finrank ℝ (Submodule.span ℝ ({p2 - q2} : Set E3)) = 1 :=
+              finrank_span_singleton hp2q2_ne0
+            have hE3 : Module.finrank ℝ E3 = 3 := by simp
+            have hsum : Module.finrank ℝ (Submodule.span ℝ ({p2 - q2} : Set E3)) +
+                Module.finrank ℝ K = Module.finrank ℝ E3 :=
+              Submodule.finrank_add_finrank_orthogonal _
+            omega
+          have hu_mem_K : u ∈ K := by
+            rw [hK_def, Submodule.mem_orthogonal]
+            intro y hy
+            rw [Submodule.mem_span_singleton] at hy
+            obtain ⟨c, hc⟩ := hy
+            have hz : ⟪p2 - q2, u⟫ = 0 := by rw [inner_sub_left, hu_in_Γ]; ring
+            rw [← hc, real_inner_smul_left, hz, mul_zero]
+          have hw_mem_K : w ∈ K := by
+            rw [hK_def, Submodule.mem_orthogonal]
+            intro y hy
+            rw [Submodule.mem_span_singleton] at hy
+            obtain ⟨c, hc⟩ := hy
+            have hz : ⟪p2 - q2, w⟫ = 0 := by rw [inner_sub_left, hw_in_Γ]; ring
+            rw [← hc, real_inner_smul_left, hz, mul_zero]
+          have hr2'_mem_K : r2' ∈ K := by
+            rw [hK_def, Submodule.mem_orthogonal]
+            intro y hy
+            rw [Submodule.mem_span_singleton] at hy
+            obtain ⟨c, hc⟩ := hy
+            have hz : ⟪p2 - q2, r2'⟫ = 0 := by rw [inner_sub_left, hp2r2', hq2r2']; ring
+            rw [← hc, real_inner_smul_left, hz, mul_zero]
+          have hL_range : ({u, w} : Set E3) = Set.range ![u, w] := by
+            ext x; simp [eq_comm, or_comm]
+          have hLfin : Module.finrank ℝ (Submodule.span ℝ ({u, w} : Set E3)) = 2 := by
+            rw [hL_range]
+            have h := finrank_span_eq_card huw_indep
+            simpa using h
+          have hL_le_K : Submodule.span ℝ ({u, w} : Set E3) ≤ K := by
+            rw [Submodule.span_le]
+            intro x hx
+            simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+            rcases hx with hx | hx
+            · rw [hx]; exact hu_mem_K
+            · rw [hx]; exact hw_mem_K
+          have hLK_eq : Submodule.span ℝ ({u, w} : Set E3) = K :=
+            Submodule.eq_of_le_of_finrank_eq hL_le_K (by rw [hLfin, hKfin])
+          have hr2'_mem_L : r2' ∈ Submodule.span ℝ ({u, w} : Set E3) := by
+            rw [hLK_eq]; exact hr2'_mem_K
+          obtain ⟨a, b, hab⟩ := Submodule.mem_span_pair.mp hr2'_mem_L
+          have hr2'_C3 : ⟪q, r2'⟫ = ⟪r, r2'⟫ := by
+            rw [← hab, inner_add_right, inner_add_right, real_inner_smul_right,
+              real_inner_smul_right, real_inner_smul_right, real_inner_smul_right, hu_C3, hw_C3]
+          have hr2'_zero : h r2' = 0 :=
+            hh_zero r2' hr2'_norm (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hr2'_C3)))))
+          exfalso
+          rw [hr2'M2] at hr2'_zero
+          linarith [hr2'_zero, hM2pos]
 
 end
 end Gleason
+
+-- Vérification (M2 complet) : `#print axioms Gleason.frameFunction_regular` donne
+-- `propext, Classical.choice, Quot.sound` uniquement (aucun axiome ajouté).

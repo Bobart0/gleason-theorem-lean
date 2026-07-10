@@ -92,7 +92,23 @@
       applications de basic_lemma_approx via exists_inf_approx_of_le sur
       h_n) ; frameFunction_attains_inf via -f. Remplace l'énoncé provisoire
       de Continuity.lean (jamais la structure réelle de CKM).
-- [ ] H. frameFunction_regular : p̂/q̂/r̂, claim, h=g−f, 6 grands cercles (§7)
+- [x] H. frameFunction_regular : p̂/q̂/r̂, claim, h=g−f, 6 grands cercles (§7)
+      — Regular.lean. H1 (exists_extremal_frame, lemme-pivot comblant une
+      lacune du papier, cf. bloc G) ; H3 (exists_axis_rotate/axis_rotate_coords,
+      rotations d'axe génériques) ; H3-H4 (frame_eq_quadratic_of_extremal_triple,
+      le Claim, 6 cas dont 2 primaires par télescopage d'identités (I)/(II)) ;
+      H2 (normSqQF, cas dégénérés M=m/α=m/α=M) ; H5 (h:=g−f, poids nul, bornée,
+      paire, nulle sur 6 cercles) ; H6-H7 (extrema de h via bloc G, cas
+      constant ou triple extrémal (p2,q2,r2') avec M2+m2=0 via zéros
+      équatoriaux) ; H8 (réapplique le Claim à h) ; H9 (comptage à six
+      cercles : diagonales non primées u,w forcées dans le cercle primé
+      x2=y2 par tiroir à 2 issues sur 3 témoins (unique_unit_orthogonal_to_pair,
+      nouvelle brique dans SphereGeometry.lean, unicité à signe près de
+      l'orthogonal d'une paire indépendante) ; r2' ∈ span{u,w} hérite de
+      y=z par linéarité ⟹ contradiction M2>0 ⟹ h≡0). `heven` retirée de
+      l'énoncé (dérivable via frameFunction_even, bloc A, cf. CLAUDE.md
+      règle 3). `#print axioms` : propext, Classical.choice, Quot.sound
+      uniquement. **M2 COMPLET.**
 
 ## M3 — réduction complexe
 - [ ] ProjMeasure.isCFrameFunction
