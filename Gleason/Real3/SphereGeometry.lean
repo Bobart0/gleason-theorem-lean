@@ -250,6 +250,28 @@ def descent (s : E3) : Set E3 := {t : E3 | t ∈ northern p ∧ ⟪sperp p s, t�
 @[simp] theorem mem_descent_iff {s t : E3} :
     t ∈ descent p s ↔ t ∈ northern p ∧ ⟪sperp p s, t⟫ = 0 := Iff.rfl
 
+/-- **B1.** Faits basiques sur `lat`, `northern`, `equator`. -/
+theorem lat_nonneg (s : E3) : 0 ≤ lat p s := sq_nonneg _
+
+theorem lat_le_one {s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) : lat p s ≤ 1 := by
+  have h := abs_real_inner_le_norm p s
+  rw [hp, hs, mul_one] at h
+  have h' := abs_le.mp h
+  have h2 : ⟪p, s⟫ ^ 2 ≤ 1 ^ 2 := sq_le_sq' h'.1 h'.2
+  simpa [lat] using h2
+
+theorem lat_self (hp : ‖p‖ = 1) : lat p p = 1 := by
+  unfold lat
+  rw [real_inner_self_eq_norm_sq, hp]
+  norm_num
+
+theorem equator_subset_northern : equator p ⊆ northern p := by
+  intro t ht
+  exact ⟨ht.1, le_of_eq ht.2.symm⟩
+
+theorem mem_equator_iff_lat_eq_zero (t : E3) : t ∈ equator p ↔ ‖t‖ = 1 ∧ lat p t = 0 := by
+  simp [equator, lat]
+
 end PoleGeometry
 
 end
