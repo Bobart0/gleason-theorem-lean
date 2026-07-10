@@ -802,5 +802,26 @@ theorem spherePoint_mem_descent_equatorial (b : OrthonormalBasis (Fin 3) ℝ E3)
   rw [spherePoint_mem_descent_iff b hθ0 hθ1.le (by linarith [Real.pi_pos]) le_rfl]
   simp
 
+/-- **E4 (lemme-outil, réutilisé pour les phases A et B).** Une suite de rayons
+`radius i > 0` et d'azimuts `azimuth i` satisfaisant la relation de pas
+(`radius (i+1) · cos(Δazimut) = radius i`, i.e. `tan θᵢ₊₁ · cos(Δψ) = tan θᵢ`
+une fois passée par `arctan`) produit, point par point, une chaîne de
+descente valide via `spherePoint_mem_descent_of_tan`. -/
+theorem tan_chain_step (b : OrthonormalBasis (Fin 3) ℝ E3) (radius azimuth : ℕ → ℝ)
+    (hradius_pos : ∀ i, 0 < radius i) {N : ℕ}
+    (hstep : ∀ i < N, radius (i + 1) * Real.cos (azimuth (i + 1) - azimuth i) = radius i) :
+    ∀ i < N, spherePoint b (Real.arctan (radius i)) (azimuth i) ≠ b 0 ∧
+      spherePoint b (Real.arctan (radius (i + 1))) (azimuth (i + 1)) ∈
+        descent (b 0) (spherePoint b (Real.arctan (radius i)) (azimuth i)) := by
+  intro i hi
+  have hθi0 : 0 < Real.arctan (radius i) := Real.arctan_pos.mpr (hradius_pos i)
+  have hθi1 : Real.arctan (radius i) < π / 2 := Real.arctan_lt_pi_div_two _
+  have hθi1'0 : 0 < Real.arctan (radius (i + 1)) := Real.arctan_pos.mpr (hradius_pos (i + 1))
+  have hθi1'1 : Real.arctan (radius (i + 1)) < π / 2 := Real.arctan_lt_pi_div_two _
+  refine ⟨ne_pole_spherePoint b hθi0 hθi1.le _, ?_⟩
+  apply spherePoint_mem_descent_of_tan b hθi0 hθi1 hθi1'0 hθi1'1
+  rw [Real.tan_arctan, Real.tan_arctan]
+  exact hstep i hi
+
 end
 end Gleason
