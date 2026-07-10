@@ -10,7 +10,7 @@ par des TRIPLETS ORTHONORMÉS (extension de bases orthonormées, Gram–Schmidt)
 
 namespace Gleason
 
-open scoped RealInnerProductSpace
+open scoped RealInnerProductSpace Real
 
 noncomputable section
 
@@ -537,6 +537,84 @@ theorem exists_frame_with_lat {p : E3} (hp : ‖p‖ = 1) {l₁ l₂ l₃ : ℝ}
   · unfold lat; rw [hinner 0, hv0, Real.sq_sqrt h₁]
   · unfold lat; rw [hinner 1, hv1, Real.sq_sqrt h₂]
   · unfold lat; rw [hinner 2, hv2, Real.sq_sqrt h₃]
+
+/- ═══════════════════════════════════════════════════════════════════
+   Chaîne de descente de Piron (CKM 1985 §5, PDF p. 123-124, Fig. 1-3).
+   Stratégie : paramétrisation explicite `spherePoint b θ ψ` (colatitude θ
+   depuis le pôle `b 0`, azimut ψ dans le plan `(b 1, b 2)`), puis
+   construction FERMÉE (sans limite ni IVT) d'une chaîne de descente en deux
+   phases : ajustement d'azimut (n pas égaux, amplification contrôlée par
+   Bernoulli) puis gain de distance pur (2 pas d'azimut opposé).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **E1a.** Point de colatitude `θ` et azimut `ψ` dans la base `b` (pôle `b 0`,
+plan équatorial `(b 1, b 2)`). -/
+noncomputable def spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) (θ ψ : ℝ) : E3 :=
+  Real.cos θ • b 0 + (Real.sin θ * Real.cos ψ) • b 1 + (Real.sin θ * Real.sin ψ) • b 2
+
+theorem inner_pole_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) (θ ψ : ℝ) :
+    ⟪b 0, spherePoint b θ ψ⟫ = Real.cos θ := by
+  unfold spherePoint
+  rw [inner_add_right, inner_add_right, real_inner_smul_right, real_inner_smul_right,
+      real_inner_smul_right, b.inner_eq_one 0, b.inner_eq_zero (i := 0) (j := 1) (by decide),
+      b.inner_eq_zero (i := 0) (j := 2) (by decide)]
+  ring
+
+theorem inner_snd_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) (θ ψ : ℝ) :
+    ⟪b 1, spherePoint b θ ψ⟫ = Real.sin θ * Real.cos ψ := by
+  unfold spherePoint
+  rw [inner_add_right, inner_add_right, real_inner_smul_right, real_inner_smul_right,
+      real_inner_smul_right, b.inner_eq_zero (i := 1) (j := 0) (by decide), b.inner_eq_one 1,
+      b.inner_eq_zero (i := 1) (j := 2) (by decide)]
+  ring
+
+theorem inner_trd_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) (θ ψ : ℝ) :
+    ⟪b 2, spherePoint b θ ψ⟫ = Real.sin θ * Real.sin ψ := by
+  unfold spherePoint
+  rw [inner_add_right, inner_add_right, real_inner_smul_right, real_inner_smul_right,
+      real_inner_smul_right, b.inner_eq_zero (i := 2) (j := 0) (by decide),
+      b.inner_eq_zero (i := 2) (j := 1) (by decide), b.inner_eq_one 2]
+  ring
+
+theorem norm_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) (θ ψ : ℝ) :
+    ‖spherePoint b θ ψ‖ = 1 := by
+  set v : E3 := spherePoint b θ ψ with hv_def
+  have hv0 : ⟪b 0, v⟫ = Real.cos θ := inner_pole_spherePoint b θ ψ
+  have hv1 : ⟪b 1, v⟫ = Real.sin θ * Real.cos ψ := inner_snd_spherePoint b θ ψ
+  have hv2 : ⟪b 2, v⟫ = Real.sin θ * Real.sin ψ := inner_trd_spherePoint b θ ψ
+  have hvv : ⟪v, v⟫ = 1 := by
+    nth_rewrite 1 [hv_def]
+    unfold spherePoint
+    rw [inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_smul_left, hv0, hv1, hv2]
+    nlinarith [Real.sin_sq_add_cos_sq θ, Real.sin_sq_add_cos_sq ψ]
+  have hsq : ‖v‖ ^ 2 = 1 := by rw [← real_inner_self_eq_norm_sq]; exact hvv
+  nlinarith [norm_nonneg v, hsq]
+
+theorem lat_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) (θ ψ : ℝ) :
+    lat (b 0) (spherePoint b θ ψ) = Real.cos θ ^ 2 := by
+  unfold lat
+  rw [inner_pole_spherePoint]
+
+theorem mem_northern_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) {θ : ℝ}
+    (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ π / 2) (ψ : ℝ) : spherePoint b θ ψ ∈ northern (b 0) := by
+  refine ⟨norm_spherePoint b θ ψ, ?_⟩
+  rw [inner_pole_spherePoint]
+  exact Real.cos_nonneg_of_mem_Icc ⟨by linarith [Real.pi_pos], hθ1⟩
+
+theorem ne_pole_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) {θ : ℝ}
+    (hθ0 : 0 < θ) (hθ1 : θ ≤ π / 2) (ψ : ℝ) : spherePoint b θ ψ ≠ b 0 := by
+  intro heq
+  have hsinpos : 0 < Real.sin θ := Real.sin_pos_of_pos_of_lt_pi hθ0 (by linarith [Real.pi_pos])
+  have h1 : ⟪b 1, spherePoint b θ ψ⟫ = 0 := by rw [heq]; exact b.inner_eq_zero (by decide)
+  have h2 : ⟪b 2, spherePoint b θ ψ⟫ = 0 := by rw [heq]; exact b.inner_eq_zero (by decide)
+  rw [inner_snd_spherePoint] at h1
+  rw [inner_trd_spherePoint] at h2
+  have hcosψ : Real.cos ψ = 0 := (mul_eq_zero.mp h1).resolve_left hsinpos.ne'
+  have hsinψ : Real.sin ψ = 0 := (mul_eq_zero.mp h2).resolve_left hsinpos.ne'
+  have hpyth := Real.sin_sq_add_cos_sq ψ
+  rw [hcosψ, hsinψ] at hpyth
+  norm_num at hpyth
 
 end
 end Gleason
