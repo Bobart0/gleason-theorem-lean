@@ -69,6 +69,25 @@ theorem exists_orthonormalBasis_of_triple (v : Fin 3 → E3)
   obtain ⟨b, hb⟩ := hv.exists_orthonormalBasis_extension_of_card_eq hcard
   exact ⟨b, fun i => hb i (Set.mem_univ i)⟩
 
+/-- Variante « symétrique » de `exists_orthonormalBasis_of_triple` : au lieu d'une
+`Pairwise`, les 3 produits scalaires deux-à-deux sont donnés explicitement (plus
+commode à fournir à chaque site d'appel). -/
+theorem exists_orthonormalBasis_of_triple' (v0 v1 v2 : E3)
+    (h0 : ‖v0‖ = 1) (h1 : ‖v1‖ = 1) (h2 : ‖v2‖ = 1)
+    (h01 : ⟪v0, v1⟫ = 0) (h02 : ⟪v0, v2⟫ = 0) (h12 : ⟪v1, v2⟫ = 0) :
+    ∃ b : OrthonormalBasis (Fin 3) ℝ E3, b 0 = v0 ∧ b 1 = v1 ∧ b 2 = v2 := by
+  have h10 : ⟪v1, v0⟫ = 0 := by rw [real_inner_comm]; exact h01
+  have h20 : ⟪v2, v0⟫ = 0 := by rw [real_inner_comm]; exact h02
+  have h21 : ⟪v2, v1⟫ = 0 := by rw [real_inner_comm]; exact h12
+  have hnorm : ∀ i, ‖(![v0, v1, v2] : Fin 3 → E3) i‖ = 1 := by
+    intro i; fin_cases i <;> simp_all
+  have hperp : Pairwise (fun i j =>
+      ⟪(![v0, v1, v2] : Fin 3 → E3) i, (![v0, v1, v2] : Fin 3 → E3) j⟫ = 0) := by
+    intro i j hij
+    fin_cases i <;> fin_cases j <;> first | exact absurd rfl hij | simp_all
+  obtain ⟨b, hb⟩ := exists_orthonormalBasis_of_triple _ hnorm hperp
+  exact ⟨b, by simpa using hb 0, by simpa using hb 1, by simpa using hb 2⟩
+
 /-- Deux bases partageant un vecteur : la somme de `f` sur les deux autres vecteurs
 est la même (conséquence directe de la définition de frame function ; utilisé
 partout dans la descente). -/
