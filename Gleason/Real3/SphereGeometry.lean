@@ -56,6 +56,19 @@ theorem exists_orthonormalBasis_pair (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖
   · have := hb 1 (by simp)
     simpa using this
 
+/-- Un triplet EXPLICITEMENT prescrit (les trois vecteurs, pas seulement deux) qui
+est orthonormé coïncide avec une base orthonormée — cas `s = univ` de l'extension.
+Outil de base pour construire des bases par manipulation directe de triplets
+(retournement de signe, produit vectoriel, etc.), utilisé dans toute la suite. -/
+theorem exists_orthonormalBasis_of_triple (v : Fin 3 → E3)
+    (hnorm : ∀ i, ‖v i‖ = 1) (hperp : Pairwise (fun i j => ⟪v i, v j⟫ = 0)) :
+    ∃ b : OrthonormalBasis (Fin 3) ℝ E3, ∀ i, b i = v i := by
+  have hcard : Module.finrank ℝ E3 = Fintype.card (Fin 3) := by simp
+  have hv : Orthonormal ℝ ((Set.univ : Set (Fin 3)).restrict v) :=
+    ⟨fun i => hnorm i.1, fun i j hij => hperp (fun h => hij (Subtype.ext h))⟩
+  obtain ⟨b, hb⟩ := hv.exists_orthonormalBasis_extension_of_card_eq hcard
+  exact ⟨b, fun i => hb i (Set.mem_univ i)⟩
+
 /-- Deux bases partageant un vecteur : la somme de `f` sur les deux autres vecteurs
 est la même (conséquence directe de la définition de frame function ; utilisé
 partout dans la descente). -/
