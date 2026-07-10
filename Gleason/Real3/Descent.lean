@@ -14,7 +14,7 @@ corollaire (limite `ξ → 0`).
 
 namespace Gleason
 
-open scoped RealInnerProductSpace
+open scoped RealInnerProductSpace Real
 
 noncomputable section
 
@@ -109,6 +109,77 @@ theorem equator_value_le {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction
     exact equator_value_lt hf hp hmax hm hconst hfp
   intro t ht
   linarith [hcm, hmlb t ht]
+
+/- ═══════════════════════════════════════════════════════════════════
+   Chaîne de descente de Piron (CKM 1985 §5, PDF p. 123-124, Fig. 1-3).
+   Construction EXPLICITE (sans limite ni IVT, contrairement au papier) en
+   deux phases : ajustement d'azimut (E2, cette estimée de spirale) puis
+   gain de distance pur (deux pas d'azimut opposé, dans E4).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **E2.** Pour tout écart d'azimut `Δ` et tout facteur d'amplification cible
+`ρ > 1`, il existe `n` pas d'angle égal `Δ/n` (avec `|Δ/n| < π/2`, condition de
+validité du critère de descente) dont l'amplification cumulée
+`(cos(Δ/n))⁻¹ⁿ` reste `≤ ρ`. Preuve : `cos x ≥ 1 - x²/2` (borne de Taylor) +
+Bernoulli donnent `cos(Δ/n)ⁿ ≥ 1 - Δ²/(2n)`, minoré par `1/ρ` dès que `n`
+dépasse un seuil explicite. -/
+theorem spiral_amplification (Δ : ℝ) {ρ : ℝ} (hρ : 1 < ρ) :
+    ∃ n : ℕ, 0 < n ∧ |Δ| / n < π / 2 ∧ (Real.cos (Δ / n))⁻¹ ^ n ≤ ρ := by
+  have hρ0 : 0 < ρ - 1 := by linarith
+  set A : ℝ := 2 * |Δ| / π with hA_def
+  set B : ℝ := |Δ| with hB_def
+  set C : ℝ := Δ ^ 2 * ρ / (2 * (ρ - 1)) with hC_def
+  have hA0 : 0 ≤ A := by rw [hA_def]; positivity
+  have hB0 : 0 ≤ B := by rw [hB_def]; positivity
+  have hC0 : 0 ≤ C := by rw [hC_def]; positivity
+  obtain ⟨n, hn⟩ := exists_nat_gt (A + B + C)
+  have hnR : (0 : ℝ) < n := by linarith
+  have hn0 : 0 < n := by exact_mod_cast hnR
+  have hnA : A < n := by linarith
+  have hnB : B < n := by linarith
+  have hnC : C < n := by linarith
+  have hangle : |Δ| / n < π / 2 := by
+    rw [hA_def, div_lt_iff₀ Real.pi_pos] at hnA
+    rw [div_lt_iff₀ hnR]
+    linarith
+  set x : ℝ := Δ / n with hx_def
+  have hxlt1 : |x| < 1 := by
+    rw [hx_def, abs_div, abs_of_pos hnR, div_lt_one hnR]
+    rw [hB_def] at hnB
+    linarith
+  have hx2lt1 : x ^ 2 < 1 := by nlinarith [hxlt1, abs_nonneg x, sq_abs x]
+  have habs : |x| < π / 2 := by
+    rw [hx_def, abs_div, abs_of_pos hnR]
+    exact hangle
+  have hcospos : 0 < Real.cos x := Real.cos_pos_of_mem_Ioo (abs_lt.mp habs)
+  have hcosbound : 1 - x ^ 2 / 2 ≤ Real.cos x := Real.one_sub_sq_div_two_le_cos
+  have hcosnn : 0 ≤ 1 - x ^ 2 / 2 := by nlinarith [hx2lt1]
+  have hbernoulli : 1 + (n : ℝ) * (-(x ^ 2 / 2)) ≤ (1 + (-(x ^ 2 / 2))) ^ n :=
+    one_add_mul_le_pow (by nlinarith [hx2lt1]) n
+  have hcos_pow : (1 - x ^ 2 / 2) ^ n ≤ Real.cos x ^ n :=
+    pow_le_pow_left₀ hcosnn hcosbound n
+  have hfinal_pow : 1 - (n : ℝ) * x ^ 2 / 2 ≤ Real.cos x ^ n := by
+    calc 1 - (n : ℝ) * x ^ 2 / 2 = 1 + (n : ℝ) * (-(x ^ 2 / 2)) := by ring
+      _ ≤ (1 + (-(x ^ 2 / 2))) ^ n := hbernoulli
+      _ = (1 - x ^ 2 / 2) ^ n := by ring_nf
+      _ ≤ Real.cos x ^ n := hcos_pow
+  have hxsq : (n : ℝ) * x ^ 2 = Δ ^ 2 / n := by
+    rw [hx_def, div_pow]; field_simp
+  rw [hxsq] at hfinal_pow
+  have hnC' : Δ ^ 2 * ρ < (n : ℝ) * (2 * (ρ - 1)) := by
+    have h := hnC
+    rw [hC_def, div_lt_iff₀ (by positivity : (0 : ℝ) < 2 * (ρ - 1))] at h
+    linarith
+  have step1 : ρ * (1 - Δ ^ 2 / (n : ℝ) / 2) ≤ ρ * Real.cos x ^ n :=
+    mul_le_mul_of_nonneg_left hfinal_pow (by linarith : (0 : ℝ) ≤ ρ)
+  have step2 : ρ * (1 - Δ ^ 2 / (n : ℝ) / 2) = ρ - Δ ^ 2 * ρ / (2 * n) := by
+    field_simp
+  have step3 : Δ ^ 2 * ρ / (2 * (n : ℝ)) ≤ ρ - 1 := by
+    rw [div_le_iff₀ (by positivity : (0 : ℝ) < 2 * (n : ℝ))]
+    nlinarith [hnC']
+  refine ⟨n, hn0, hangle, ?_⟩
+  rw [inv_pow, inv_eq_one_div, div_le_iff₀ (by positivity : (0 : ℝ) < Real.cos x ^ n)]
+  linarith [step1, step2, step3]
 
 end
 end Gleason
