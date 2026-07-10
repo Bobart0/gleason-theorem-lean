@@ -7,6 +7,7 @@ import Gleason.Real3.Simplex
 import Gleason.Real3.SphereGeometry
 import Gleason.Real3.SphereCoords
 import Gleason.Real3.Descent
+import Gleason.Real3.ExactPole
 import Gleason.Real3.Continuity
 import Gleason.Real3.Regular
 import Gleason.Complex.RealSections
