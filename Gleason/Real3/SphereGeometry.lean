@@ -445,5 +445,30 @@ theorem self_mem_descent {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN :
   have h := inner_sperp_self hp hs hsN hsp
   rwa [real_inner_comm (sperp p s) s] at h
 
+/-- **B6.** Le sommet du cercle de descente est le point de latitude maximale :
+`t ∈ descent p s → lat p t ≤ lat p s`. Preuve : Parseval polarisé
+(`x=p,y=t`) sur la base de B4a donne `⟪p,t⟫ = ⟪p,s⟫·⟪s,t⟫` (les deux autres
+termes s'annulent : `⟪sperp,t⟫=0` par définition de la descente,
+`⟪p,b 2⟫=0` par B4a) ; Parseval `x=y=t` donne `⟪s,t⟫² ≤ 1`. -/
+theorem lat_le_of_mem_descent {p s t : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ northern p)
+    (hsp : s ≠ p) (ht : t ∈ descent p s) : lat p t ≤ lat p s := by
+  obtain ⟨b, hb0, hb1, hb2⟩ := exists_descent_basis hp hs hsN hsp
+  have htd : ⟪sperp p s, t⟫ = 0 := ht.2
+  have htN : t ∈ northern p := ht.1
+  have hpol := b.sum_inner_mul_inner p t
+  rw [Fin.sum_univ_three, hb0, hb1, htd, hb2.2, mul_zero, zero_mul, add_zero, zero_add] at hpol
+  have hlat_eq : lat p t = lat p s * ⟪s, t⟫ ^ 2 := by
+    unfold lat
+    rw [← hpol]
+    ring
+  have hsum_t := b.sum_sq_inner_right t
+  rw [htN.1] at hsum_t
+  norm_num at hsum_t
+  rw [Fin.sum_univ_three, hb1] at hsum_t
+  have hββ : ⟪s, t⟫ ^ 2 ≤ 1 := by
+    nlinarith [sq_nonneg (⟪b 0, t⟫ : ℝ), sq_nonneg (⟪b 2, t⟫ : ℝ), hsum_t]
+  rw [hlat_eq]
+  exact mul_le_of_le_one_right (lat_nonneg p s) hββ
+
 end
 end Gleason
