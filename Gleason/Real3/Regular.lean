@@ -505,7 +505,80 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
           simp only [hh_def]
           rw [hclaim s hs hcond]
           ring
-        sorry -- H6-H9
+        -- Forme quadratique cible (partagée par les deux branches de H6-H7).
+        set Q0 : QuadraticForm ℝ E3 :=
+          M • QuadraticMap.linMulLin (innerₗ E3 p) (innerₗ E3 p) +
+          α • QuadraticMap.linMulLin (innerₗ E3 q) (innerₗ E3 q) +
+          m • QuadraticMap.linMulLin (innerₗ E3 r) (innerₗ E3 r) with hQ0_def
+        have hQ0_apply : ∀ s : E3, Q0 s = g s := by
+          intro s
+          simp only [hQ0_def, hg_def, QuadraticMap.add_apply, QuadraticMap.smul_apply,
+            QuadraticMap.linMulLin_apply, innerₗ_apply_apply, smul_eq_mul]
+          ring
+        suffices hzero_final : ∀ s : E3, ‖s‖ = 1 → h s = 0 by
+          refine ⟨Q0, fun x hx => ?_⟩
+          have hhx := hzero_final x hx
+          simp only [hh_def] at hhx
+          rw [hQ0_apply x]
+          linarith [hhx]
+        -- **H6.** Extrema de `h` (via G).
+        obtain ⟨p2, hp2_norm, hp2max⟩ := frameFunction_attains_sup hhframe hh_le
+        obtain ⟨r2, hr2_norm, hr2min⟩ := frameFunction_attains_inf hhframe hh_ge
+        by_cases hMm2 : h p2 = h r2
+        · -- `h` constante ; poids nul ⟹ `h ≡ 0`.
+          obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst p2 hp2_norm
+          have hsum := hhframe b
+          rw [Fin.sum_univ_three, hb0] at hsum
+          have e1 : h (b 1) = h p2 := le_antisymm (hp2max (b 1) (b.norm_eq_one 1))
+            (by rw [hMm2]; exact hr2min (b 1) (b.norm_eq_one 1))
+          have e2 : h (b 2) = h p2 := le_antisymm (hp2max (b 2) (b.norm_eq_one 2))
+            (by rw [hMm2]; exact hr2min (b 2) (b.norm_eq_one 2))
+          rw [e1, e2] at hsum
+          have hp2zero : h p2 = 0 := by linarith [hsum]
+          intro s hs
+          have h1 : h s ≤ h p2 := hp2max s hs
+          have h2 : h r2 ≤ h s := hr2min s hs
+          rw [hMm2] at h1
+          linarith [h1, h2, hp2zero, hMm2]
+        · -- **H7.** `h(p2) ≠ h(r2)` : H1 donne un triple extrémal `(p2,q2,r2)` pour `h`.
+          obtain ⟨q2, r2', hq2_norm, hr2'_norm, hp2q2, hp2r2', hq2r2', hq2eq, hr2'eq⟩ :=
+            exists_extremal_frame hhframe hp2_norm hp2max hr2_norm hr2min hMm2
+          -- Zéro de `h` sur l'équateur de `p2`, via le cercle `⟪p-q,·⟫=0` (H4/H5).
+          obtain ⟨s0, hs0_norm, hs0pq, hs0p2⟩ := exists_unit_orthogonal_to_pair (p - q) p2
+          have hs0_cond : ⟪p, s0⟫ = ⟪q, s0⟫ := by
+            have hz : ⟪p - q, s0⟫ = 0 := by rw [real_inner_comm]; exact hs0pq
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hs0_zero : h s0 = 0 := hh_zero s0 hs0_norm (Or.inl hs0_cond)
+          have hp2s0 : ⟪p2, s0⟫ = 0 := by rw [real_inner_comm]; exact hs0p2
+          have hM2nonneg : 0 ≤ h p2 := by rw [← hs0_zero]; exact hp2max s0 hs0_norm
+          obtain ⟨t0, ht0_norm, hp2t0, hs0t0⟩ :=
+            exists_third_orthogonal p2 s0 hp2_norm hs0_norm hp2s0
+          obtain ⟨bt, hbt0, hbt1, hbt2⟩ :=
+            exists_orthonormalBasis_of_triple' p2 s0 t0 hp2_norm hs0_norm ht0_norm hp2s0 hp2t0 hs0t0
+          have hsumt := hhframe bt
+          rw [Fin.sum_univ_three, hbt0, hbt1, hbt2, hs0_zero] at hsumt
+          have ht0eq : h t0 = -(h p2) := by linarith [hsumt]
+          have hstep1 : h r2 ≤ -(h p2) := by rw [← ht0eq]; exact hr2min t0 ht0_norm
+          -- Argument miroir sur l'équateur de `r2`.
+          obtain ⟨s0', hs0'_norm, hs0'pq, hs0'r2⟩ := exists_unit_orthogonal_to_pair (p - q) r2
+          have hs0'_cond : ⟪p, s0'⟫ = ⟪q, s0'⟫ := by
+            have hz : ⟪p - q, s0'⟫ = 0 := by rw [real_inner_comm]; exact hs0'pq
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hs0'_zero : h s0' = 0 := hh_zero s0' hs0'_norm (Or.inl hs0'_cond)
+          have hr2s0' : ⟪r2, s0'⟫ = 0 := by rw [real_inner_comm]; exact hs0'r2
+          obtain ⟨t0', ht0'_norm, hr2t0', hs0't0'⟩ :=
+            exists_third_orthogonal r2 s0' hr2_norm hs0'_norm hr2s0'
+          obtain ⟨bt', hbt0', hbt1', hbt2'⟩ := exists_orthonormalBasis_of_triple' r2 s0' t0'
+            hr2_norm hs0'_norm ht0'_norm hr2s0' hr2t0' hs0't0'
+          have hsumt' := hhframe bt'
+          rw [Fin.sum_univ_three, hbt0', hbt1', hbt2', hs0'_zero] at hsumt'
+          have ht0'eq : h t0' = -(h r2) := by linarith [hsumt']
+          have hstep2 : h t0' ≤ h p2 := hp2max t0' ht0'_norm
+          have hMm2eq : h p2 + h r2 = 0 := by
+            rw [ht0'eq] at hstep2
+            linarith [hstep1, hstep2]
+          have hq2zero : h q2 = 0 := by linarith [hq2eq, hMm2eq]
+          sorry -- H8-H9
 
 end
 end Gleason
