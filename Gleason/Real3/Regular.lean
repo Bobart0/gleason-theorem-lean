@@ -634,7 +634,176 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
             have hh := Real.sqrt_sq (norm_nonneg w)
             rw [h2, Real.sqrt_one] at hh
             exact hh.symm
-          sorry -- H9 (suite)
+          -- Boîte à outils : orthonormalité ⟹ distinction, non-colinéarité via un témoin.
+          have hvne : ∀ A B : E3, ‖A‖ = 1 → ‖B‖ = 1 → ⟪A, B⟫ = 0 → A ≠ B := by
+            intro A B hA hB hAB heq
+            rw [heq, real_inner_self_eq_norm_sq, hB] at hAB
+            norm_num at hAB
+          have hpq_ne0 : (p - q : E3) ≠ 0 := sub_ne_zero.mpr (hvne p q hp hq hpq)
+          have hpr_ne0 : (p - r : E3) ≠ 0 := sub_ne_zero.mpr (hvne p r hp hr hpr)
+          have hp2q2_ne0 : (p2 - q2 : E3) ≠ 0 := sub_ne_zero.mpr (hvne p2 q2 hp2_norm hq2_norm hp2q2)
+          have hnprop : ∀ A B C : E3, ⟪C, A⟫ = 0 → ⟪C, B⟫ ≠ 0 → ∀ c : ℝ, c • A ≠ B := by
+            intro A B C hCA hCB c hc
+            exact hCB (by rw [← hc, real_inner_smul_right, hCA, mul_zero])
+          have hne_pq_pr : ∀ c : ℝ, c • (p - q) ≠ p - r := by
+            apply hnprop (p - q) (p - r) r
+            · rw [inner_sub_right, hrp, hrq]; ring
+            · rw [inner_sub_right, hrp, real_inner_self_eq_norm_sq, hr]; norm_num
+          have hne_pq_qr : ∀ c : ℝ, c • (p - q) ≠ q - r := by
+            apply hnprop (p - q) (q - r) r
+            · rw [inner_sub_right, hrp, hrq]; ring
+            · rw [inner_sub_right, hrq, real_inner_self_eq_norm_sq, hr]; norm_num
+          have hne_pr_qr : ∀ c : ℝ, c • (p - r) ≠ q - r := by
+            apply hnprop (p - r) (q - r) q
+            · rw [inner_sub_right, hqp, hqr]; ring
+            · rw [inner_sub_right, real_inner_self_eq_norm_sq, hq, hqr]; norm_num
+          have hne_p2r2' : ∀ c : ℝ, c • (p2 - q2) ≠ p2 - r2' := by
+            have h1 : ⟪r2', p2⟫ = 0 := by rw [real_inner_comm]; exact hp2r2'
+            have h2 : ⟪r2', q2⟫ = 0 := by rw [real_inner_comm]; exact hq2r2'
+            apply hnprop (p2 - q2) (p2 - r2') r2'
+            · rw [inner_sub_right, h1, h2]; ring
+            · rw [inner_sub_right, h1, real_inner_self_eq_norm_sq, hr2'_norm]; norm_num
+          have hne_p2plusr2' : ∀ c : ℝ, c • (p2 - q2) ≠ p2 + r2' := by
+            have h1 : ⟪r2', p2⟫ = 0 := by rw [real_inner_comm]; exact hp2r2'
+            have h2 : ⟪r2', q2⟫ = 0 := by rw [real_inner_comm]; exact hq2r2'
+            apply hnprop (p2 - q2) (p2 + r2') r2'
+            · rw [inner_sub_right, h1, h2]; ring
+            · rw [inner_add_right, h1, real_inner_self_eq_norm_sq, hr2'_norm]; norm_num
+          -- Coordonnées de `u` : `⟪p,u⟫ = ⟪q,u⟫ = ⟪r,u⟫`, donc `u` est sur les trois
+          -- cercles non-primés `x = y`, `x = z`, `y = z`.
+          have hu_p : ⟪p, u⟫ = (Real.sqrt 3)⁻¹ := by
+            rw [hu_def, real_inner_smul_right]
+            simp only [inner_add_right, real_inner_self_eq_norm_sq, hp, hpq, hpr]
+            norm_num
+          have hu_q : ⟪q, u⟫ = (Real.sqrt 3)⁻¹ := by
+            rw [hu_def, real_inner_smul_right]
+            simp only [inner_add_right, real_inner_self_eq_norm_sq, hq, hqp, hqr]
+            norm_num
+          have hu_r : ⟪r, u⟫ = (Real.sqrt 3)⁻¹ := by
+            rw [hu_def, real_inner_smul_right]
+            simp only [inner_add_right, real_inner_self_eq_norm_sq, hr, hrp, hrq]
+            norm_num
+          have hu_C1 : ⟪p, u⟫ = ⟪q, u⟫ := hu_p.trans hu_q.symm
+          have hu_C2 : ⟪p, u⟫ = ⟪r, u⟫ := hu_p.trans hu_r.symm
+          have hu_C3 : ⟪q, u⟫ = ⟪r, u⟫ := hu_q.trans hu_r.symm
+          have hto_orth : ∀ X A B : E3, ⟪A, X⟫ = ⟪B, X⟫ → ⟪X, A - B⟫ = 0 := by
+            intro X A B hAB
+            rw [inner_sub_right, real_inner_comm A X, real_inner_comm B X, hAB]; ring
+          have hto_orth' : ∀ X A B : E3, ⟪A, X⟫ = -⟪B, X⟫ → ⟪X, A + B⟫ = 0 := by
+            intro X A B hAB
+            rw [inner_add_right, real_inner_comm A X, real_inner_comm B X, hAB]; ring
+          have hu_orth_pq : ⟪u, p - q⟫ = 0 := hto_orth u p q hu_C1
+          have hu_orth_pr : ⟪u, p - r⟫ = 0 := hto_orth u p r hu_C2
+          have hu_orth_qr : ⟪u, q - r⟫ = 0 := hto_orth u q r hu_C3
+          -- Deux cercles non-primés distincts (parmi `x=y,x=z,y=z`) ne se coupent qu'en `±u`.
+          have hCiCj_to_u : ∀ nA nB : E3, nA ≠ 0 → (∀ c : ℝ, c • nA ≠ nB) →
+              ⟪u, nA⟫ = 0 → ⟪u, nB⟫ = 0 →
+              ∀ X : E3, ‖X‖ = 1 → ⟪X, nA⟫ = 0 → ⟪X, nB⟫ = 0 → X = u ∨ X = -u :=
+            fun nA nB hA0 hindep huA huB X hX hXA hXB =>
+              unique_unit_orthogonal_to_pair hA0 hindep huA huB hu_norm hXA hXB hX
+          -- Zéro de `h` sur `Γ ∩ Cᵢ` (i=1,2,3, non-primés) : via le Claim `hclaim_h`, ce zéro
+          -- force la coordonnée `x2` à égaler `±z2` (les deux seules issues, car `M2 ≠ 0`).
+          have hbin_of : ∀ X : E3, ‖X‖ = 1 → ⟪p2, X⟫ = ⟪q2, X⟫ → h X = 0 →
+              ⟪p2, X⟫ = ⟪r2', X⟫ ∨ ⟪p2, X⟫ = -⟪r2', X⟫ := by
+            intro X hX hXΓ hX0
+            have hcl := hclaim_h X hX (Or.inl hXΓ)
+            rw [hX0, hr2'M2] at hcl
+            have hfact : M2 * (⟪p2, X⟫ - ⟪r2', X⟫) * (⟪p2, X⟫ + ⟪r2', X⟫) = 0 := by
+              linear_combination -hcl
+            rcases mul_eq_zero.mp hfact with h | h
+            · rcases mul_eq_zero.mp h with h1 | h1
+              · exact absurd h1 hM2pos.ne'
+              · left; linarith [h1]
+            · right; linarith [h]
+          obtain ⟨A1, hA1_norm, hA1Γ0, hA1C10⟩ := exists_unit_orthogonal_to_pair (p2 - q2) (p - q)
+          have hA1_Γ : ⟪p2, A1⟫ = ⟪q2, A1⟫ := by
+            have hz : ⟪p2 - q2, A1⟫ = 0 := by rw [real_inner_comm]; exact hA1Γ0
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hA1_cond : ⟪p, A1⟫ = ⟪q, A1⟫ := by
+            have hz : ⟪p - q, A1⟫ = 0 := by rw [real_inner_comm]; exact hA1C10
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hA1_zero : h A1 = 0 := hh_zero A1 hA1_norm (Or.inl hA1_cond)
+          have hA1_bin := hbin_of A1 hA1_norm hA1_Γ hA1_zero
+          obtain ⟨A2, hA2_norm, hA2Γ0, hA2C0⟩ := exists_unit_orthogonal_to_pair (p2 - q2) (p - r)
+          have hA2_Γ : ⟪p2, A2⟫ = ⟪q2, A2⟫ := by
+            have hz : ⟪p2 - q2, A2⟫ = 0 := by rw [real_inner_comm]; exact hA2Γ0
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hA2_cond : ⟪p, A2⟫ = ⟪r, A2⟫ := by
+            have hz : ⟪p - r, A2⟫ = 0 := by rw [real_inner_comm]; exact hA2C0
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hA2_zero : h A2 = 0 := hh_zero A2 hA2_norm (Or.inr (Or.inr (Or.inl hA2_cond)))
+          have hA2_bin := hbin_of A2 hA2_norm hA2_Γ hA2_zero
+          obtain ⟨A3, hA3_norm, hA3Γ0, hA3C0⟩ := exists_unit_orthogonal_to_pair (p2 - q2) (q - r)
+          have hA3_Γ : ⟪p2, A3⟫ = ⟪q2, A3⟫ := by
+            have hz : ⟪p2 - q2, A3⟫ = 0 := by rw [real_inner_comm]; exact hA3Γ0
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hA3_cond : ⟪q, A3⟫ = ⟪r, A3⟫ := by
+            have hz : ⟪q - r, A3⟫ = 0 := by rw [real_inner_comm]; exact hA3C0
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hA3_zero : h A3 = 0 :=
+            hh_zero A3 hA3_norm (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hA3_cond)))))
+          have hA3_bin := hbin_of A3 hA3_norm hA3_Γ hA3_zero
+          -- Si deux `Aᵢ` tombent dans la même "case" (`x2=z2` ou `x2=-z2`), l'unicité
+          -- (`unique_unit_orthogonal_to_pair`, appliquée à `Γ` et au cercle-case primé)
+          -- force `Aᵢ = ±Aⱼ`.
+          have hmatchL : ∀ X Y : E3, ‖X‖ = 1 → ‖Y‖ = 1 → ⟪p2, X⟫ = ⟪q2, X⟫ → ⟪p2, Y⟫ = ⟪q2, Y⟫ →
+              ⟪p2, X⟫ = ⟪r2', X⟫ → ⟪p2, Y⟫ = ⟪r2', Y⟫ → X = Y ∨ X = -Y := by
+            intro X Y hX hY hXΓ hYΓ hXb hYb
+            exact unique_unit_orthogonal_to_pair hp2q2_ne0 hne_p2r2'
+              (hto_orth Y p2 q2 hYΓ) (hto_orth Y p2 r2' hYb) hY
+              (hto_orth X p2 q2 hXΓ) (hto_orth X p2 r2' hXb) hX
+          have hmatchR : ∀ X Y : E3, ‖X‖ = 1 → ‖Y‖ = 1 → ⟪p2, X⟫ = ⟪q2, X⟫ → ⟪p2, Y⟫ = ⟪q2, Y⟫ →
+              ⟪p2, X⟫ = -⟪r2', X⟫ → ⟪p2, Y⟫ = -⟪r2', Y⟫ → X = Y ∨ X = -Y := by
+            intro X Y hX hY hXΓ hYΓ hXb hYb
+            exact unique_unit_orthogonal_to_pair hp2q2_ne0 hne_p2plusr2'
+              (hto_orth Y p2 q2 hYΓ) (hto_orth' Y p2 r2' hYb) hY
+              (hto_orth X p2 q2 hXΓ) (hto_orth' X p2 r2' hXb) hX
+          have hmatch : (A1 = A2 ∨ A1 = -A2) ∨ (A1 = A3 ∨ A1 = -A3) ∨ (A2 = A3 ∨ A2 = -A3) := by
+            rcases hA1_bin with hb1 | hb1 <;> rcases hA2_bin with hb2 | hb2 <;>
+              rcases hA3_bin with hb3 | hb3
+            · exact Or.inl (hmatchL A1 A2 hA1_norm hA2_norm hA1_Γ hA2_Γ hb1 hb2)
+            · exact Or.inl (hmatchL A1 A2 hA1_norm hA2_norm hA1_Γ hA2_Γ hb1 hb2)
+            · exact Or.inr (Or.inl (hmatchL A1 A3 hA1_norm hA3_norm hA1_Γ hA3_Γ hb1 hb3))
+            · exact Or.inr (Or.inr (hmatchR A2 A3 hA2_norm hA3_norm hA2_Γ hA3_Γ hb2 hb3))
+            · exact Or.inr (Or.inr (hmatchL A2 A3 hA2_norm hA3_norm hA2_Γ hA3_Γ hb2 hb3))
+            · exact Or.inr (Or.inl (hmatchR A1 A3 hA1_norm hA3_norm hA1_Γ hA3_Γ hb1 hb3))
+            · exact Or.inl (hmatchR A1 A2 hA1_norm hA2_norm hA1_Γ hA2_Γ hb1 hb2)
+            · exact Or.inl (hmatchR A1 A2 hA1_norm hA2_norm hA1_Γ hA2_Γ hb1 hb2)
+          have hA2_orth_pr : ⟪A2, p - r⟫ = 0 := hto_orth A2 p r hA2_cond
+          have hA3_orth_qr : ⟪A3, q - r⟫ = 0 := hto_orth A3 q r hA3_cond
+          have hu_in_Γ : ⟪p2, u⟫ = ⟪q2, u⟫ := by
+            rcases hmatch with h12 | h13 | h23
+            · have hA1u : A1 = u ∨ A1 = -u := by
+                apply hCiCj_to_u (p - q) (p - r) hpq_ne0 hne_pq_pr hu_orth_pq hu_orth_pr A1 hA1_norm
+                  (hto_orth A1 p q hA1_cond)
+                rcases h12 with heq | heq
+                · rw [heq]; exact hA2_orth_pr
+                · rw [heq, inner_neg_left, hA2_orth_pr]; ring
+              rcases hA1u with heq | heq
+              · rw [← heq]; exact hA1_Γ
+              · have : ⟪p2, -u⟫ = ⟪q2, -u⟫ := heq ▸ hA1_Γ
+                rw [inner_neg_right, inner_neg_right] at this; linarith [this]
+            · have hA1u : A1 = u ∨ A1 = -u := by
+                apply hCiCj_to_u (p - q) (q - r) hpq_ne0 hne_pq_qr hu_orth_pq hu_orth_qr A1 hA1_norm
+                  (hto_orth A1 p q hA1_cond)
+                rcases h13 with heq | heq
+                · rw [heq]; exact hA3_orth_qr
+                · rw [heq, inner_neg_left, hA3_orth_qr]; ring
+              rcases hA1u with heq | heq
+              · rw [← heq]; exact hA1_Γ
+              · have : ⟪p2, -u⟫ = ⟪q2, -u⟫ := heq ▸ hA1_Γ
+                rw [inner_neg_right, inner_neg_right] at this; linarith [this]
+            · have hA2u : A2 = u ∨ A2 = -u := by
+                apply hCiCj_to_u (p - r) (q - r) hpr_ne0 hne_pr_qr hu_orth_pr hu_orth_qr A2 hA2_norm
+                  hA2_orth_pr
+                rcases h23 with heq | heq
+                · rw [heq]; exact hA3_orth_qr
+                · rw [heq, inner_neg_left, hA3_orth_qr]; ring
+              rcases hA2u with heq | heq
+              · rw [← heq]; exact hA2_Γ
+              · have : ⟪p2, -u⟫ = ⟪q2, -u⟫ := heq ▸ hA2_Γ
+                rw [inner_neg_right, inner_neg_right] at this; linarith [this]
+          sorry -- H9 (suite : w, span final)
 
 end
 end Gleason
