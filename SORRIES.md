@@ -34,7 +34,15 @@
 - [x] D. warmup_II : monotone + co-dénombrable + additif-à-1 ⇒ identité (§3)
       — Simplex.lean, 7 sous-lemmes (D1..D6-existence, D5) + assemblage,
       route cardinale pour la non-dénombrabilité de Ioo 0 1
-- [ ] E. piron_chain : chaîne de descentes, l(s)>l(t) (§5, spirale tan/cos) [DUR]
+- [x] E. piron_chain : chaîne de descentes, lat p t < lat p s (§5, spirale
+      tan/cos, Fig. 1-3) — construction EXPLICITE (sans limite/IVT) en deux
+      phases : E2 spiral_amplification (spirale d'azimut, borne de Taylor +
+      Bernoulli), E3 spherePoint_mem_descent_of_tan (critère de pas en tan),
+      E4 piron_chain_equator_case / piron_chain_main_case (cas cible sur
+      l'équateur / cas général à 2 pas de phase B), E4 piron_chain (assemblage,
+      dispatch via exists_basis_aligned/exists_sphereCoords) ; E5
+      chain_decreasing + frameFunction_le_of_lat_lt (corollaire pour f,
+      récurrence sur la chaîne via basic_lemma)
 - [ ] F. frameFunction_exact_pole : f̄/f_, C dénombrable, Warmup II, C=∅ (§5)
 - [ ] G. frameFunction_attains_extrema : Tychonoff + rotations + cas radial (§6) [DUR]
 - [ ] H. frameFunction_regular : p̂/q̂/r̂, claim, h=g−f, 6 grands cercles (§7)

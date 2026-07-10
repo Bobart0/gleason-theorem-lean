@@ -394,5 +394,64 @@ theorem piron_chain {p : E3} (hp : ‖p‖ = 1) {s t : E3}
     · rw [hc0, hs_eq]
     · rw [hcn, ht_eq, hθt_eq]
 
+/-- **E5 (préliminaire).** Le long d'une chaîne de descente `c`, tous les
+points restent dans `northern p` : `c 0` par hypothèse, puis hérité pas à pas
+via la première composante de `descent`. -/
+private theorem chain_mem_northern {p : E3} {c : ℕ → E3} (hc0N : c 0 ∈ northern p)
+    {n : ℕ} (hstep : ∀ i < n, c i ≠ p ∧ c (i + 1) ∈ descent p (c i)) :
+    ∀ i ≤ n, c i ∈ northern p := by
+  intro i
+  induction i with
+  | zero => intro _; exact hc0N
+  | succ k ih =>
+    intro hik
+    have _hkN : c k ∈ northern p := ih (by omega)
+    exact (hstep k (by omega)).2.1
+
+/-- **E5 (corollaire, décroissance le long d'une chaîne).** Si `f` vérifie les
+hypothèses de `basic_lemma` (bornée, sup en `p`, minorée par `m₀` approché,
+constante sur l'équateur de `p`) et `c` est une chaîne de descente issue de
+`c 0 ∈ northern p`, alors `f (c n) ≤ f (c 0)`. Récurrence sur `n` : chaque pas
+`c i → c (i+1)` applique `basic_lemma` (via `chain_mem_northern` pour la
+membre `c i ∈ northern p` nécessaire à `hsN`). -/
+theorem chain_decreasing {f : E3 → ℝ} {W m₀ cst : ℝ} (hf : IsFrameFunction f W)
+    {p : E3} (hp : ‖p‖ = 1)
+    (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
+    (hmlb : ∀ t : E3, ‖t‖ = 1 → m₀ ≤ f t)
+    (hm : ∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m₀ + ε)
+    (hconst : ∀ e ∈ equator p, f e = cst)
+    {n : ℕ} {c : ℕ → E3} (hc0N : c 0 ∈ northern p)
+    (hstep : ∀ i < n, c i ≠ p ∧ c (i + 1) ∈ descent p (c i)) :
+    f (c n) ≤ f (c 0) := by
+  induction n with
+  | zero => exact le_refl _
+  | succ n ih =>
+    have hstep' : ∀ i < n, c i ≠ p ∧ c (i + 1) ∈ descent p (c i) := fun i hi => hstep i (by omega)
+    have hih : f (c n) ≤ f (c 0) := ih hstep'
+    have hcnN : c n ∈ northern p := chain_mem_northern hc0N hstep' n le_rfl
+    have hcnne : c n ≠ p := (hstep n (by omega)).1
+    have hstepn : c (n + 1) ∈ descent p (c n) := (hstep n (by omega)).2
+    have hcnunit : ‖c n‖ = 1 := hcnN.1
+    have hdec : f (c (n + 1)) ≤ f (c n) :=
+      basic_lemma hf hp hmax hmlb hm hconst hcnunit hcnN hcnne hstepn
+    linarith [hih, hdec]
+
+/-- **E5 (assemblage).** Corollaire de `piron_chain` + `chain_decreasing` :
+sous les hypothèses de `basic_lemma`, une frame function décroît entre deux
+points de `northern p \ {p}` dès que la latitude (par rapport à `p`) augmente. -/
+theorem frameFunction_le_of_lat_lt {f : E3 → ℝ} {W m₀ cst : ℝ} (hf : IsFrameFunction f W)
+    {p : E3} (hp : ‖p‖ = 1)
+    (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
+    (hmlb : ∀ t : E3, ‖t‖ = 1 → m₀ ≤ f t)
+    (hm : ∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m₀ + ε)
+    (hconst : ∀ e ∈ equator p, f e = cst)
+    {s t : E3} (hs : ‖s‖ = 1) (hsN : s ∈ northern p) (hsp : s ≠ p)
+    (ht : ‖t‖ = 1) (htN : t ∈ northern p) (htp : t ≠ p)
+    (hlt : lat p t < lat p s) :
+    f t ≤ f s := by
+  obtain ⟨n, c, hc0, hcn, hstep⟩ := piron_chain hp hs hsN hsp ht htN htp hlt
+  have h := chain_decreasing hf hp hmax hmlb hm hconst (hc0 ▸ hsN) hstep
+  rwa [hc0, hcn] at h
+
 end
 end Gleason
