@@ -94,6 +94,128 @@ include hf hp hmax hmlb hm hconst in
 theorem c_le_f : ∀ t : E3, ‖t‖ = 1 → c ≤ f t :=
   equator_value_le hf hp hmax hmlb hm hconst
 
+include hp in
+/-- **F2 (préliminaire).** Un point de l'équateur de `p` (utilisé pour la
+non-vacuité de la classe de latitude `0`). -/
+theorem equator_nonempty' : (equator p).Nonempty := by
+  obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst p hp
+  refine ⟨b 1, b.norm_eq_one 1, ?_⟩
+  rw [← hb0]; exact b.inner_eq_zero (by decide)
+
+include hp in
+/-- **F2a.** Toute latitude `l ∈ [0,1]` est atteinte dans `northern p`
+(`exists_frame_with_lat`, puis `exists_northern_rep` pour le signe). -/
+theorem nonempty_latClass {l : ℝ} (hl0 : 0 ≤ l) (hl1 : l ≤ 1) :
+    {s : E3 | s ∈ northern p ∧ lat p s = l}.Nonempty := by
+  have h2 : (0 : ℝ) ≤ (1 - l) / 2 := by linarith
+  obtain ⟨b, hb0, -, -⟩ := exists_frame_with_lat hp hl0 h2 h2 (by ring)
+  obtain ⟨s, hsN, hlseq, -⟩ := exists_northern_rep (p := p) (b.norm_eq_one 0)
+  exact ⟨s, hsN, hlseq.trans hb0⟩
+
+include hmax in
+theorem bddAbove_latClass_image (l : ℝ) :
+    BddAbove (f '' {s : E3 | s ∈ northern p ∧ lat p s = l}) := by
+  refine ⟨f p, ?_⟩
+  rintro y ⟨s, hs, rfl⟩
+  exact hmax s hs.1.1
+
+include hmlb in
+theorem bddBelow_latClass_image (l : ℝ) :
+    BddBelow (f '' {s : E3 | s ∈ northern p ∧ lat p s = l}) := by
+  refine ⟨m₀, ?_⟩
+  rintro y ⟨s, hs, rfl⟩
+  exact hmlb s hs.1.1
+
+include hf hp hmax hmlb hm hconst in
+/-- **F2b (monotonie croisée, cœur de F2).** `l < l' → latSup l ≤ latInf l'` :
+pour `s` de latitude `l`, `s'` de latitude `l'`, `f s ≤ f s'`. Cas `l' = 1`
+(`s' = p` par `eq_pole_of_lat_eq_one`) via `hmax` directement ; cas `l' < 1`
+via `frameFunction_le_of_lat_lt` (E5, `s ≠ p` toujours car `l < l' ≤ 1`
+force `l < 1` donc `lat p s ≠ lat p p = 1`, et `s' ≠ p` car `l' < 1`). -/
+theorem latSup_le_latInf_of_lt {l l' : ℝ} (hl0 : 0 ≤ l) (hl'1 : l' ≤ 1) (hlt : l < l') :
+    latSup f p l ≤ latInf f p l' := by
+  have hl1 : l ≤ 1 := hlt.le.trans hl'1
+  unfold latSup latInf
+  refine csSup_le (Set.Nonempty.image f (nonempty_latClass hp hl0 hl1)) ?_
+  rintro y ⟨s, ⟨hsN, hls⟩, rfl⟩
+  refine le_csInf (Set.Nonempty.image f (nonempty_latClass hp (by linarith) hl'1)) ?_
+  rintro y' ⟨s', ⟨hs'N, hl's'⟩, rfl⟩
+  rcases hl'1.lt_or_eq with hl'lt | hl'eq
+  · have hsp : s ≠ p := by
+      intro heq; rw [heq, lat_self p hp] at hls; linarith
+    have hs'p : s' ≠ p := by
+      intro heq; rw [heq, lat_self p hp] at hl's'; linarith
+    exact frameFunction_le_of_lat_lt hf hp hmax hmlb hm hconst hs'N.1 hs'N hs'p hsN.1 hsN hsp
+      (by rw [hls, hl's']; exact hlt)
+  · have hs'p : s' = p := eq_pole_of_lat_eq_one hp hs'N.1 hs'N (hl's'.trans hl'eq)
+    rw [hs'p]
+    exact hmax s hsN.1
+
+/-- **F2c (préliminaire).** La classe de latitude `0` de `northern p` est
+exactement l'équateur de `p` (pas de nouvelle hypothèse : déroulement pur des
+définitions). -/
+theorem latClass_zero_eq_equator : {s : E3 | s ∈ northern p ∧ lat p s = 0} = equator p := by
+  ext s
+  constructor
+  · rintro ⟨hsN, hl⟩
+    exact (mem_equator_iff_lat_eq_zero p s).mpr ⟨hsN.1, hl⟩
+  · intro hs
+    have h := (mem_equator_iff_lat_eq_zero p s).mp hs
+    exact ⟨equator_subset_northern p hs, h.2⟩
+
+include hp in
+/-- **F2c (préliminaire).** La classe de latitude `1` de `northern p` est le
+singleton `{p}` (`eq_pole_of_lat_eq_one`). -/
+theorem latClass_one_eq_singleton : {s : E3 | s ∈ northern p ∧ lat p s = 1} = {p} := by
+  ext s
+  constructor
+  · rintro ⟨hsN, hl⟩
+    exact eq_pole_of_lat_eq_one hp hsN.1 hsN hl
+  · intro hsp
+    rw [Set.mem_singleton_iff] at hsp
+    rw [hsp]
+    refine ⟨⟨hp, ?_⟩, lat_self p hp⟩
+    rw [real_inner_self_eq_norm_sq, hp]; norm_num
+
+include hp hconst in
+/-- **F2d (extrémité `l = 0`).** `latSup 0 = latInf 0 = c` : l'image de
+l'équateur par `f` est le singleton `{c}` (`hconst`). -/
+theorem latSup_zero : latSup f p 0 = c := by
+  unfold latSup
+  rw [latClass_zero_eq_equator]
+  have himg : f '' equator p = {c} := by
+    apply Set.eq_singleton_iff_unique_mem.mpr
+    refine ⟨?_, ?_⟩
+    · obtain ⟨e, he⟩ := equator_nonempty' hp
+      exact ⟨e, he, hconst e he⟩
+    · rintro y ⟨e, he, hey⟩
+      rw [← hey]; exact hconst e he
+  rw [himg, csSup_singleton]
+
+include hp hconst in
+theorem latInf_zero : latInf f p 0 = c := by
+  unfold latInf
+  rw [latClass_zero_eq_equator]
+  have himg : f '' equator p = {c} := by
+    apply Set.eq_singleton_iff_unique_mem.mpr
+    refine ⟨?_, ?_⟩
+    · obtain ⟨e, he⟩ := equator_nonempty' hp
+      exact ⟨e, he, hconst e he⟩
+    · rintro y ⟨e, he, hey⟩
+      rw [← hey]; exact hconst e he
+  rw [himg, csInf_singleton]
+
+include hp in
+/-- **F2e (extrémité `l = 1`).** `latSup 1 = latInf 1 = f p`. -/
+theorem latSup_one : latSup f p 1 = f p := by
+  unfold latSup
+  rw [latClass_one_eq_singleton hp, Set.image_singleton, csSup_singleton]
+
+include hp in
+theorem latInf_one : latInf f p 1 = f p := by
+  unfold latInf
+  rw [latClass_one_eq_singleton hp, Set.image_singleton, csInf_singleton]
+
 end ExactPoleSetup
 
 end
