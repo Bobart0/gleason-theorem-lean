@@ -62,7 +62,11 @@ partout dans la descente). -/
 theorem frame_pair_sum_eq {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
     (b b' : OrthonormalBasis (Fin 3) ℝ E3) (h : b 0 = b' 0) :
     f (b 1) + f (b 2) = f (b' 1) + f (b' 2) := by
-  sorry
+  have h1 := hf b
+  have h2 := hf b'
+  rw [Fin.sum_univ_three] at h1 h2
+  rw [h] at h1
+  linarith
 
 end
 end Gleason
