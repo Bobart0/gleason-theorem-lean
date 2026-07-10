@@ -616,5 +616,52 @@ theorem ne_pole_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) {θ : ℝ}
   rw [hcosψ, hsinψ] at hpyth
   norm_num at hpyth
 
+/-- **E1d (préliminaire).** Norme d'un point purement équatorial (colatitude
+`π/2`) exprimé dans le plan `(b 1, b 2)`. -/
+theorem norm_equatorial_combo (b : OrthonormalBasis (Fin 3) ℝ E3) (ψ : ℝ) :
+    ‖Real.cos ψ • b 1 + Real.sin ψ • b 2‖ = 1 := by
+  have hb11 : (⟪b 1, b 1⟫ : ℝ) = 1 := b.inner_eq_one 1
+  have hb22 : (⟪b 2, b 2⟫ : ℝ) = 1 := b.inner_eq_one 2
+  have hb12 : (⟪b 1, b 2⟫ : ℝ) = 0 := b.inner_eq_zero (by decide)
+  have hb21 : (⟪b 2, b 1⟫ : ℝ) = 0 := b.inner_eq_zero (by decide)
+  set w : E3 := Real.cos ψ • b 1 + Real.sin ψ • b 2 with hw_def
+  have hw1 : ⟪b 1, w⟫ = Real.cos ψ := by
+    rw [hw_def, inner_add_right, real_inner_smul_right, real_inner_smul_right, hb11, hb12]
+    ring
+  have hw2 : ⟪b 2, w⟫ = Real.sin ψ := by
+    rw [hw_def, inner_add_right, real_inner_smul_right, real_inner_smul_right, hb21, hb22]
+    ring
+  have hww : ⟪w, w⟫ = 1 := by
+    nth_rewrite 1 [hw_def]
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left, hw1, hw2]
+    nlinarith [Real.sin_sq_add_cos_sq ψ]
+  have hsq : ‖w‖ ^ 2 = 1 := by rw [← real_inner_self_eq_norm_sq]; exact hww
+  nlinarith [norm_nonneg w, hsq]
+
+/-- **E1d.** `sperp` d'un point de colatitude `θ ∈ (0, π/2]` : le point de
+l'équateur diamétralement opposé dans le plan `(pôle, point)`, exprimé dans
+la base `(b 0, b 1, b 2)`. -/
+theorem sperp_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) {θ : ℝ}
+    (hθ0 : 0 < θ) (hθ1 : θ ≤ π / 2) (ψ : ℝ) :
+    sperp (b 0) (spherePoint b θ ψ) =
+      Real.sin θ • b 0 - Real.cos θ • (Real.cos ψ • b 1 + Real.sin ψ • b 2) := by
+  have hsinpos : 0 < Real.sin θ := Real.sin_pos_of_pos_of_lt_pi hθ0 (by linarith [Real.pi_pos])
+  have hcs : ⟪b 0, spherePoint b θ ψ⟫ = Real.cos θ := inner_pole_spherePoint b θ ψ
+  have hdecomp : spherePoint b θ ψ - Real.cos θ • b 0 =
+      Real.sin θ • (Real.cos ψ • b 1 + Real.sin ψ • b 2) := by
+    unfold spherePoint
+    module
+  have hnormw : ‖spherePoint b θ ψ - Real.cos θ • b 0‖ = Real.sin θ := by
+    rw [hdecomp, norm_smul, norm_equatorial_combo, mul_one, Real.norm_eq_abs,
+        abs_of_pos hsinpos]
+  have hsqrt : Real.sqrt (1 - Real.cos θ ^ 2) = Real.sin θ := by
+    rw [show (1 : ℝ) - Real.cos θ ^ 2 = Real.sin θ ^ 2 by nlinarith [Real.sin_sq_add_cos_sq θ]]
+    exact Real.sqrt_sq hsinpos.le
+  unfold sperp
+  rw [hcs, hnormw, hsqrt, hdecomp, smul_smul, smul_smul]
+  have hscalar : Real.cos θ * (Real.sin θ)⁻¹ * Real.sin θ = Real.cos θ := by
+    field_simp
+  rw [hscalar]
+
 end
 end Gleason
