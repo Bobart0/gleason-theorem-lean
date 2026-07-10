@@ -470,5 +470,64 @@ theorem lat_le_of_mem_descent {p s t : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
   rw [hlat_eq]
   exact mul_le_of_le_one_right (lat_nonneg p s) hββ
 
+/-- **B7.** Réalisabilité des latitudes : pour tout triplet de latitudes
+positives sommant à 1, il existe une base orthonormée les réalisant.
+Construction sans matrices : `v := √l₁•E0+√l₂•E1+√l₃•E2` (`E` = base standard)
+est unitaire ; on transporte `E` par l'isométrie envoyant `v` sur `p`
+(composée des représentations de deux bases étendant `v` et `p`). -/
+theorem exists_frame_with_lat {p : E3} (hp : ‖p‖ = 1) {l₁ l₂ l₃ : ℝ}
+    (h₁ : 0 ≤ l₁) (h₂ : 0 ≤ l₂) (h₃ : 0 ≤ l₃) (hsum : l₁ + l₂ + l₃ = 1) :
+    ∃ b : OrthonormalBasis (Fin 3) ℝ E3,
+      lat p (b 0) = l₁ ∧ lat p (b 1) = l₂ ∧ lat p (b 2) = l₃ := by
+  set E := EuclideanSpace.basisFun (Fin 3) ℝ with hE_def
+  set v : E3 := Real.sqrt l₁ • E 0 + Real.sqrt l₂ • E 1 + Real.sqrt l₃ • E 2 with hv_def
+  have hE01 : (⟪E 0, E 1⟫ : ℝ) = 0 := E.inner_eq_zero (by decide)
+  have hE11 : (⟪E 1, E 1⟫ : ℝ) = 1 := E.inner_eq_one 1
+  have hE21 : (⟪E 2, E 1⟫ : ℝ) = 0 := E.inner_eq_zero (by decide)
+  have hE00 : (⟪E 0, E 0⟫ : ℝ) = 1 := E.inner_eq_one 0
+  have hE10 : (⟪E 1, E 0⟫ : ℝ) = 0 := E.inner_eq_zero (by decide)
+  have hE20 : (⟪E 2, E 0⟫ : ℝ) = 0 := E.inner_eq_zero (by decide)
+  have hE02 : (⟪E 0, E 2⟫ : ℝ) = 0 := E.inner_eq_zero (by decide)
+  have hE12 : (⟪E 1, E 2⟫ : ℝ) = 0 := E.inner_eq_zero (by decide)
+  have hE22 : (⟪E 2, E 2⟫ : ℝ) = 1 := E.inner_eq_one 2
+  have hv0 : ⟪v, E 0⟫ = Real.sqrt l₁ := by
+    rw [hv_def, inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_smul_left, hE00, hE10, hE20]
+    ring
+  have hv1 : ⟪v, E 1⟫ = Real.sqrt l₂ := by
+    rw [hv_def, inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_smul_left, hE01, hE11, hE21]
+    ring
+  have hv2 : ⟪v, E 2⟫ = Real.sqrt l₃ := by
+    rw [hv_def, inner_add_left, inner_add_left, real_inner_smul_left, real_inner_smul_left,
+        real_inner_smul_left, hE02, hE12, hE22]
+    ring
+  have hvv : ⟪v, v⟫ = l₁ + l₂ + l₃ := by
+    nth_rewrite 2 [hv_def]
+    rw [inner_add_right, inner_add_right, real_inner_smul_right, real_inner_smul_right,
+        real_inner_smul_right, hv0, hv1, hv2, Real.mul_self_sqrt h₁, Real.mul_self_sqrt h₂,
+        Real.mul_self_sqrt h₃]
+  have hvnorm : ‖v‖ = 1 := by
+    have hsq : ‖v‖ ^ 2 = 1 := by rw [← real_inner_self_eq_norm_sq, hvv, hsum]
+    nlinarith [norm_nonneg v, hsq]
+  obtain ⟨bᵥ, hbᵥ0⟩ := exists_orthonormalBasis_fst v hvnorm
+  obtain ⟨c_p, hc_p0⟩ := exists_orthonormalBasis_fst p hp
+  set U : E3 ≃ₗᵢ[ℝ] E3 := bᵥ.repr.trans c_p.repr.symm with hU_def
+  have hUv : U v = p := by
+    have h1 : bᵥ.repr v = EuclideanSpace.single 0 (1 : ℝ) := by
+      conv_lhs => rw [← hbᵥ0]
+      exact bᵥ.repr_self 0
+    have h2 : c_p.repr (c_p 0) = EuclideanSpace.single 0 (1 : ℝ) := c_p.repr_self 0
+    rw [hU_def, LinearIsometryEquiv.trans_apply, h1, ← h2, LinearIsometryEquiv.symm_apply_apply,
+        hc_p0]
+  set b := E.map U with hb_def
+  have hinner : ∀ j, ⟪p, b j⟫ = ⟪v, E j⟫ := by
+    intro j
+    rw [hb_def, OrthonormalBasis.map_apply, ← hUv, U.inner_map_map]
+  refine ⟨b, ?_, ?_, ?_⟩
+  · unfold lat; rw [hinner 0, hv0, Real.sq_sqrt h₁]
+  · unfold lat; rw [hinner 1, hv1, Real.sq_sqrt h₂]
+  · unfold lat; rw [hinner 2, hv2, Real.sq_sqrt h₃]
+
 end
 end Gleason

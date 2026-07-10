@@ -23,8 +23,10 @@
 - [x] A. P2 (frameFunction_even), P3 (frameFunction_pair_swap), P4 (frameFunction_P4)
       — SphereGeometry.lean, + infra réutilisable (exists_orthonormalBasis_of_triple/',
       exists_unit_orthogonal_to_pair, remplace le produit vectoriel par comptage de dim)
-- [ ] B. Géométrie du pôle : latitude, E, N, s^⊥ explicite, D_s + 3 faits
-      (point⊥s de D_s ∈ E ; latitudes d'un frame Σ=1 ; réalisabilité des latitudes)
+- [x] B. Géométrie du pôle : lat, northern, equator, sperp, descent (B0-B7,
+      SphereGeometry.lean) — sperp_core groupe norme/orthogonalité/lat ;
+      B6 lat_le_of_mem_descent (Parseval polarisé) ; B7 réalisabilité des
+      latitudes (transport d'isométrie, sans matrices)
 - [ ] C. basic_lemma + version approchée (§4 ; courts une fois A+B faits)
 - [x] D. warmup_II : monotone + co-dénombrable + additif-à-1 ⇒ identité (§3)
       — Simplex.lean, 7 sous-lemmes (D1..D6-existence, D5) + assemblage,
