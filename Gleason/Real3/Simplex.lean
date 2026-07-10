@@ -268,4 +268,112 @@ theorem bounded_additive_affine (h : ℝ → ℝ) (C : ℝ)
   have hgx : h x - h 0 - x * (h 1 - h 0) = 0 := hvanish x hx
   linarith
 
+-- ═══════════════════════════════════════════════════════════════════
+-- Warmup Theorem II (CKM 1985 §3) : monotone + additif-à-1 sur [0,1] \ C
+-- (C dénombrable, C ⊆ (0,1)) ⇒ f = identité sur [0,1] \ C.
+-- Recherche Mathlib (avant de prouver quoi que ce soit) : aucun théorème
+-- générique « monotone + additif ⇒ linéaire » n'existe. Non-dénombrabilité de
+-- Ioo 0 1 : pas de lemme direct `¬Countable`, mais route cardinale propre via
+-- Cardinal.mk_Ioo_real + Cardinal.aleph0_lt_continuum + le_aleph0_iff_set_countable
+-- (préférée à la route mesure, qui marche aussi via Real.volume_Ioo +
+-- Set.Countable.measure_zero mais alourdit les imports).
+-- ═══════════════════════════════════════════════════════════════════
+
+/-- **D1.** `f 1 = 1`, via le triplet `(0,0,1)` (`0,1 ∉ C` car `C ⊆ Ioo 0 1`). -/
+private theorem warmup_II_D1 {C : Set ℝ} (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) (f : ℝ → ℝ)
+    (hf0 : f 0 = 0)
+    (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
+      c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1) :
+    f 1 = 1 := by
+  sorry
+
+/-- **D2.** Il existe un point `a₀ ∈ (0,1)` « générique » : pour tous `p q : ℕ`
+avec `q > 0` et `(p/q)·a₀ ≤ 1`, ni `(p/q)·a₀` ni `1 - (p/q)·a₀` ne sont dans `C`.
+Construit via l'ensemble dénombrable `⋃_{c∈C} ℚ·c ∪ ⋃_{c∈C} ℚ·(1-c)` : tout point
+hors de cet ensemble a la propriété (sinon `a₀` s'écrirait `(q/p)·c` ou
+`(q/p)·(1-c)` pour un `c ∈ C`, avec `p ≠ 0` car `c ∈ (0,1)`). -/
+private theorem warmup_II_D2 {C : Set ℝ} (hC : C.Countable) (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) :
+    ∃ a₀ ∈ Set.Ioo (0 : ℝ) 1, ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
+      (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C := by
+  sorry
+
+/-- **D3.** Additivité sur l'orbite de `a₀` : deux applications de `htriple`
+(`(p/q·a₀, p'/q·a₀, 1-(p+p')/q·a₀)` puis `((p+p')/q·a₀, 1-(p+p')/q·a₀, 0)`),
+soustraction, `hf0`. Toutes les appartenances viennent de `hgen` (D2). -/
+private theorem warmup_II_D3 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
+    (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
+      c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1)
+    {a₀ : ℝ} (ha₀ : a₀ ∈ Set.Ioo (0 : ℝ) 1)
+    (hgen : ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
+      (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C) :
+    ∀ p p' q : ℕ, 0 < q → ((p + p' : ℕ) : ℝ) / q * a₀ ≤ 1 →
+      f ((p : ℝ) / q * a₀) + f ((p' : ℝ) / q * a₀) = f (((p + p' : ℕ) : ℝ) / q * a₀) := by
+  sorry
+
+/-- **D4.** Homogénéité rationnelle sur l'orbite : `f((p/q)·a₀) = (p/q)·f(a₀)`.
+Deux temps : (i) récurrence sur `p` via D3 pour `f(p·(a₀/q)) = p·f(a₀/q)` tant
+que `p·(a₀/q) ≤ 1` ; (ii) cas `p = q` donne `f(a₀) = q·f(a₀/q)` ; combiner. -/
+private theorem warmup_II_D4 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
+    (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
+      c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1)
+    {a₀ : ℝ} (ha₀ : a₀ ∈ Set.Ioo (0 : ℝ) 1)
+    (hgen : ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
+      (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C) :
+    ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 → f ((p : ℝ) / q * a₀) = (p : ℝ) / q * f a₀ := by
+  sorry
+
+/-- **D6-existence.** Il existe `b ∈ (0,1)` avec `b ∉ C` et `1 - b ∉ C`
+(l'ensemble `C ∪ {x | 1 - x ∈ C}` est dénombrable, ne peut recouvrir `(0,1)`). -/
+private theorem warmup_II_D6_exists {C : Set ℝ} (hC : C.Countable) :
+    ∃ b ∈ Set.Ioo (0 : ℝ) 1, b ∉ C ∧ 1 - b ∉ C := by
+  sorry
+
+/-- **D5 (le cœur, squeeze).** Pour `a ∈ [0,1) \ C`, `f a = (f a₀ / a₀) · a`.
+Par `le_antisymm`, chaque sens via `∀ ε > 0` : `exists_rat_btwn` donne des
+rationnels `r < a/a₀ < r'` (dénominateur commun `q`) avec `r'·a₀ ≤ 1` et
+`(r' - r)·a₀` arbitrairement petit ; `hmono` encadre `f a` par
+`f(r·a₀) ≤ f a ≤ f(r'·a₀)`, D4 réécrit les bornes en `r·f(a₀)` et `r'·f(a₀)`. -/
+private theorem warmup_II_D5 {C : Set ℝ} (f : ℝ → ℝ)
+    (hmono : ∀ a b, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C → a ≤ b → f a ≤ f b)
+    {a₀ : ℝ} (ha₀ : a₀ ∈ Set.Ioo (0 : ℝ) 1)
+    (hgen : ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
+      (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C)
+    (hD4 : ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 → f ((p : ℝ) / q * a₀) = (p : ℝ) / q * f a₀) :
+    ∀ a ∈ Set.Ico (0 : ℝ) 1 \ C, f a = (f a₀ / a₀) * a := by
+  sorry
+
+/-- **D6.** `f a₀ / a₀ = 1` : triplet `(b, 1-b, 0)` (`htriple`) donne
+`f b + f(1-b) = 1` (avec `f 0 = 0`) ; D5 sur `b` et `1-b` (tous deux `< 1`)
+donne `β·b + β·(1-b) = β = 1`. -/
+private theorem warmup_II_D6 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
+    (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
+      c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1)
+    {a₀ : ℝ} (ha₀ : a₀ ∈ Set.Ioo (0 : ℝ) 1)
+    (hD5 : ∀ a ∈ Set.Ico (0 : ℝ) 1 \ C, f a = (f a₀ / a₀) * a)
+    {b : ℝ} (hb : b ∈ Set.Ioo (0 : ℝ) 1) (hbC : b ∉ C) (hbC' : 1 - b ∉ C) :
+    f a₀ / a₀ = 1 := by
+  sorry
+
+/-- **D7 / Warmup Theorem II (CKM 1985 §3).** Si `f` est monotone et
+« additive-à-1 » sur `[0,1] \ C` (`C` dénombrable, `C ⊆ (0,1)`), avec `f 0 = 0`,
+alors `f = id` sur `[0,1] \ C`. -/
+theorem warmup_II (C : Set ℝ) (hC : C.Countable) (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) (f : ℝ → ℝ)
+    (hf0 : f 0 = 0)
+    (hmono : ∀ a b, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C → a ≤ b → f a ≤ f b)
+    (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
+      c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1) :
+    ∀ a ∈ Set.Icc (0 : ℝ) 1 \ C, f a = a := by
+  have hD1 := warmup_II_D1 hCsub f hf0 htriple
+  obtain ⟨a₀, ha₀, hgen⟩ := warmup_II_D2 hC hCsub
+  have hD4 := warmup_II_D4 f hf0 htriple ha₀ hgen
+  have hD5 := warmup_II_D5 f hmono ha₀ hgen hD4
+  obtain ⟨b, hb, hbC, hbC'⟩ := warmup_II_D6_exists hC
+  have hβ := warmup_II_D6 f hf0 htriple ha₀ hD5 hb hbC hbC'
+  intro a ha
+  obtain ⟨ha01, haC⟩ := ha
+  rcases ha01.2.lt_or_eq with hlt | heq
+  · have haIco : a ∈ Set.Ico (0 : ℝ) 1 \ C := ⟨⟨ha01.1, hlt⟩, haC⟩
+    rw [hD5 a haIco, hβ, one_mul]
+  · rw [heq]; exact hD1
+
 end Gleason
