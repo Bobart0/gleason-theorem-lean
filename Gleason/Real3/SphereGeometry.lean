@@ -428,5 +428,22 @@ theorem exists_descent_basis {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (h
   have hlat2 : lat p (b 2) = 0 := by linarith
   exact ⟨b, hb0, hb1, (mem_equator_iff_lat_eq_zero p (b 2)).mpr ⟨b.norm_eq_one 2, hlat2⟩⟩
 
+/-- **B4b (corollaire).** Le 3ᵉ vecteur de la base de B4a est à la fois dans le
+cercle de descente et sur l'équateur, et orthogonal à `s`. -/
+theorem exists_equator_orthogonal {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
+    (hsN : s ∈ northern p) (hsp : s ≠ p) :
+    ∃ u, u ∈ descent p s ∩ equator p ∧ ⟪s, u⟫ = 0 := by
+  obtain ⟨b, hb0, hb1, hb2⟩ := exists_descent_basis hp hs hsN hsp
+  have hd : ⟪sperp p s, b 2⟫ = 0 := by rw [← hb0]; exact b.inner_eq_zero (by decide)
+  have hse : ⟪s, b 2⟫ = 0 := by rw [← hb1]; exact b.inner_eq_zero (by decide)
+  exact ⟨b 2, ⟨⟨equator_subset_northern p hb2, hd⟩, hb2⟩, hse⟩
+
+/-- **B5.** `s` est toujours dans son propre cercle de descente. -/
+theorem self_mem_descent {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ northern p)
+    (hsp : s ≠ p) : s ∈ descent p s := by
+  refine ⟨hsN, ?_⟩
+  have h := inner_sperp_self hp hs hsN hsp
+  rwa [real_inner_comm (sperp p s) s] at h
+
 end
 end Gleason
