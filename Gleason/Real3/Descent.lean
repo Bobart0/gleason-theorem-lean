@@ -1,4 +1,5 @@
 import Gleason.Real3.SphereGeometry
+import Gleason.Real3.SphereCoords
 import Gleason.Real3.Simplex
 
 /-!
