@@ -281,6 +281,12 @@ theorem equator_subset_northern : equator p ⊆ northern p := by
 theorem mem_equator_iff_lat_eq_zero (t : E3) : t ∈ equator p ↔ ‖t‖ = 1 ∧ lat p t = 0 := by
   simp [equator, lat]
 
+/-- **F0.** `lat` est paire (`⟪p,-s⟫ = -⟪p,s⟫`, mis au carré). -/
+theorem lat_neg (s : E3) : lat p (-s) = lat p s := by
+  unfold lat
+  rw [inner_neg_right]
+  ring
+
 end PoleGeometry
 
 /-- **B2 (préliminaire).** `‖s - ⟪p,s⟫•p‖² = 1 - ⟪p,s⟫²`, par développement de
@@ -291,6 +297,33 @@ theorem norm_sq_sub_inner_smul {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) 
   rw [norm_sub_sq_real, real_inner_smul_right, real_inner_comm p s, ← hc_def,
       norm_smul, hp, mul_one, Real.norm_eq_abs, sq_abs, hs]
   ring
+
+/-- **F0.** Latitude maximale ⇒ pôle : `s ∈ northern p`, `lat p s = 1` force
+`⟪p,s⟫ = 1` (racine positive), d'où `‖s-p‖ = 0` via le préliminaire ci-dessus. -/
+theorem eq_pole_of_lat_eq_one {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
+    (hsN : s ∈ northern p) (hl : lat p s = 1) : s = p := by
+  have hc0 : 0 ≤ ⟪p, s⟫ := hsN.2
+  have hc1 : ⟪p, s⟫ = 1 := by
+    have heq0 : (⟪p, s⟫ - 1) * (⟪p, s⟫ + 1) = 0 := by
+      have : ⟪p, s⟫ ^ 2 = 1 := hl
+      linear_combination this
+    rcases mul_eq_zero.mp heq0 with h | h
+    · linarith
+    · linarith
+  have hnorm : ‖s - ⟪p, s⟫ • p‖ ^ 2 = 1 - ⟪p, s⟫ ^ 2 := norm_sq_sub_inner_smul hp hs
+  rw [hc1, one_smul] at hnorm
+  norm_num at hnorm
+  exact sub_eq_zero.mp hnorm
+
+/-- **F0.** Tout vecteur unitaire admet un représentant dans `northern p` de
+même latitude, égal à lui-même ou à son opposé (`⟪p,·⟫ ≥ 0` ou `< 0`). -/
+theorem exists_northern_rep {p t : E3} (ht : ‖t‖ = 1) :
+    ∃ s : E3, s ∈ northern p ∧ lat p s = lat p t ∧ (s = t ∨ s = -t) := by
+  by_cases h : 0 ≤ (⟪p, t⟫ : ℝ)
+  · exact ⟨t, ⟨ht, h⟩, rfl, Or.inl rfl⟩
+  · push Not at h
+    refine ⟨-t, ⟨by rwa [norm_neg], ?_⟩, lat_neg p t, Or.inr rfl⟩
+    rw [inner_neg_right]; linarith
 
 /-- **B2 (préliminaire).** `⟪p,s⟫ < 1` pour `p,s` unitaires, `s ≠ p` : `⟪p,s⟫ = 1`
 forcerait `‖s-p‖ = 0` (via le préliminaire ci-dessus), donc `s = p`. -/
