@@ -453,5 +453,218 @@ theorem frameFunction_le_of_lat_lt {f : E3 → ℝ} {W m₀ cst : ℝ} (hf : IsF
   have h := chain_decreasing hf hp hmax hmlb hm hconst (hc0 ▸ hsN) hstep
   rwa [hc0, hcn] at h
 
+/- ═══════════════════════════════════════════════════════════════════
+   G8 (bloc G, CKM §6) : descente radiale à 2 pas dans le plan méridien
+   (p, e0). Nécessaire pour borner l'erreur par un nombre FIXE (2) de pas
+   de C3 (`basic_lemma_approx`), indépendant de la précision recherchée :
+   `piron_chain` (E4) ne convient pas, son nombre de pas dépendant de
+   l'amplification requise (variable le long de la suite de G9).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+set_option maxHeartbeats 1000000 in
+/-- **G8.** Descente radiale à 2 pas dans le plan méridien `(p,e0)` : pour
+`s := a•p+a'•e0`, `t := b•p+b'•e0` (`a' := √(1-a²)`, `b' := √(1-b²)`,
+`0 ≤ b < a < 1`), il existe `s₁ ∈ northern p \ {p}` avec `s₁ ∈ descent p s`
+et `t ∈ descent p s₁`. Construction (CKM §6, sans trigonométrie) : `n0`
+orthogonal à `(p,e0)` (C1), `x := √(b/(a·⟪s,t⟫))` (`⟪s,t⟫ = ab+a'b' > 0`),
+`s₁ := x•s+√(1-x²)•n0`. Le point clé (`t ∈ descent p s₁`) se réduit à
+l'identité `x²·a·⟪s,t⟫ = b`, vraie par définition de `x`. -/
+theorem exists_two_step_descent {p e0 : E3} (hp : ‖p‖ = 1) (he0 : ‖e0‖ = 1) (hpe0 : ⟪p, e0⟫ = 0)
+    {a b : ℝ} (hb0 : 0 ≤ b) (hba : b < a) (ha1 : a < 1) :
+    ∃ s1 : E3, s1 ∈ northern p ∧ s1 ≠ p ∧
+      s1 ∈ descent p (a • p + Real.sqrt (1 - a ^ 2) • e0) ∧
+      (b • p + Real.sqrt (1 - b ^ 2) • e0) ∈ descent p s1 := by
+  have ha0 : 0 < a := lt_of_le_of_lt hb0 hba
+  have hb1 : b < 1 := hba.trans ha1
+  have ha'pos : 0 < 1 - a ^ 2 := by nlinarith
+  have hb'pos : 0 < 1 - b ^ 2 := by nlinarith
+  set a' : ℝ := Real.sqrt (1 - a ^ 2) with ha'_def
+  set b' : ℝ := Real.sqrt (1 - b ^ 2) with hb'_def
+  have ha'sq : a' ^ 2 = 1 - a ^ 2 := Real.sq_sqrt ha'pos.le
+  have hb'sq : b' ^ 2 = 1 - b ^ 2 := Real.sq_sqrt hb'pos.le
+  have ha'pos' : 0 < a' := Real.sqrt_pos.mpr ha'pos
+  have hb'pos' : 0 < b' := Real.sqrt_pos.mpr hb'pos
+  set s : E3 := a • p + a' • e0 with hs_def
+  set t : E3 := b • p + b' • e0 with ht_def
+  have hep : ⟪e0, p⟫ = 0 := by rw [real_inner_comm]; exact hpe0
+  have hps : ⟪p, s⟫ = a := by
+    rw [hs_def, inner_add_right, real_inner_smul_right, real_inner_smul_right,
+      real_inner_self_eq_norm_sq, hp, hpe0]
+    ring
+  have hpt : ⟪p, t⟫ = b := by
+    rw [ht_def, inner_add_right, real_inner_smul_right, real_inner_smul_right,
+      real_inner_self_eq_norm_sq, hp, hpe0]
+    ring
+  have hsnorm : ‖s‖ = 1 := by
+    have hsq : ‖s‖ ^ 2 = 1 := by
+      rw [hs_def, norm_add_sq_real, real_inner_smul_left, real_inner_smul_right, hpe0, mul_zero,
+        mul_zero]
+      have h1 : ‖a • p‖ ^ 2 = a ^ 2 := by
+        rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, hp]; ring
+      have h2 : ‖a' • e0‖ ^ 2 = a' ^ 2 := by
+        rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, he0]; ring
+      rw [h1, h2, ha'sq]; ring
+    have heq0 : (‖s‖ - 1) * (‖s‖ + 1) = 0 := by linear_combination hsq
+    rcases mul_eq_zero.mp heq0 with h | h
+    · linarith
+    · linarith [norm_nonneg s]
+  have htnorm : ‖t‖ = 1 := by
+    have hsq : ‖t‖ ^ 2 = 1 := by
+      rw [ht_def, norm_add_sq_real, real_inner_smul_left, real_inner_smul_right, hpe0, mul_zero,
+        mul_zero]
+      have h1 : ‖b • p‖ ^ 2 = b ^ 2 := by
+        rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, hp]; ring
+      have h2 : ‖b' • e0‖ ^ 2 = b' ^ 2 := by
+        rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, he0]; ring
+      rw [h1, h2, hb'sq]; ring
+    have heq0 : (‖t‖ - 1) * (‖t‖ + 1) = 0 := by linear_combination hsq
+    rcases mul_eq_zero.mp heq0 with h | h
+    · linarith
+    · linarith [norm_nonneg t]
+  have htN : t ∈ northern p := ⟨htnorm, by rw [hpt]; exact hb0⟩
+  have hst : ⟪s, t⟫ = a * b + a' * b' := by
+    rw [hs_def, ht_def]
+    simp only [inner_add_left, inner_add_right, real_inner_smul_left, real_inner_smul_right,
+      real_inner_self_eq_norm_sq, hp, he0, hpe0, hep]
+    ring
+  have hstpos : 0 < ⟪s, t⟫ := by rw [hst]; positivity
+  obtain ⟨n0, hn0, hpn0, hen0⟩ := exists_third_orthogonal p e0 hp he0 hpe0
+  set x : ℝ := Real.sqrt (b / (a * ⟪s, t⟫)) with hx_def
+  have hxarg_nn : 0 ≤ b / (a * ⟪s, t⟫) := div_nonneg hb0 (by positivity)
+  have hxsq : x ^ 2 = b / (a * ⟪s, t⟫) := Real.sq_sqrt hxarg_nn
+  have hxnn : 0 ≤ x := Real.sqrt_nonneg _
+  have hb2lea2 : b ^ 2 ≤ a ^ 2 := by nlinarith
+  have stepA : b ^ 2 * (1 - a ^ 2) ≤ a ^ 2 * (1 - b ^ 2) := by nlinarith [hb2lea2]
+  have stepB : b ^ 2 * a' ^ 2 ≤ a ^ 2 * b' ^ 2 := by rw [ha'sq, hb'sq]; exact stepA
+  have stepC : (b * a') ^ 2 ≤ (a * b') ^ 2 := by nlinarith [stepB]
+  have stepD : b * a' ≤ a * b' :=
+    (sq_le_sq₀ (mul_nonneg hb0 ha'pos'.le) (mul_nonneg ha0.le hb'pos'.le)).mp stepC
+  have stepE : b * a' ^ 2 ≤ a * a' * b' := by nlinarith [stepD, ha'pos'.le]
+  have stepF : b * (1 - a ^ 2) ≤ a * a' * b' := by rw [← ha'sq]; exact stepE
+  have hb_le : b ≤ a ^ 2 * b + a * a' * b' := by
+    have hexp : b * (1 - a ^ 2) = b - a ^ 2 * b := by ring
+    linarith [stepF, hexp]
+  have hx2le1 : x ^ 2 ≤ 1 := by
+    rw [hxsq, div_le_one (by positivity), hst]
+    have hexp : a * (a * b + a' * b') = a ^ 2 * b + a * a' * b' := by ring
+    linarith [hb_le, hexp]
+  have hxle1 : x ≤ 1 := (sq_le_sq₀ hxnn zero_le_one).mp (by rw [one_pow]; exact hx2le1)
+  have hx2nn : 0 ≤ 1 - x ^ 2 := by linarith
+  have hxa_lt1 : x * a < 1 := by
+    have h1 : x * a ≤ 1 * a := mul_le_mul_of_nonneg_right hxle1 ha0.le
+    have h2 : (1:ℝ) * a = a := one_mul a
+    linarith [h1, h2, ha1]
+  set s1 : E3 := x • s + Real.sqrt (1 - x ^ 2) • n0 with hs1_def
+  have hsn0 : ⟪s, n0⟫ = 0 := by
+    rw [hs_def, inner_add_left, real_inner_smul_left, real_inner_smul_left, hpn0, hen0]
+    ring
+  have hs1norm : ‖s1‖ = 1 := by
+    have hsq : ‖s1‖ ^ 2 = 1 := by
+      rw [hs1_def, norm_add_sq_real, real_inner_smul_left, real_inner_smul_right, hsn0, mul_zero,
+        mul_zero]
+      have h1 : ‖x • s‖ ^ 2 = x ^ 2 := by
+        rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, hsnorm]; ring
+      have h2 : ‖Real.sqrt (1 - x ^ 2) • n0‖ ^ 2 = 1 - x ^ 2 := by
+        rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, hn0, Real.sq_sqrt hx2nn]; ring
+      rw [h1, h2]; ring
+    have heq0 : (‖s1‖ - 1) * (‖s1‖ + 1) = 0 := by linear_combination hsq
+    rcases mul_eq_zero.mp heq0 with h | h
+    · linarith
+    · linarith [norm_nonneg s1]
+  have hps1 : ⟪p, s1⟫ = x * a := by
+    rw [hs1_def, inner_add_right, real_inner_smul_right, real_inner_smul_right, hps, hpn0]
+    ring
+  have hs1N : s1 ∈ northern p := ⟨hs1norm, by rw [hps1]; positivity⟩
+  have hs1p : s1 ≠ p := by
+    intro heq
+    rw [heq, real_inner_self_eq_norm_sq, hp] at hps1
+    norm_num at hps1
+    linarith [hxa_lt1]
+  have hsperp_s : sperp p s = a' • p - a • e0 := by
+    unfold sperp
+    rw [hps, ← ha'_def]
+    have hresidual : s - a • p = a' • e0 := by rw [hs_def]; abel
+    rw [hresidual]
+    have hnorm_resid : ‖a' • e0‖ = a' := by
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos ha'pos', he0, mul_one]
+    rw [hnorm_resid]
+    have hcancel : a'⁻¹ • (a' • e0) = e0 := by
+      rw [smul_smul, inv_mul_cancel₀ ha'pos'.ne', one_smul]
+    rw [hcancel]
+  have hes1 : ⟪e0, s1⟫ = x * a' := by
+    rw [hs1_def, inner_add_right, real_inner_smul_right, real_inner_smul_right, hen0, hs_def,
+      inner_add_right, real_inner_smul_right, real_inner_smul_right, hep,
+      real_inner_self_eq_norm_sq, he0]
+    ring
+  have hsperp_s_s1 : ⟪sperp p s, s1⟫ = 0 := by
+    rw [hsperp_s, inner_sub_left, real_inner_smul_left, real_inner_smul_left, hps1, hes1]
+    ring
+  have hs1_mem_descent_s : s1 ∈ descent p s := ⟨hs1N, hsperp_s_s1⟩
+  have hresid_s1 : s1 - (x * a) • p = (x * a') • e0 + Real.sqrt (1 - x ^ 2) • n0 := by
+    rw [hs1_def, hs_def]
+    module
+  set r : ℝ := ‖(x * a') • e0 + Real.sqrt (1 - x ^ 2) • n0‖ with hr_def
+  have hr2 : r ^ 2 = 1 - (x * a) ^ 2 := by
+    rw [hr_def, norm_add_sq_real, real_inner_smul_left, real_inner_smul_right, hen0, mul_zero,
+      mul_zero]
+    have h1 : ‖(x * a') • e0‖ ^ 2 = (x * a') ^ 2 := by
+      rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, he0]; ring
+    have h2 : ‖Real.sqrt (1 - x ^ 2) • n0‖ ^ 2 = 1 - x ^ 2 := by
+      rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, hn0, Real.sq_sqrt hx2nn]; ring
+    rw [h1, h2]
+    have hexp : (x * a') ^ 2 = x ^ 2 * a' ^ 2 := by ring
+    rw [hexp, ha'sq]
+    ring
+  have hrnn : 0 ≤ r := norm_nonneg _
+  have hxa_nn : 0 ≤ x * a := mul_nonneg hxnn ha0.le
+  have hxa2_lt1 : (x * a) ^ 2 < 1 := by
+    have h : (x * a) * (x * a) < 1 * 1 := mul_self_lt_mul_self hxa_nn hxa_lt1
+    have he : (x * a) ^ 2 = (x * a) * (x * a) := by ring
+    linarith [h, he]
+  have hr2pos : 0 < r ^ 2 := by rw [hr2]; linarith
+  have hrpos : 0 < r := by
+    rcases hrnn.eq_or_lt with h | h
+    · exfalso; rw [← h] at hr2pos; norm_num at hr2pos
+    · exact h
+  have hsqrt_eq_r : Real.sqrt (1 - (x * a) ^ 2) = r := by rw [← hr2, Real.sqrt_sq hrnn]
+  have hsperp_s1 : sperp p s1 =
+      r • p - (x * a) • (r⁻¹ • ((x * a') • e0 + Real.sqrt (1 - x ^ 2) • n0)) := by
+    unfold sperp
+    rw [hps1, hresid_s1, ← hr_def, hsqrt_eq_r]
+  clear_value a' b' s t x s1 r
+  clear stepA stepB stepC stepD stepE stepF hb2lea2 hb_le hx2le1 hxle1 hx2nn hxa_lt1 hxa_nn
+    hxa2_lt1 hsn0 hs1norm hes1 hsperp_s_s1 hresid_s1 hr_def hrnn
+    hr2pos hrpos hsqrt_eq_r hs_def hx_def ha'pos hb'pos ha'pos' hb'pos' hxarg_nn
+    ha'_def hb'_def hs1_def hsnorm htnorm hps hsperp_s hxnn
+  have hkey : x ^ 2 * a * (a * b + a' * b') = b := by
+    rw [← hst, hxsq]; field_simp
+  have hr2b : r ^ 2 * b = x ^ 2 * a * a' * b' := by
+    rw [hr2]
+    linear_combination -hkey
+  have het : ⟪e0, t⟫ = b' := by
+    rw [ht_def, inner_add_right, real_inner_smul_right, real_inner_smul_right, hep,
+      real_inner_self_eq_norm_sq, he0]
+    ring
+  have hn0p : ⟪n0, p⟫ = 0 := by rw [real_inner_comm]; exact hpn0
+  have hn0e0 : ⟪n0, e0⟫ = 0 := by rw [real_inner_comm]; exact hen0
+  have hn0t : ⟪n0, t⟫ = 0 := by
+    rw [ht_def, inner_add_right, real_inner_smul_right, real_inner_smul_right, hn0p, hn0e0]
+    ring
+  have hsperp_s1_t : ⟪sperp p s1, t⟫ = 0 := by
+    rw [hsperp_s1]
+    have hpart1 : ⟪r • p, t⟫ = r * b := by rw [real_inner_smul_left, hpt]
+    have hpart2 : ⟪(x * a) • (r⁻¹ • ((x * a') • e0 + Real.sqrt (1 - x ^ 2) • n0)), t⟫ =
+        x * a * (r⁻¹ * (x * a' * b')) := by
+      rw [real_inner_smul_left, real_inner_smul_left, inner_add_left, real_inner_smul_left,
+        real_inner_smul_left, het, hn0t, mul_zero, add_zero]
+    rw [inner_sub_left, hpart1, hpart2]
+    have hgoal_eq : r * b - x * a * (r⁻¹ * (x * a' * b')) =
+        (r ^ 2 * b - x ^ 2 * a * a' * b') * r⁻¹ := by
+      field_simp
+    rw [hgoal_eq, hr2b]
+    ring
+  have ht_mem_descent_s1 : t ∈ descent p s1 := ⟨htN, hsperp_s1_t⟩
+  exact ⟨s1, hs1N, hs1p, hs1_mem_descent_s, ht_mem_descent_s1⟩
+
 end
 end Gleason
