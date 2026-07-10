@@ -619,6 +619,51 @@ private theorem riesz_unique
                LinearMap.zero_apply]
   exact sub_eq_zero.mp hδ_zero
 
+private theorem riesz_rep_assembly {n : ℕ}
+    (b : OrthonormalBasis (Fin n) ℂ (H n))
+    (E F : Fin n → Fin n → H n →ₗ[ℂ] H n)
+    (g : (H n →ₗ[ℂ] H n) → ℝ) (ρ : H n →ₗ[ℂ] H n)
+    (hg_add : ∀ S T : H n →ₗ[ℂ] H n, S.IsSymmetric → T.IsSymmetric →
+      g (S + T) = g S + g T)
+    (hE_sym : ∀ i j, (E i j).IsSymmetric)
+    (hF_sym : ∀ i j, (F i j).IsSymmetric)
+    (hsymm_finsum : ∀ (c : (Fin n × Fin n) → ℝ) (B : (Fin n × Fin n) → H n →ₗ[ℂ] H n),
+      (∀ k, (B k).IsSymmetric) →
+      (∑ k, (↑(c k) : ℂ) • B k).IsSymmetric)
+    (hD1 : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
+      S = (∑ p : Fin n × Fin n,
+            (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ) • E p.1 p.2) +
+          (∑ p : Fin n × Fin n,
+            (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) • F p.1 p.2))
+    (hD2 : ∀ (c : (Fin n × Fin n) → ℝ) (B : (Fin n × Fin n) → H n →ₗ[ℂ] H n),
+      (∀ k, (B k).IsSymmetric) →
+      g (∑ k, (↑(c k) : ℂ) • B k) = ∑ k, c k * g (B k))
+    (hD3 : ∀ (c : (Fin n × Fin n) → ℝ) (B : (Fin n × Fin n) → H n →ₗ[ℂ] H n),
+      (LinearMap.trace ℂ (H n) (ρ ∘ₗ ∑ k, (↑(c k) : ℂ) • B k)).re =
+      ∑ k, c k * (LinearMap.trace ℂ (H n) (ρ ∘ₗ B k)).re)
+    (hD4 : ∀ i j : Fin n,
+      g (E i j) = (LinearMap.trace ℂ (H n) (ρ ∘ₗ E i j)).re ∧
+      g (F i j) = (LinearMap.trace ℂ (H n) (ρ ∘ₗ F i j)).re)
+    (S : H n →ₗ[ℂ] H n) (hS : S.IsSymmetric) :
+    g S = (LinearMap.trace ℂ (H n) (ρ ∘ₗ S)).re := by
+  rw [hD1 S hS]
+  generalize hSE : (∑ p : Fin n × Fin n,
+      (↑((⟪b p.1, S (b p.2)⟫_ℂ).re / 2) : ℂ) • E p.1 p.2) = SE
+  generalize hSF : (∑ p : Fin n × Fin n,
+      (↑((⟪b p.1, S (b p.2)⟫_ℂ).im / 2) : ℂ) • F p.1 p.2) = SF
+  have hsym1 : SE.IsSymmetric := by
+    rw [← hSE]; exact hsymm_finsum _ _ (fun p => hE_sym p.1 p.2)
+  have hsym2 : SF.IsSymmetric := by
+    rw [← hSF]; exact hsymm_finsum _ _ (fun p => hF_sym p.1 p.2)
+  rw [hg_add SE SF hsym1 hsym2, LinearMap.comp_add, map_add, Complex.add_re]
+  congr 1
+  · rw [← hSE, hD2 _ _ (fun p => hE_sym p.1 p.2),
+        hD3 _ (fun p : Fin n × Fin n => E p.1 p.2)]
+    exact Finset.sum_congr rfl fun p _ => by rw [(hD4 p.1 p.2).1]
+  · rw [← hSF, hD2 _ _ (fun p => hF_sym p.1 p.2),
+        hD3 _ (fun p : Fin n × Fin n => F p.1 p.2)]
+    exact Finset.sum_congr rfl fun p _ => by rw [(hD4 p.1 p.2).2]
+
 theorem riesz_selfAdjoint (hn : 1 ≤ n)
     (g : (H n →ₗ[ℂ] H n) → ℝ)
     (hg_add : ∀ S T : H n →ₗ[ℂ] H n, S.IsSymmetric → T.IsSymmetric →
@@ -656,7 +701,7 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
   -- g(0) = 0
   have hg_zero : g 0 = 0 := by
     have := hg_smul 0 0 LinearMap.IsSymmetric.zero
-    simp at this; exact this
+    simp only [Complex.ofReal_zero, smul_zero, zero_mul] at this; exact this
   -- g(E j i) = g(E i j) (E symmetric in indices)
   have hgE : ∀ i j, g (E j i) = g (E i j) := fun i j => by
     congr 1; exact add_comm _ _
@@ -667,6 +712,24 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
       simp only [F, ← smul_add]; convert smul_zero _; abel
     have h := hg_add (F j i) (F i j) (hF_sym j i) (hF_sym i j)
     rw [hsum, hg_zero] at h; linarith
+  -- Une combinaison ℝ-scalaire d'un opérateur symétrique reste symétrique
+  have hsymm_smul : ∀ (r : ℝ) (T : H n →ₗ[ℂ] H n),
+      T.IsSymmetric → ((↑r : ℂ) • T).IsSymmetric :=
+    fun r T hT x y => by
+      simp only [LinearMap.smul_apply, inner_smul_left, inner_smul_right,
+                 Complex.conj_ofReal]
+      rw [hT x y]
+  -- Une somme finie de combinaisons ℝ-scalaires d'opérateurs symétriques reste symétrique
+  have hsymm_finsum : ∀ {ι : Type} (c : ι → ℝ) (B : ι → H n →ₗ[ℂ] H n),
+      (∀ k, (B k).IsSymmetric) → ∀ s : Finset ι,
+        (∑ k ∈ s, (↑(c k) : ℂ) • B k).IsSymmetric := by
+    intro ι c B hB s
+    classical
+    induction s using Finset.induction_on with
+    | empty => rw [Finset.sum_empty]; exact LinearMap.IsSymmetric.zero
+    | @insert x s hx ih =>
+      rw [Finset.sum_insert hx]
+      exact (hsymm_smul _ _ (hB _)).add ih
   -- Symmetry of ρ : M is Hermitian
   have hρ_sym : ρ.IsSymmetric := by
     rw [hρ_def, Matrix.isSymmetric_toEuclideanLin_iff]
@@ -674,17 +737,22 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
     simp only [hM_def]
     rw [hgE i j, hgF i j]
     apply Complex.ext <;>
-      simp [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+      simp only [Complex.star_def, Complex.conj_re, Complex.conj_im,
+            Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
             Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im,
-            neg_div, mul_comm]
+            neg_div] <;>
+      ring
   -- Representation
   have hρ_rep : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
       g S = (LinearMap.trace ℂ (H n) (ρ ∘ₗ S)).re := by
     -- Entrées de ρ dans la base b : ⟪b i, ρ (b j)⟫ = M i j
     have hMcol : ∀ i j : Fin n, ⟪b i, ρ (b j)⟫_ℂ = M i j := by
       intro i j
-      simp [hρ_def, b, EuclideanSpace.basisFun_apply, EuclideanSpace.inner_single_left,
-            Matrix.ofLp_toLpLin, PiLp.ofLp_single, Matrix.col_apply]
+      simp only [EuclideanSpace.basisFun_apply, hρ_def,
+            EuclideanSpace.inner_single_left, map_one, Matrix.ofLp_toLpLin,
+            PiLp.ofLp_single, Matrix.toLin'_apply, Matrix.mulVec_single,
+            MulOpposite.op_one, Pi.smul_apply, Matrix.col_apply,
+            one_smul, one_mul, b]
     -- Trace de ρ ∘ (rankOne x y)
     have htr_ro : ∀ x y : H n, LinearMap.trace ℂ (H n) (ρ ∘ₗ ro x y) = ⟪y, ρ x⟫_ℂ := by
       intro x y
@@ -747,12 +815,16 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
         ∑ k, c k * (LinearMap.trace ℂ (H n) (ρ ∘ₗ B k)).re := by
       intro ι _ c B
       have h1 : ρ ∘ₗ ∑ k, (↑(c k) : ℂ) • B k = ∑ k, (↑(c k) : ℂ) • (ρ ∘ₗ B k) := by
-        ext x; simp [LinearMap.sum_apply, map_sum]
+        ext x; simp only [Complex.coe_smul, LinearMap.coe_comp, LinearMap.coe_sum,
+              LinearMap.coe_smul, Function.comp_apply, Finset.sum_apply,
+              Pi.smul_apply, map_sum, LinearMap.map_smul_of_tower,
+              WithLp.ofLp_sum, WithLp.ofLp_smul, Complex.real_smul,
+              LinearMap.sum_apply, LinearMap.smul_apply]
       rw [h1, map_sum, Complex.re_sum]
       apply Finset.sum_congr rfl
       intro k _
       rw [map_smul, smul_eq_mul, Complex.mul_re]
-      simp
+      simp only [Complex.ofReal_re, Complex.ofReal_im, zero_mul, sub_zero]
     -- D1 : décomposition de S symétrique sur la base {E i j, F i j} (facteur 1/2,
     -- vérifié sur le cas diagonal i = j : F i i = 0, E i i = 2·ro(bᵢ)(bᵢ))
     have hD1 : ∀ S : H n →ₗ[ℂ] H n, S.IsSymmetric →
@@ -768,28 +840,28 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
           val (l, k) := by
         intro val k l
         rw [Finset.sum_eq_single (l, k)]
-        · simp
+        · simp only [ite_true, mul_one]
         · intro p _ hp
           by_cases h1 : p.2 = k
           · by_cases h2 : l = p.1
             · exact absurd (Prod.ext h2.symm h1) hp
-            · simp [h2]
-          · simp [h1]
-        · simp
+            · simp only [if_neg h2, mul_zero]
+          · simp only [if_neg h1, zero_mul, mul_zero]
+        · simp only [Finset.mem_univ, not_true_eq_false, false_implies]
       have hcollapse2 : ∀ (val : Fin n × Fin n → ℂ) (k l : Fin n),
           (∑ p : Fin n × Fin n,
             val p * ((if p.1 = k then (1:ℂ) else 0) * if l = p.2 then (1:ℂ) else 0)) =
           val (k, l) := by
         intro val k l
         rw [Finset.sum_eq_single (k, l)]
-        · simp
+        · simp only [ite_true, mul_one]
         · intro p _ hp
           by_cases h1 : p.1 = k
           · by_cases h2 : l = p.2
             · exact absurd (Prod.ext h1 h2.symm) hp
-            · simp [h2]
-          · simp [h1]
-        · simp
+            · simp only [if_neg h2, mul_zero]
+          · simp only [if_neg h1, zero_mul, mul_zero]
+        · simp only [Finset.mem_univ, not_true_eq_false, false_implies]
       -- Deux vecteurs de H n sont égaux si leurs produits scalaires contre tous les bₗ coïncident
       have vec_ext : ∀ u v : H n, (∀ l, ⟪b l, u⟫_ℂ = ⟪b l, v⟫_ℂ) → u = v := by
         intro u v h
@@ -846,7 +918,9 @@ theorem riesz_selfAdjoint (hn : 1 ≤ n)
       apply Finset.sum_congr rfl
       intro k _
       rw [map_smul, map_smul, hbk k, LinearMap.add_apply]
-    sorry -- assemblage final via D1, D2, D3, D4 (après remplissage de D1)
+    intro S hS
+    exact riesz_rep_assembly b E F g ρ hg_add hE_sym hF_sym
+      (fun c B hB => hsymm_finsum c B hB Finset.univ) hD1 hD2 hD3 hD4 S hS
   -- Assemble
   exact ⟨ρ, ⟨⟨hρ_sym, hρ_rep⟩, fun ρ' ⟨hρ'_sym, hρ'_rep⟩ =>
     riesz_unique hρ'_sym hρ_sym fun S hS => by rw [← hρ'_rep S hS]; exact hρ_rep S hS⟩⟩
@@ -882,9 +956,45 @@ theorem busch {n : ℕ} (hn : 1 ≤ n) (F : EffectMeasure n) :
     (fun r S hS => F.extendSA_realSmul hn hS r)
   refine ⟨ρ, ⟨⟨hρ_sym, ?_, ?_⟩, ?_⟩, ?_⟩
   · -- Positivité : Re⟪ρ x, x⟫ ≥ 0
-    sorry
-  · -- Trace 1
-    sorry
+    intro x
+    by_cases hx : x = 0
+    · subst hx; simp [map_zero]
+    · have heff := EffectMeasure.isEffect_projL (ℂ ∙ x : Submodule ℂ (H n))
+      have hge := F.nonneg _ heff
+      rw [← F.extendSA_extends hn heff, hrep _ heff.1.1] at hge
+      have hcomp : ρ ∘ₗ projL (ℂ ∙ x : Submodule ℂ (H n)) =
+          ((↑(‖x‖ ^ 2 : ℝ) : ℂ)⁻¹) •
+            (↑(InnerProductSpace.rankOne ℂ (ρ x) x) : H n →ₗ[ℂ] H n) := by
+        ext1 w
+        simp only [LinearMap.comp_apply, projL, ContinuousLinearMap.coe_coe,
+                    Submodule.starProjection_singleton ℂ, map_smul, LinearMap.smul_apply,
+                    InnerProductSpace.rankOne_apply, smul_smul, div_eq_inv_mul]
+        rfl
+      rw [hcomp] at hge
+      simp only [map_smul, smul_eq_mul, InnerProductSpace.trace_rankOne] at hge
+      rw [← Complex.ofReal_inv, Complex.re_ofReal_mul, ← hρ_sym x x] at hge
+      exact nonneg_of_mul_nonneg_right hge (inv_pos.mpr (by positivity))
+  · -- Trace 1 : tr(ρ) = tr(ρ ∘ 1) = g(1) = f(1) = 1
+    have hone_eff : IsEffect (1 : H n →ₗ[ℂ] H n) :=
+      ⟨⟨LinearMap.IsSymmetric.one, fun x => by
+        simp only [Module.End.one_apply]; exact inner_self_nonneg (𝕜 := ℂ)⟩,
+       ⟨by simp, fun x => by simp⟩⟩
+    have hcomp : ρ ∘ₗ (1 : H n →ₗ[ℂ] H n) = ρ := mul_one ρ
+    have hre : (LinearMap.trace ℂ (H n) ρ).re = 1 := by
+      have h := hrep 1 LinearMap.IsSymmetric.one
+      rw [hcomp] at h
+      rw [← h, F.extendSA_extends hn hone_eff, F.map_one]
+    have him : (LinearMap.trace ℂ (H n) ρ).im = 0 := by
+      rw [LinearMap.trace_eq_sum_inner ρ (EuclideanSpace.basisFun (Fin n) ℂ),
+          Complex.im_sum]
+      apply Finset.sum_eq_zero
+      intro i _
+      apply Complex.conj_eq_iff_im.mp
+      set bi := EuclideanSpace.basisFun (Fin n) ℂ i
+      calc (starRingEnd ℂ) ⟪bi, ρ bi⟫_ℂ
+          = ⟪ρ bi, bi⟫_ℂ := inner_conj_symm (𝕜 := ℂ) (ρ bi) bi
+        _ = ⟪bi, ρ bi⟫_ℂ := hρ_sym bi bi
+    exact Complex.ext hre (by simp [him])
   · -- Représentation sur les effets : F.f T = Re tr(ρ ∘ T)
     intro T hT
     rw [← F.extendSA_extends hn hT]

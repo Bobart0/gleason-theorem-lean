@@ -10,16 +10,16 @@
 - [x] ProjMeasure.le_one
 - [x] ProjMeasure.mono
 
-## M-B — Busch 2003 (cible de publication n°1)
+## M-B — Busch 2003 
 - [x] EffectMeasure.map_zero
 - [x] EffectMeasure.mono
 - [x] EffectMeasure.isEffect_projL
 - [x] EffectMeasure.toProjMeasure (2 sorry)
-- [ ] busch (à décomposer en ~6 lemmes, plan dans Busch/Main.lean)
+- [x] busch (positivité + trace 1 + représentation + unicité)
 - [ ] busch_born_rule
 
 ## M2 — cœur analytique réel (le dur)
-- [ ] bounded_additive_affine (Simplex — semaine 1, échauffement)
+- [ ] bounded_additive_affine (Simplex)
 - [ ] IsFrameFunction.le_of_nonneg
 - [ ] exists_orthonormalBasis_fst / _pair / frame_pair_sum_eq (SphereGeometry)
 - [ ] exists_continuity_point (Descent — 3 à 5 semaines, poste de variance principal)
