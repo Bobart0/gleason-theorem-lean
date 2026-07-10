@@ -389,7 +389,42 @@ private theorem warmup_II_D4 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
     (hgen : ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
       (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C) :
     ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 → f ((p : ℝ) / q * a₀) = (p : ℝ) / q * f a₀ := by
-  sorry
+  have hD3 := warmup_II_D3 f hf0 htriple ha₀ hgen
+  intro p q hq
+  have hqR_ne : (q : ℝ) ≠ 0 := by exact_mod_cast hq.ne'
+  -- (i) f (p/q·a₀) = p · f (1/q·a₀), par récurrence sur p
+  have hstep : ∀ p : ℕ, (p : ℝ) / q * a₀ ≤ 1 →
+      f ((p : ℝ) / q * a₀) = (p : ℝ) * f ((1 : ℝ) / q * a₀) := by
+    intro p
+    induction p with
+    | zero => intro _; simp [hf0]
+    | succ n ih =>
+      intro hle
+      have hdecomp : ((n + 1 : ℕ) : ℝ) / q * a₀ = (n : ℝ) / q * a₀ + (1 : ℝ) / q * a₀ := by
+        push_cast; ring
+      have hle' := hle
+      rw [hdecomp] at hle'
+      have ha₀pos : 0 < a₀ := ha₀.1
+      have hqR : (0 : ℝ) < q := by exact_mod_cast hq
+      have hpos2 : 0 ≤ (1 : ℝ) / q * a₀ := by positivity
+      have hnle : (n : ℝ) / q * a₀ ≤ 1 := by linarith
+      have key := hD3 n 1 q hq hle
+      rw [ih hnle] at key
+      push_cast at key ⊢
+      rw [← key]
+      ring
+  -- (ii) cas p = q : f(a₀) = q · f(1/q·a₀)
+  have hqeq : f a₀ = (q : ℝ) * f ((1 : ℝ) / q * a₀) := by
+    have hqle : (q : ℝ) / q * a₀ ≤ 1 := by
+      rw [div_self hqR_ne, one_mul]; exact ha₀.2.le
+    have hh := hstep q hqle
+    rwa [div_self hqR_ne, one_mul] at hh
+  -- combinaison
+  intro hle
+  have hinv : f ((1 : ℝ) / q * a₀) = f a₀ / q := by
+    rw [hqeq, mul_div_cancel_left₀ _ hqR_ne]
+  rw [hstep p hle, hinv]
+  ring
 
 /-- **D6-existence.** Il existe `b ∈ (0,1)` avec `b ∉ C` et `1 - b ∉ C`
 (l'ensemble `C ∪ {x | 1 - x ∈ C}` est dénombrable, ne peut recouvrir `(0,1)`). -/
