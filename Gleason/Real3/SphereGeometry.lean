@@ -663,5 +663,119 @@ theorem sperp_spherePoint (b : OrthonormalBasis (Fin 3) ℝ E3) {θ : ℝ}
     field_simp
   rw [hscalar]
 
+/-- **E1d (critère de pas).** `spherePoint b θ' ψ'` est dans le cercle de
+descente de `spherePoint b θ ψ` (autour du pôle `b 0`) ssi l'identité
+trigonométrique suivante est vérifiée. Calcul direct de
+`⟪sperp (b0) (spherePoint b θ ψ), spherePoint b θ' ψ'⟫` via `sperp_spherePoint`
+et les formules `inner_*_spherePoint`. -/
+theorem spherePoint_mem_descent_iff (b : OrthonormalBasis (Fin 3) ℝ E3) {θ θ' : ℝ}
+    (hθ0 : 0 < θ) (hθ1 : θ ≤ π / 2) (hθ'0 : 0 ≤ θ') (hθ'1 : θ' ≤ π / 2) (ψ ψ' : ℝ) :
+    spherePoint b θ' ψ' ∈ descent (b 0) (spherePoint b θ ψ) ↔
+      Real.sin θ * Real.cos θ' = Real.cos θ * Real.sin θ' * Real.cos (ψ' - ψ) := by
+  have hmemN : spherePoint b θ' ψ' ∈ northern (b 0) := mem_northern_spherePoint b hθ'0 hθ'1 ψ'
+  have hexpand : ⟪sperp (b 0) (spherePoint b θ ψ), spherePoint b θ' ψ'⟫ =
+      Real.sin θ * Real.cos θ' - Real.cos θ * Real.sin θ' * Real.cos (ψ' - ψ) := by
+    rw [sperp_spherePoint b hθ0 hθ1 ψ, Real.cos_sub]
+    rw [inner_sub_left, real_inner_smul_left, real_inner_smul_left, inner_add_left,
+        real_inner_smul_left, real_inner_smul_left, inner_pole_spherePoint,
+        inner_snd_spherePoint, inner_trd_spherePoint]
+    ring
+  rw [mem_descent_iff]
+  constructor
+  · rintro ⟨_, h⟩
+    rw [hexpand] at h
+    linarith
+  · intro h
+    refine ⟨hmemN, ?_⟩
+    rw [hexpand]
+    linarith
+
+/-- **E1c.** Tout vecteur unitaire de `northern (b 0) \ {b 0}` s'exprime en
+coordonnées sphériques dans la base `b`. Décomposition polaire de la
+projection sur `(b 1, b 2)` via `Complex.arg` (aucun lemme Mathlib direct
+« a²+b²=1 → ∃ψ, cosψ=a∧sinψ=b » : détour par `Complex.mk`/`normSq`). -/
+theorem exists_sphereCoords (b : OrthonormalBasis (Fin 3) ℝ E3) {t : E3}
+    (ht : ‖t‖ = 1) (htN : t ∈ northern (b 0)) (htp : t ≠ b 0) :
+    ∃ θ ψ : ℝ, 0 < θ ∧ θ ≤ π / 2 ∧ t = spherePoint b θ ψ := by
+  set c : ℝ := ⟪b 0, t⟫ with hc_def
+  have hc0 : 0 ≤ c := htN.2
+  have hc1 : c ≤ 1 := by
+    have h := abs_real_inner_le_norm (b 0) t
+    rw [b.norm_eq_one 0, ht, mul_one] at h
+    exact (abs_le.mp h).2
+  have hcne1 : c ≠ 1 := by
+    intro heq
+    apply htp
+    have hns : ‖t - c • b 0‖ ^ 2 = 1 - c ^ 2 := norm_sq_sub_inner_smul (b.norm_eq_one 0) ht
+    rw [heq, one_smul] at hns
+    norm_num at hns
+    exact sub_eq_zero.mp hns
+  set θ : ℝ := Real.arccos c with hθ_def
+  have hθ0 : 0 < θ := by rw [hθ_def]; exact Real.arccos_pos.mpr (lt_of_le_of_ne hc1 hcne1)
+  have hθ1 : θ ≤ π / 2 := by rw [hθ_def]; exact Real.arccos_le_pi_div_two.mpr hc0
+  have hcosθ : Real.cos θ = c := Real.cos_arccos (by linarith) hc1
+  have hsinθnn : Real.sin θ = Real.sqrt (1 - c ^ 2) := by rw [hθ_def]; exact Real.sin_arccos c
+  have hsinθpos : 0 < Real.sin θ := Real.sin_pos_of_pos_of_lt_pi hθ0 (by linarith [Real.pi_pos])
+  set w : E3 := t - c • b 0 with hw_def
+  have hw0 : ⟪b 0, w⟫ = 0 := by
+    rw [hw_def, inner_sub_right, real_inner_smul_right, b.inner_eq_one 0, ← hc_def]
+    ring
+  have hwsq : ‖w‖ ^ 2 = Real.sin θ ^ 2 := by
+    rw [hw_def, hc_def, norm_sq_sub_inner_smul (b.norm_eq_one 0) ht, ← hc_def, hsinθnn,
+        Real.sq_sqrt (by nlinarith : (0 : ℝ) ≤ 1 - c ^ 2)]
+  have hwnorm : ‖w‖ = Real.sin θ := by
+    have heq0 : (‖w‖ - Real.sin θ) * (‖w‖ + Real.sin θ) = 0 := by linear_combination hwsq
+    rcases mul_eq_zero.mp heq0 with h | h
+    · linarith
+    · linarith [norm_nonneg w]
+  have hwne : w ≠ 0 := by
+    intro h
+    rw [h, norm_zero] at hwnorm
+    linarith
+  have hdecomp_w : ⟪b 1, w⟫ • b 1 + ⟪b 2, w⟫ • b 2 = w := by
+    have h := b.sum_repr' w
+    rw [Fin.sum_univ_three, hw0, zero_smul, zero_add] at h
+    exact h
+  have hw_sq_decomp : ‖w‖ ^ 2 = ⟪b 1, w⟫ ^ 2 + ⟪b 2, w⟫ ^ 2 := by
+    rw [← real_inner_self_eq_norm_sq]
+    nth_rewrite 1 [← hdecomp_w]
+    rw [inner_add_left, real_inner_smul_left, real_inner_smul_left]
+    ring
+  have hwnn : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hwne
+  set a : ℝ := ⟪b 1, w⟫ / ‖w‖ with ha_def
+  set d : ℝ := ⟪b 2, w⟫ / ‖w‖ with hd_def
+  have had : a ^ 2 + d ^ 2 = 1 := by
+    have hstep : a ^ 2 + d ^ 2 = (⟪b 1, w⟫ ^ 2 + ⟪b 2, w⟫ ^ 2) / ‖w‖ ^ 2 := by
+      rw [ha_def, hd_def, div_pow, div_pow]; ring
+    rw [hstep, ← hw_sq_decomp, div_self (pow_ne_zero 2 hwnn)]
+  set z : ℂ := ⟨a, d⟩ with hz_def
+  have hnormSqz : Complex.normSq z = 1 := by
+    rw [hz_def, Complex.normSq_mk]
+    nlinarith [had]
+  have hzne : z ≠ 0 := by
+    intro h
+    rw [h, map_zero] at hnormSqz
+    norm_num at hnormSqz
+  have hzabs : ‖z‖ = 1 := by
+    have hsq : ‖z‖ ^ 2 = 1 := by rw [← Complex.normSq_eq_norm_sq]; exact hnormSqz
+    have heq0 : (‖z‖ - 1) * (‖z‖ + 1) = 0 := by linear_combination hsq
+    rcases mul_eq_zero.mp heq0 with h | h
+    · linarith
+    · linarith [norm_nonneg z]
+  set ψ : ℝ := Complex.arg z with hψ_def
+  have hcosψ : Real.cos ψ = a := by
+    rw [hψ_def, Complex.cos_arg hzne, hzabs, div_one]
+  have hsinψ : Real.sin ψ = d := by
+    rw [hψ_def, Complex.sin_arg, hzabs, div_one]
+  refine ⟨θ, ψ, hθ0, hθ1, ?_⟩
+  unfold spherePoint
+  rw [hcosθ, hsinθnn, hcosψ, hsinψ, ha_def, hd_def]
+  have h1 : Real.sqrt (1 - c ^ 2) * (⟪b 1, w⟫ / ‖w‖) = ⟪b 1, w⟫ := by
+    rw [← hsinθnn, hwnorm]; field_simp
+  have h2 : Real.sqrt (1 - c ^ 2) * (⟪b 2, w⟫ / ‖w‖) = ⟪b 2, w⟫ := by
+    rw [← hsinθnn, hwnorm]; field_simp
+  rw [h1, h2, add_assoc, hdecomp_w, hw_def]
+  abel
+
 end
 end Gleason
