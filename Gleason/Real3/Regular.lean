@@ -578,7 +578,15 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
             rw [ht0'eq] at hstep2
             linarith [hstep1, hstep2]
           have hq2zero : h q2 = 0 := by linarith [hq2eq, hMm2eq]
-          sorry -- H8-H9
+          -- **H8.** Réapplique le Claim (H3-H4) à `h` sur le triple (p2,q2,r2').
+          have hRmin_r2' : ∀ t : E3, ‖t‖ = 1 → h r2' ≤ h t := by rw [hr2'eq]; exact hr2min
+          have hq2eq' : h q2 = 0 - h p2 - h r2' := by rw [hr2'eq]; exact hq2eq
+          have hclaim_h := frame_eq_quadratic_of_extremal_triple hhframe hp2_norm hq2_norm
+            hr2'_norm hp2q2 hp2r2' hq2r2' hp2max hRmin_r2' hq2eq'
+          rw [hq2zero] at hclaim_h
+          have hr2'M2 : h r2' = -(h p2) := by rw [hr2'eq]; linarith [hMm2eq]
+          -- `hclaim_h : ∀ s, ‖s‖=1 → (6 cond en p2,q2,r2') → h s = h(p2)*⟪p2,s⟫² - h(p2)*⟪r2',s⟫²`
+          sorry -- H9
 
 end
 end Gleason
