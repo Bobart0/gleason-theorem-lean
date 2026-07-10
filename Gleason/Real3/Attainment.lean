@@ -331,5 +331,40 @@ theorem symmetrize_equator {g : E3 → ℝ} {W : ℝ} (hg : IsFrameFunction g W)
   rw [Fin.sum_univ_three, hb0, hb1, hb2] at h
   linarith
 
+/- ═══════════════════════════════════════════════════════════════════
+   G5 (préliminaires). Limites le long d'un ultrafiltre dans un compact
+   (l'espace produit `[2m,2M]^S` n'étant pas métrisable, pas de
+   sous-suites : Gleason/CKM §6 utilise un ultrafiltre).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+open Filter Topology
+
+/-- **G5a.** Toute suite de vecteurs unitaires admet, le long de l'ultrafiltre
+`Ultrafilter.of atTop`, une limite unitaire (compacité de la sphère). -/
+theorem exists_ultrafilter_tendsto_sphere (u : ℕ → E3) (hu : ∀ n, ‖u n‖ = 1) :
+    ∃ p : E3, ‖p‖ = 1 ∧
+      Tendsto u (Ultrafilter.of (atTop : Filter ℕ) : Filter ℕ) (𝓝 p) := by
+  set 𝒰 : Ultrafilter ℕ := Ultrafilter.of atTop with h𝒰_def
+  have hmem : (Ultrafilter.map u 𝒰 : Filter E3) ≤ 𝓟 (Metric.sphere (0 : E3) 1) := by
+    rw [Ultrafilter.coe_map, le_principal_iff, mem_map]
+    filter_upwards [univ_mem] with n _
+    simpa using hu n
+  obtain ⟨p, hpmem, hp⟩ := (isCompact_sphere (0 : E3) 1).ultrafilter_le_nhds (Ultrafilter.map u 𝒰)
+    hmem
+  refine ⟨p, ?_, hp⟩
+  simpa using hpmem
+
+/-- **G5a' (variante réelle).** Toute suite réelle à valeurs dans `[m,M]`
+admet, le long de l'ultrafiltre, une limite dans `[m,M]` (compacité de
+`Icc m M`). -/
+theorem exists_ultrafilter_tendsto_Icc {m M : ℝ} (u : ℕ → ℝ) (hu : ∀ n, u n ∈ Set.Icc m M) :
+    ∃ L : ℝ, L ∈ Set.Icc m M ∧
+      Tendsto u (Ultrafilter.of (atTop : Filter ℕ) : Filter ℕ) (𝓝 L) := by
+  set 𝒰 : Ultrafilter ℕ := Ultrafilter.of atTop with h𝒰_def
+  have hmem : (Ultrafilter.map u 𝒰 : Filter ℝ) ≤ 𝓟 (Set.Icc m M) := by
+    rw [Ultrafilter.coe_map, le_principal_iff, mem_map]
+    filter_upwards [univ_mem] with n _ using hu n
+  exact isCompact_Icc.ultrafilter_le_nhds (Ultrafilter.map u 𝒰) hmem
+
 end
 end Gleason
