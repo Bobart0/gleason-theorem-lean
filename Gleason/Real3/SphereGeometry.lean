@@ -34,7 +34,27 @@ theorem exists_orthonormalBasis_fst (x : E3) (hx : ‖x‖ = 1) :
 theorem exists_orthonormalBasis_pair (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
     (hxy : ⟪x, y⟫ = 0) :
     ∃ b : OrthonormalBasis (Fin 3) ℝ E3, b 0 = x ∧ b 1 = y := by
-  sorry
+  have hcard : Module.finrank ℝ E3 = Fintype.card (Fin 3) := by simp
+  have hyx : ⟪y, x⟫ = 0 := by rw [real_inner_comm]; exact hxy
+  have hv : Orthonormal ℝ (({0, 1} : Set (Fin 3)).restrict ![x, y, 0]) := by
+    constructor
+    · rintro ⟨i, hi⟩
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hi
+      rcases hi with hi | hi <;> subst hi <;> simp [Set.restrict_apply, hx, hy]
+    · rintro ⟨i, hi⟩ ⟨j, hj⟩ hij
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hi hj
+      simp only [ne_eq, Subtype.mk.injEq] at hij
+      rcases hi with hi | hi <;> rcases hj with hj | hj <;> subst hi <;> subst hj
+      · exact absurd rfl hij
+      · simp [Set.restrict_apply, hxy]
+      · simp [Set.restrict_apply, hyx]
+      · exact absurd rfl hij
+  obtain ⟨b, hb⟩ := hv.exists_orthonormalBasis_extension_of_card_eq hcard
+  refine ⟨b, ?_, ?_⟩
+  · have := hb 0 (by simp)
+    simpa using this
+  · have := hb 1 (by simp)
+    simpa using this
 
 /-- Deux bases partageant un vecteur : la somme de `f` sur les deux autres vecteurs
 est la même (conséquence directe de la définition de frame function ; utilisé
