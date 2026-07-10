@@ -88,6 +88,38 @@ theorem exists_orthonormalBasis_of_triple' (v0 v1 v2 : E3)
   obtain ⟨b, hb⟩ := exists_orthonormalBasis_of_triple _ hnorm hperp
   exact ⟨b, by simpa using hb 0, by simpa using hb 1, by simpa using hb 2⟩
 
+/-- Il existe un vecteur unitaire orthogonal à deux vecteurs donnés : l'orthogonal
+d'un sous-espace engendré par 2 vecteurs, dans un espace de dimension 3, est de
+dimension ≥ 1 (comptage de dimension). Remplace le produit vectoriel : couvre
+uniformément le cas dégénéré où les deux vecteurs sont colinéaires, sans
+disjonction de cas. -/
+theorem exists_unit_orthogonal_to_pair (a b : E3) :
+    ∃ u : E3, ‖u‖ = 1 ∧ ⟪u, a⟫ = 0 ∧ ⟪u, b⟫ = 0 := by
+  classical
+  set K : Submodule ℝ E3 := Submodule.span ℝ ({a, b} : Set E3) with hK_def
+  have hKfin : Module.finrank ℝ K ≤ 2 := by
+    refine le_trans (finrank_span_le_card ({a, b} : Set E3)) ?_
+    simp only [Set.toFinset_insert, Set.toFinset_singleton]
+    exact (Finset.card_insert_le _ _).trans (by simp)
+  have hE3 : Module.finrank ℝ E3 = 3 := by simp
+  have hsum : Module.finrank ℝ K + Module.finrank ℝ Kᗮ = Module.finrank ℝ E3 :=
+    Submodule.finrank_add_finrank_orthogonal K
+  have hKperp : 1 ≤ Module.finrank ℝ Kᗮ := by omega
+  have hne : Kᗮ ≠ ⊥ := by
+    intro h
+    rw [h, finrank_bot] at hKperp
+    omega
+  obtain ⟨w, hwK, hw0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hne
+  have haK : a ∈ K := Submodule.subset_span (by simp)
+  have hbK : b ∈ K := Submodule.subset_span (by simp)
+  have hwa : ⟪w, a⟫ = 0 := Submodule.inner_left_of_mem_orthogonal haK hwK
+  have hwb : ⟪w, b⟫ = 0 := Submodule.inner_left_of_mem_orthogonal hbK hwK
+  refine ⟨(‖w‖⁻¹ : ℝ) • w, ?_, ?_, ?_⟩
+  · rw [norm_smul, Real.norm_eq_abs, abs_inv, abs_of_pos (norm_pos_iff.mpr hw0)]
+    exact inv_mul_cancel₀ (norm_ne_zero_iff.mpr hw0)
+  · rw [real_inner_smul_left, hwa, mul_zero]
+  · rw [real_inner_smul_left, hwb, mul_zero]
+
 /-- Deux bases partageant un vecteur : la somme de `f` sur les deux autres vecteurs
 est la même (conséquence directe de la définition de frame function ; utilisé
 partout dans la descente). -/
