@@ -348,6 +348,7 @@ theorem normSqQF_apply (b : OrthonormalBasis (Fin 3) ℝ E3) (s : E3) :
   rw [← b.sum_sq_inner_right s, Fin.sum_univ_three]
   ring
 
+set_option maxHeartbeats 2000000 in
 /-- **Régularité (Gleason réel, dimension 3).** Toute frame function positive
 est quadratique sur la sphère (`heven` retirée : dérivable via
 `frameFunction_even`, cf. le commentaire d'en-tête). -/
@@ -803,7 +804,114 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
               · rw [← heq]; exact hA2_Γ
               · have : ⟪p2, -u⟫ = ⟪q2, -u⟫ := heq ▸ hA2_Γ
                 rw [inner_neg_right, inner_neg_right] at this; linarith [this]
-          sorry -- H9 (suite : w, span final)
+          -- **H9d.** Même argument pour `w := (p-q-r)/√3`, sur les cercles non-primés
+          -- `y=z` (réutilise `A3`), `x=-y`, `x=-z`.
+          have hqr_ne0 : (q - r : E3) ≠ 0 := sub_ne_zero.mpr (hvne q r hq hr hqr)
+          have hpq_plus_ne0 : (p + q : E3) ≠ 0 := by
+            intro hcontra
+            have h1 : ⟪p, p + q⟫ = 0 := by rw [hcontra, inner_zero_right]
+            rw [inner_add_right, real_inner_self_eq_norm_sq, hp, hpq] at h1
+            norm_num at h1
+          have hne_qr_pq : ∀ c : ℝ, c • (q - r) ≠ p + q := by
+            apply hnprop (q - r) (p + q) p
+            · rw [inner_sub_right, hpq, hpr]; ring
+            · rw [inner_add_right, real_inner_self_eq_norm_sq, hp, hpq]; norm_num
+          have hne_qr_pr : ∀ c : ℝ, c • (q - r) ≠ p + r := by
+            apply hnprop (q - r) (p + r) p
+            · rw [inner_sub_right, hpq, hpr]; ring
+            · rw [inner_add_right, real_inner_self_eq_norm_sq, hp, hpr]; norm_num
+          have hne_pq_pr' : ∀ c : ℝ, c • (p + q) ≠ p + r := by
+            apply hnprop (p + q) (p + r) r
+            · rw [inner_add_right, hrp, hrq]; ring
+            · rw [inner_add_right, hrp, real_inner_self_eq_norm_sq, hr]; norm_num
+          have hw_p : ⟪p, w⟫ = (Real.sqrt 3)⁻¹ := by
+            rw [hw_def, real_inner_smul_right]
+            simp only [inner_sub_right, real_inner_self_eq_norm_sq, hp, hpq, hpr]
+            ring
+          have hw_q : ⟪q, w⟫ = -(Real.sqrt 3)⁻¹ := by
+            rw [hw_def, real_inner_smul_right]
+            simp only [inner_sub_right, real_inner_self_eq_norm_sq, hq, hqp, hqr]
+            ring
+          have hw_r : ⟪r, w⟫ = -(Real.sqrt 3)⁻¹ := by
+            rw [hw_def, real_inner_smul_right]
+            simp only [inner_sub_right, real_inner_self_eq_norm_sq, hr, hrp, hrq]
+            ring
+          have hw_C3 : ⟪q, w⟫ = ⟪r, w⟫ := hw_q.trans hw_r.symm
+          have hw_C4 : ⟪p, w⟫ = -⟪q, w⟫ := by rw [hw_p, hw_q]; ring
+          have hw_C5 : ⟪p, w⟫ = -⟪r, w⟫ := by rw [hw_p, hw_r]; ring
+          have hw_orth_qr : ⟪w, q - r⟫ = 0 := hto_orth w q r hw_C3
+          have hw_orth_pq : ⟪w, p + q⟫ = 0 := hto_orth' w p q hw_C4
+          have hw_orth_pr : ⟪w, p + r⟫ = 0 := hto_orth' w p r hw_C5
+          have hCiCj_to_w : ∀ nA nB : E3, nA ≠ 0 → (∀ c : ℝ, c • nA ≠ nB) →
+              ⟪w, nA⟫ = 0 → ⟪w, nB⟫ = 0 →
+              ∀ X : E3, ‖X‖ = 1 → ⟪X, nA⟫ = 0 → ⟪X, nB⟫ = 0 → X = w ∨ X = -w :=
+            fun nA nB hA0 hindep hwA hwB X hX hXA hXB =>
+              unique_unit_orthogonal_to_pair hA0 hindep hwA hwB hw_norm hXA hXB hX
+          obtain ⟨B2, hB2_norm, hB2Γ0, hB2C0⟩ := exists_unit_orthogonal_to_pair (p2 - q2) (p + q)
+          have hB2_Γ : ⟪p2, B2⟫ = ⟪q2, B2⟫ := by
+            have hz : ⟪p2 - q2, B2⟫ = 0 := by rw [real_inner_comm]; exact hB2Γ0
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hB2_cond : ⟪p, B2⟫ = -⟪q, B2⟫ := by
+            have hz : ⟪p + q, B2⟫ = 0 := by rw [real_inner_comm]; exact hB2C0
+            rw [inner_add_left] at hz; linarith [hz]
+          have hB2_zero : h B2 = 0 := hh_zero B2 hB2_norm (Or.inr (Or.inl hB2_cond))
+          have hB2_bin := hbin_of B2 hB2_norm hB2_Γ hB2_zero
+          obtain ⟨B3, hB3_norm, hB3Γ0, hB3C0⟩ := exists_unit_orthogonal_to_pair (p2 - q2) (p + r)
+          have hB3_Γ : ⟪p2, B3⟫ = ⟪q2, B3⟫ := by
+            have hz : ⟪p2 - q2, B3⟫ = 0 := by rw [real_inner_comm]; exact hB3Γ0
+            rw [inner_sub_left] at hz; linarith [hz]
+          have hB3_cond : ⟪p, B3⟫ = -⟪r, B3⟫ := by
+            have hz : ⟪p + r, B3⟫ = 0 := by rw [real_inner_comm]; exact hB3C0
+            rw [inner_add_left] at hz; linarith [hz]
+          have hB3_zero : h B3 = 0 :=
+            hh_zero B3 hB3_norm (Or.inr (Or.inr (Or.inr (Or.inl hB3_cond))))
+          have hB3_bin := hbin_of B3 hB3_norm hB3_Γ hB3_zero
+          have hmatchw : (A3 = B2 ∨ A3 = -B2) ∨ (A3 = B3 ∨ A3 = -B3) ∨ (B2 = B3 ∨ B2 = -B3) := by
+            rcases hA3_bin with hb3 | hb3 <;> rcases hB2_bin with hb2 | hb2 <;>
+              rcases hB3_bin with hb3' | hb3'
+            · exact Or.inl (hmatchL A3 B2 hA3_norm hB2_norm hA3_Γ hB2_Γ hb3 hb2)
+            · exact Or.inl (hmatchL A3 B2 hA3_norm hB2_norm hA3_Γ hB2_Γ hb3 hb2)
+            · exact Or.inr (Or.inl (hmatchL A3 B3 hA3_norm hB3_norm hA3_Γ hB3_Γ hb3 hb3'))
+            · exact Or.inr (Or.inr (hmatchR B2 B3 hB2_norm hB3_norm hB2_Γ hB3_Γ hb2 hb3'))
+            · exact Or.inr (Or.inr (hmatchL B2 B3 hB2_norm hB3_norm hB2_Γ hB3_Γ hb2 hb3'))
+            · exact Or.inr (Or.inl (hmatchR A3 B3 hA3_norm hB3_norm hA3_Γ hB3_Γ hb3 hb3'))
+            · exact Or.inl (hmatchR A3 B2 hA3_norm hB2_norm hA3_Γ hB2_Γ hb3 hb2)
+            · exact Or.inl (hmatchR A3 B2 hA3_norm hB2_norm hA3_Γ hB2_Γ hb3 hb2)
+          have hB2_orth_pq : ⟪B2, p + q⟫ = 0 := hto_orth' B2 p q hB2_cond
+          have hB3_orth_pr : ⟪B3, p + r⟫ = 0 := hto_orth' B3 p r hB3_cond
+          have hw_in_Γ : ⟪p2, w⟫ = ⟪q2, w⟫ := by
+            rcases hmatchw with h12 | h13 | h23
+            · have hA3w : A3 = w ∨ A3 = -w := by
+                apply hCiCj_to_w (q - r) (p + q) hqr_ne0 hne_qr_pq hw_orth_qr hw_orth_pq A3
+                  hA3_norm hA3_orth_qr
+                rcases h12 with heq | heq
+                · rw [heq]; exact hB2_orth_pq
+                · rw [heq, inner_neg_left, hB2_orth_pq]; ring
+              rcases hA3w with heq | heq
+              · rw [← heq]; exact hA3_Γ
+              · have : ⟪p2, -w⟫ = ⟪q2, -w⟫ := heq ▸ hA3_Γ
+                rw [inner_neg_right, inner_neg_right] at this; linarith [this]
+            · have hA3w : A3 = w ∨ A3 = -w := by
+                apply hCiCj_to_w (q - r) (p + r) hqr_ne0 hne_qr_pr hw_orth_qr hw_orth_pr A3
+                  hA3_norm hA3_orth_qr
+                rcases h13 with heq | heq
+                · rw [heq]; exact hB3_orth_pr
+                · rw [heq, inner_neg_left, hB3_orth_pr]; ring
+              rcases hA3w with heq | heq
+              · rw [← heq]; exact hA3_Γ
+              · have : ⟪p2, -w⟫ = ⟪q2, -w⟫ := heq ▸ hA3_Γ
+                rw [inner_neg_right, inner_neg_right] at this; linarith [this]
+            · have hB2w : B2 = w ∨ B2 = -w := by
+                apply hCiCj_to_w (p + q) (p + r) hpq_plus_ne0 hne_pq_pr' hw_orth_pq hw_orth_pr B2
+                  hB2_norm hB2_orth_pq
+                rcases h23 with heq | heq
+                · rw [heq]; exact hB3_orth_pr
+                · rw [heq, inner_neg_left, hB3_orth_pr]; ring
+              rcases hB2w with heq | heq
+              · rw [← heq]; exact hB2_Γ
+              · have : ⟪p2, -w⟫ = ⟪q2, -w⟫ := heq ▸ hB2_Γ
+                rw [inner_neg_right, inner_neg_right] at this; linarith [this]
+          sorry -- H9e (span final)
 
 end
 end Gleason
