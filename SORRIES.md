@@ -18,15 +18,19 @@
 - [x] busch (positivité + trace 1 + représentation + unicité)
 - [ ] busch_born_rule
 
-## M2 — cœur analytique réel (le dur)
-- [x] bounded_additive_affine (Simplex ; 6 sous-lemmes : g_props, split, halve,
-      nat_mul, dyadic_vanish, vanish)
-- [x] exists_orthonormalBasis_fst / _pair / frame_pair_sum_eq (SphereGeometry)
-- [x] IsFrameFunction.le_of_nonneg (déplacé dans SphereGeometry.lean, corollaire
-      d'exists_orthonormalBasis_fst — évite le cycle d'import avec FrameFunction)
-- [ ] exists_continuity_point (Descent, poste de variance principal)
-- [ ] frameFunction_continuousOn (Continuity)
-- [ ] frameFunction_regular (Regular)
+
+## M2 — cœur analytique réel (source : CKM 1985 §2-§7, PDF dans le projet)
+- [x] A. P2 (frameFunction_even), P3 (frameFunction_pair_swap), P4 (frameFunction_P4)
+      — SphereGeometry.lean, + infra réutilisable (exists_orthonormalBasis_of_triple/',
+      exists_unit_orthogonal_to_pair, remplace le produit vectoriel par comptage de dim)
+- [ ] B. Géométrie du pôle : latitude, E, N, s^⊥ explicite, D_s + 3 faits
+      (point⊥s de D_s ∈ E ; latitudes d'un frame Σ=1 ; réalisabilité des latitudes)
+- [ ] C. basic_lemma + version approchée (§4 ; courts une fois A+B faits)
+- [ ] D. warmup_II : monotone + co-dénombrable + additif-à-1 ⇒ identité (§3)
+- [ ] E. piron_chain : chaîne de descentes, l(s)>l(t) (§5, spirale tan/cos) [DUR]
+- [ ] F. frameFunction_exact_pole : f̄/f_, C dénombrable, Warmup II, C=∅ (§5)
+- [ ] G. frameFunction_attains_extrema : Tychonoff + rotations + cas radial (§6) [DUR]
+- [ ] H. frameFunction_regular : p̂/q̂/r̂, claim, h=g−f, 6 grands cercles (§7)
 
 ## M3 — réduction complexe
 - [ ] ProjMeasure.isCFrameFunction

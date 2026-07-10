@@ -184,5 +184,34 @@ theorem frameFunction_pair_swap {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction
   have h := frame_pair_sum_eq hf b b' (by rw [hb0, hb0'])
   rwa [hb1, hb2, hb1', hb2'] at h
 
+/-- **P4.** Si `f(s) > M - ξ` (proche du sup) alors il existe `t ⊥ s` avec
+`f(t) < m + ξ` (proche de l'inf). Preuve CKM §2 : on choisit `t'` avec
+`f(t') < m + δ` où `δ = ξ - (M - f s) > 0`, un vecteur `u` orthogonal à `s`
+et `t'` (`exists_unit_orthogonal_to_pair`, remplace le produit vectoriel —
+couvre le cas dégénéré `t' = ±s` sans disjonction de cas), puis on complète
+en `t ⊥ (s,u)` et `s' ⊥ (t',u)`. `frameFunction_pair_swap` sur `(u,s,t)` et
+`(u,s',t')` donne `f s + f t = f s' + f t'`, d'où `f t < m + ξ` en
+combinant `f s' ≤ M` et `f t' < m + δ`. -/
+theorem frameFunction_P4 {f : E3 → ℝ} {W M m : ℝ} (hf : IsFrameFunction f W)
+    (hMub : ∀ x : E3, ‖x‖ = 1 → f x ≤ M)
+    (hm : ∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m + ε)
+    {s : E3} (hs : ‖s‖ = 1) {ξ : ℝ} (hfs : M - ξ < f s) :
+    ∃ t : E3, ‖t‖ = 1 ∧ ⟪s, t⟫ = 0 ∧ f t < m + ξ := by
+  set δ : ℝ := ξ - (M - f s) with hδ_def
+  have hδpos : 0 < δ := by rw [hδ_def]; linarith
+  obtain ⟨t', ht'unit, ht'lt⟩ := hm δ hδpos
+  obtain ⟨u, huunit, hus, hut'⟩ := exists_unit_orthogonal_to_pair s t'
+  obtain ⟨t, htunit, hts, htu⟩ := exists_unit_orthogonal_to_pair s u
+  obtain ⟨s', hs'unit, hs't', hs'u⟩ := exists_unit_orthogonal_to_pair t' u
+  have hut : ⟪u, t⟫ = 0 := by rw [real_inner_comm]; exact htu
+  have hst : ⟪s, t⟫ = 0 := by rw [real_inner_comm]; exact hts
+  have hus' : ⟪u, s'⟫ = 0 := by rw [real_inner_comm]; exact hs'u
+  have h := frameFunction_pair_swap hf huunit hs htunit hs'unit ht'unit
+    hus hut hst hus' hut' hs't'
+  have hs'M : f s' ≤ M := hMub s' hs'unit
+  refine ⟨t, htunit, hst, ?_⟩
+  rw [hδ_def] at ht'lt
+  linarith
+
 end
 end Gleason
