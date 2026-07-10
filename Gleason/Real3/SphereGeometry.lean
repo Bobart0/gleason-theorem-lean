@@ -777,5 +777,30 @@ theorem exists_sphereCoords (b : OrthonormalBasis (Fin 3) ℝ E3) {t : E3}
   rw [h1, h2, add_assoc, hdecomp_w, hw_def]
   abel
 
+/-- **E3 (lemme de pas générique).** Formulation en `tan` du critère de
+descente : pour `θ, θ' ∈ (0, π/2)`, si `tan θ' · cos(ψ'-ψ) = tan θ`, alors
+`spherePoint b θ' ψ'` est dans le cercle de descente de `spherePoint b θ ψ`.
+Se réduit à une tautologie pour les pas de la phase A de E4 (ajustement
+d'azimut à rapport de distance constant). -/
+theorem spherePoint_mem_descent_of_tan (b : OrthonormalBasis (Fin 3) ℝ E3) {θ θ' : ℝ}
+    (hθ0 : 0 < θ) (hθ1 : θ < π / 2) (hθ'0 : 0 < θ') (hθ'1 : θ' < π / 2) (ψ ψ' : ℝ)
+    (htan : Real.tan θ' * Real.cos (ψ' - ψ) = Real.tan θ) :
+    spherePoint b θ' ψ' ∈ descent (b 0) (spherePoint b θ ψ) := by
+  have hcosθpos : 0 < Real.cos θ := Real.cos_pos_of_mem_Ioo ⟨by linarith [Real.pi_pos], hθ1⟩
+  have hcosθ'pos : 0 < Real.cos θ' := Real.cos_pos_of_mem_Ioo ⟨by linarith [Real.pi_pos], hθ'1⟩
+  rw [spherePoint_mem_descent_iff b hθ0 hθ1.le hθ'0.le hθ'1.le]
+  rw [Real.tan_eq_sin_div_cos, Real.tan_eq_sin_div_cos] at htan
+  field_simp at htan
+  linarith [htan]
+
+/-- **E4 équatorial (pas terminal).** `spherePoint b (π/2) (ψ+π/2)` (un point de
+l'équateur) est dans le cercle de descente de `spherePoint b θ ψ`, pour tout
+`θ ∈ (0, π/2)`. Le critère se réduit à `0 = 0` (`cos(π/2) = 0` des deux côtés). -/
+theorem spherePoint_mem_descent_equatorial (b : OrthonormalBasis (Fin 3) ℝ E3) {θ : ℝ}
+    (hθ0 : 0 < θ) (hθ1 : θ < π / 2) (ψ : ℝ) :
+    spherePoint b (π / 2) (ψ + π / 2) ∈ descent (b 0) (spherePoint b θ ψ) := by
+  rw [spherePoint_mem_descent_iff b hθ0 hθ1.le (by linarith [Real.pi_pos]) le_rfl]
+  simp
+
 end
 end Gleason
