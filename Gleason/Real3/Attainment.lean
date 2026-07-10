@@ -193,9 +193,13 @@ theorem IsFrameFunction.sub {f g : E3 → ℝ} {Wf Wg : ℝ}
 l'équateur de `p` dans lui-même ; pour `s` sur l'équateur, `s` et son image
 sont orthogonaux (décomposition `s = ⟪u1,s⟫•u1+⟪u2,s⟫•u2`, image
 `⟪u1,s⟫•u2-⟪u2,s⟫•u1`, produit scalaire croisé nul par `⟪u1,u2⟫=0` et
-normes unitaires). -/
+normes unitaires). `u1` (renommé `e0` par G3) est exposé pour que le
+recentrage de G3 et la descente de G8/G9 travaillent dans le même plan
+méridien que la rotation. -/
 theorem exists_rotate90 {p : E3} (hp : ‖p‖ = 1) :
-    ∃ phat : E3 ≃ₗᵢ[ℝ] E3, phat p = p ∧
+    ∃ (phat : E3 ≃ₗᵢ[ℝ] E3) (u1 u2 : E3), ‖u1‖ = 1 ∧ ‖u2‖ = 1 ∧
+      ⟪p, u1⟫ = 0 ∧ ⟪p, u2⟫ = 0 ∧ ⟪u1, u2⟫ = 0 ∧
+      phat p = p ∧ phat u1 = u2 ∧ phat u2 = -u1 ∧
       ∀ s ∈ equator p, phat s ∈ equator p ∧ ⟪s, phat s⟫ = 0 := by
   obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst p hp
   set u1 : E3 := b 1 with hu1_def
@@ -211,7 +215,7 @@ theorem exists_rotate90 {p : E3} (hp : ‖p‖ = 1) :
   have hnegu1 : ‖(-u1 : E3)‖ = 1 := by rw [norm_neg]; exact hu1
   obtain ⟨ρ, hρp, hρu1, hρu2⟩ := isometry_of_orthonormal_triples hp hu1 hu2 hpu1 hpu2 hu1u2
     hp hu2 hnegu1 hpu2 hpu1_neg hu2u1_neg
-  refine ⟨ρ, hρp, ?_⟩
+  refine ⟨ρ, u1, u2, hu1, hu2, hpu1, hpu2, hu1u2, hρp, hρu1, hρu2, ?_⟩
   intro s hs
   have hsu : ‖s‖ = 1 := hs.1
   have hsp : ⟪p, s⟫ = 0 := hs.2
@@ -231,6 +235,62 @@ theorem exists_rotate90 {p : E3} (hp : ‖p‖ = 1) :
   simp only [inner_add_left, inner_sub_right, real_inner_smul_left, real_inner_smul_right,
     real_inner_self_eq_norm_sq, hu1, hu2, hu1u2, hu2u1]
   ring
+
+/- ═══════════════════════════════════════════════════════════════════
+   G3. Recentrage.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **G3 (définition).** Point du méridien `(p,e0)` de latitude (signée) `c'`. -/
+def recenter (p e0 : E3) (c' : ℝ) : E3 := c' • p + Real.sqrt (1 - c' ^ 2) • e0
+
+/-- **G3.** `recenter p e0 c'` est unitaire, de produit scalaire `c'` avec `p`,
+pour `c' ∈ [0,1]` (le radicande `1-c'²` est alors `≥ 0`). -/
+theorem recenter_prop {p e0 : E3} (hp : ‖p‖ = 1) (he0 : ‖e0‖ = 1) (hpe0 : ⟪p, e0⟫ = 0)
+    {c' : ℝ} (hc'0 : 0 ≤ c') (hc'1 : c' ≤ 1) :
+    ‖recenter p e0 c'‖ = 1 ∧ ⟪p, recenter p e0 c'⟫ = c' := by
+  have hnn : (0 : ℝ) ≤ 1 - c' ^ 2 := by nlinarith
+  have hinner : ⟪p, recenter p e0 c'⟫ = c' := by
+    unfold recenter
+    rw [inner_add_right, real_inner_smul_right, real_inner_smul_right, hpe0, mul_zero, add_zero,
+      real_inner_self_eq_norm_sq, hp]
+    ring
+  refine ⟨?_, hinner⟩
+  have hsq : ‖recenter p e0 c'‖ ^ 2 = 1 := by
+    unfold recenter
+    rw [norm_add_sq_real, real_inner_smul_left, real_inner_smul_right, hpe0, mul_zero, mul_zero]
+    have h1 : ‖c' • p‖ ^ 2 = c' ^ 2 := by
+      rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, hp]; ring
+    have h2 : ‖Real.sqrt (1 - c' ^ 2) • e0‖ ^ 2 = 1 - c' ^ 2 := by
+      rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, he0, Real.sq_sqrt hnn]; ring
+    rw [h1, h2]
+    ring
+  have heq0 : (‖recenter p e0 c'‖ - 1) * (‖recenter p e0 c'‖ + 1) = 0 := by
+    linear_combination hsq
+  rcases mul_eq_zero.mp heq0 with h | h
+  · linarith
+  · linarith [norm_nonneg (recenter p e0 c')]
+
+/-- **G3.** `recenter p e0 c'` est dans `northern p`, de latitude `c'²`. -/
+theorem recenter_northern {p e0 : E3} (hp : ‖p‖ = 1) (he0 : ‖e0‖ = 1) (hpe0 : ⟪p, e0⟫ = 0)
+    {c' : ℝ} (hc'0 : 0 ≤ c') (hc'1 : c' ≤ 1) :
+    recenter p e0 c' ∈ northern p ∧ lat p (recenter p e0 c') = c' ^ 2 := by
+  obtain ⟨hn, hi⟩ := recenter_prop hp he0 hpe0 hc'0 hc'1
+  refine ⟨⟨hn, by rw [hi]; exact hc'0⟩, ?_⟩
+  unfold lat; rw [hi]
+
+/-- **G3 (assemblage).** Pour `q` unitaire avec `⟪p,q⟫ ∈ [0,1]`, il existe une
+isométrie envoyant `recenter p e0 ⟪p,q⟫` sur `p` et `p` sur `q` :
+`⟪recenter c', p⟫ = c' = ⟪p,q⟫` (G3, `real_inner_comm`), puis G1b. -/
+theorem exists_recenter_isometry {p e0 q : E3} (hp : ‖p‖ = 1) (he0 : ‖e0‖ = 1)
+    (hpe0 : ⟪p, e0⟫ = 0) (hq : ‖q‖ = 1) (hc'0 : 0 ≤ ⟪p, q⟫) :
+    ∃ ρ : E3 ≃ₗᵢ[ℝ] E3, ρ (recenter p e0 ⟪p, q⟫) = p ∧ ρ p = q := by
+  have hc'1 : ⟪p, q⟫ ≤ 1 := by
+    have h := abs_real_inner_le_norm p q
+    rw [hp, hq, mul_one] at h
+    exact (abs_le.mp h).2
+  obtain ⟨hrn, hri⟩ := recenter_prop hp he0 hpe0 hc'0 hc'1
+  have hcomm : ⟪recenter p e0 ⟪p, q⟫, p⟫ = ⟪p, q⟫ := by rw [real_inner_comm]; exact hri
+  exact exists_isometry_pair hrn hp hp hq hcomm
 
 end
 end Gleason
