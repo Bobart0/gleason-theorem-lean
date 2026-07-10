@@ -23,12 +23,9 @@ abbrev E3 := EuclideanSpace ℝ (Fin 3)
 def IsFrameFunction (f : E3 → ℝ) (W : ℝ) : Prop :=
   ∀ b : OrthonormalBasis (Fin 3) ℝ E3, (∑ i, f (b i)) = W
 
-/-- Une frame function positive est bornée par `W` sur la sphère
-(compléter tout vecteur unitaire en base orthonormée, les deux autres termes sont ≥ 0). -/
-theorem IsFrameFunction.le_of_nonneg {f : E3 → ℝ} {W : ℝ}
-    (hf : IsFrameFunction f W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ f x)
-    {x : E3} (hx : ‖x‖ = 1) : f x ≤ W := by
-  sorry
+-- `IsFrameFunction.le_of_nonneg` est dans `SphereGeometry.lean` : elle a besoin de
+-- `exists_orthonormalBasis_fst` (complétion en base), et `SphereGeometry` importe
+-- déjà `FrameFunction` (l'inverse créerait un cycle).
 
 end
 end Gleason

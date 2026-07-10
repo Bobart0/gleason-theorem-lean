@@ -68,5 +68,17 @@ theorem frame_pair_sum_eq {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
   rw [h] at h1
   linarith
 
+/-- Une frame function positive est bornée par `W` sur la sphère
+(compléter tout vecteur unitaire en base orthonormée, les deux autres termes sont ≥ 0). -/
+theorem IsFrameFunction.le_of_nonneg {f : E3 → ℝ} {W : ℝ}
+    (hf : IsFrameFunction f W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ f x)
+    {x : E3} (hx : ‖x‖ = 1) : f x ≤ W := by
+  obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst x hx
+  have hsum := hf b
+  rw [Fin.sum_univ_three, hb0] at hsum
+  have hn1 : 0 ≤ f (b 1) := hnn (b 1) (b.norm_eq_one 1)
+  have hn2 : 0 ≤ f (b 2) := hnn (b 2) (b.norm_eq_one 2)
+  linarith
+
 end
 end Gleason

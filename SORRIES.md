@@ -21,9 +21,9 @@
 ## M2 — cœur analytique réel (le dur)
 - [x] bounded_additive_affine (Simplex ; 6 sous-lemmes : g_props, split, halve,
       nat_mul, dyadic_vanish, vanish)
-- [ ] exists_orthonormalBasis_fst / _pair / frame_pair_sum_eq (SphereGeometry —
-      traité en premier : le_of_nonneg en dépend, via la complétion en base)
-- [ ] IsFrameFunction.le_of_nonneg (corollaire du trio SphereGeometry)
+- [x] exists_orthonormalBasis_fst / _pair / frame_pair_sum_eq (SphereGeometry)
+- [x] IsFrameFunction.le_of_nonneg (déplacé dans SphereGeometry.lean, corollaire
+      d'exists_orthonormalBasis_fst — évite le cycle d'import avec FrameFunction)
 - [ ] exists_continuity_point (Descent, poste de variance principal)
 - [ ] frameFunction_continuousOn (Continuity)
 - [ ] frameFunction_regular (Regular)
