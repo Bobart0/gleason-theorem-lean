@@ -216,6 +216,38 @@ theorem latInf_one : latInf f p 1 = f p := by
   unfold latInf
   rw [latClass_one_eq_singleton hp, Set.image_singleton, csInf_singleton]
 
+include hf hp hmax hmlb hm hconst in
+/-- **F3 (dénombrabilité de l'écart).** `C := {l ∈ (0,1) | latInf l < latSup l}`
+est dénombrable : pour `l ∈ C`, choisir un rationnel `q(l)` dans l'intervalle
+`(latInf l, latSup l)` (`exists_rat_btwn`) ; par la monotonie croisée (F2b),
+ces intervalles sont deux-à-deux ordonnés-disjoints, donc `q` est injective sur
+`C`, qui s'injecte ainsi dans `ℚ` (dénombrable). -/
+theorem countable_latGap :
+    {l ∈ Set.Ioo (0 : ℝ) 1 | latInf f p l < latSup f p l}.Countable := by
+  classical
+  set C : Set ℝ := {l ∈ Set.Ioo (0 : ℝ) 1 | latInf f p l < latSup f p l} with hC_def
+  have hchoice : ∀ l, l ∈ C → ∃ q : ℚ, latInf f p l < (q : ℝ) ∧ (q : ℝ) < latSup f p l := by
+    intro l hl
+    exact exists_rat_btwn hl.2
+  choose! q hqP using hchoice
+  have hInj : Set.InjOn q C := by
+    intro l₁ hl₁ l₂ hl₂ heq
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with hlt | hlt
+    · have hmono : latSup f p l₁ ≤ latInf f p l₂ :=
+        latSup_le_latInf_of_lt hf hp hmax hmlb hm hconst hl₁.1.1.le hl₂.1.2.le hlt
+      have h1 := (hqP l₁ hl₁).2
+      have h2 := (hqP l₂ hl₂).1
+      have hlt' : (q l₁ : ℝ) < (q l₂ : ℝ) := by linarith
+      exact (by exact_mod_cast hlt' : q l₁ < q l₂).ne heq
+    · have hmono : latSup f p l₂ ≤ latInf f p l₁ :=
+        latSup_le_latInf_of_lt hf hp hmax hmlb hm hconst hl₂.1.1.le hl₁.1.2.le hlt
+      have h1 := (hqP l₂ hl₂).2
+      have h2 := (hqP l₁ hl₁).1
+      have hlt' : (q l₂ : ℝ) < (q l₁ : ℝ) := by linarith
+      exact (by exact_mod_cast hlt' : q l₂ < q l₁).ne heq.symm
+  exact Set.MapsTo.countable_of_injOn (Set.mapsTo_univ q C) hInj Set.countable_univ
+
 end ExactPoleSetup
 
 end
