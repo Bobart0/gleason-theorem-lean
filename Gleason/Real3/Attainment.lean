@@ -184,5 +184,53 @@ theorem IsFrameFunction.sub {f g : E3 → ℝ} {Wf Wg : ℝ}
   have := hf.add hg.neg
   simpa [sub_eq_add_neg] using this
 
+/- ═══════════════════════════════════════════════════════════════════
+   G2. Rotation de 90° autour du pôle.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **G2.** Isométrie de rotation de 90° autour de `p` : complète `p` en base
+`(p,u1,u2)`, envoie `(p,u1,u2) ↦ (p,u2,-u1)` (G1a). Fixe `p` ; envoie
+l'équateur de `p` dans lui-même ; pour `s` sur l'équateur, `s` et son image
+sont orthogonaux (décomposition `s = ⟪u1,s⟫•u1+⟪u2,s⟫•u2`, image
+`⟪u1,s⟫•u2-⟪u2,s⟫•u1`, produit scalaire croisé nul par `⟪u1,u2⟫=0` et
+normes unitaires). -/
+theorem exists_rotate90 {p : E3} (hp : ‖p‖ = 1) :
+    ∃ phat : E3 ≃ₗᵢ[ℝ] E3, phat p = p ∧
+      ∀ s ∈ equator p, phat s ∈ equator p ∧ ⟪s, phat s⟫ = 0 := by
+  obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst p hp
+  set u1 : E3 := b 1 with hu1_def
+  set u2 : E3 := b 2 with hu2_def
+  have hu1 : ‖u1‖ = 1 := b.norm_eq_one 1
+  have hu2 : ‖u2‖ = 1 := b.norm_eq_one 2
+  have hpu1 : ⟪p, u1⟫ = 0 := by rw [← hb0]; exact b.inner_eq_zero (by decide)
+  have hpu2 : ⟪p, u2⟫ = 0 := by rw [← hb0]; exact b.inner_eq_zero (by decide)
+  have hu1u2 : ⟪u1, u2⟫ = 0 := b.inner_eq_zero (by decide)
+  have hu2u1 : ⟪u2, u1⟫ = 0 := by rw [real_inner_comm]; exact hu1u2
+  have hpu1_neg : ⟪p, -u1⟫ = 0 := by rw [inner_neg_right, hpu1, neg_zero]
+  have hu2u1_neg : ⟪u2, -u1⟫ = 0 := by rw [inner_neg_right, hu2u1, neg_zero]
+  have hnegu1 : ‖(-u1 : E3)‖ = 1 := by rw [norm_neg]; exact hu1
+  obtain ⟨ρ, hρp, hρu1, hρu2⟩ := isometry_of_orthonormal_triples hp hu1 hu2 hpu1 hpu2 hu1u2
+    hp hu2 hnegu1 hpu2 hpu1_neg hu2u1_neg
+  refine ⟨ρ, hρp, ?_⟩
+  intro s hs
+  have hsu : ‖s‖ = 1 := hs.1
+  have hsp : ⟪p, s⟫ = 0 := hs.2
+  have hpsnorm : ‖ρ s‖ = 1 := by rw [ρ.norm_map]; exact hsu
+  have hpsp : ⟪p, ρ s⟫ = 0 := by rw [← hρp, ρ.inner_map_map]; exact hsp
+  refine ⟨⟨hpsnorm, hpsp⟩, ?_⟩
+  have hdecomp : ⟪u1, s⟫ • u1 + ⟪u2, s⟫ • u2 = s := by
+    have h := b.sum_repr' s
+    rw [Fin.sum_univ_three, hb0, hsp, zero_smul, zero_add, ← hu1_def, ← hu2_def] at h
+    exact h
+  set a : ℝ := ⟪u1, s⟫ with ha_def
+  set d : ℝ := ⟪u2, s⟫ with hd_def
+  have hrhos : ρ s = a • u2 - d • u1 := by
+    rw [← hdecomp, ρ.map_add, ρ.map_smul, ρ.map_smul, hρu1, hρu2, smul_neg]
+    abel
+  rw [hrhos, ← hdecomp]
+  simp only [inner_add_left, inner_sub_right, real_inner_smul_left, real_inner_smul_right,
+    real_inner_self_eq_norm_sq, hu1, hu2, hu1u2, hu2u1]
+  ring
+
 end
 end Gleason
