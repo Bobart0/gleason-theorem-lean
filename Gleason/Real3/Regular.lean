@@ -420,7 +420,92 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
           smul_eq_mul]
         linarith [hex]
       · -- Cas principal : m < α < M strictement (H3-H9).
-        sorry
+        have hRmin_r : ∀ t : E3, ‖t‖ = 1 → f r ≤ f t := by rw [hreq]; exact hr0lb
+        have hqeq' : f q = W - f p - f r := by rw [hreq]; exact hqeq
+        have hαM : α ≤ M := hpmax q hq
+        have hmα : m ≤ α := hr0lb q hq
+        set g : E3 → ℝ := fun s => M * ⟪p, s⟫ ^ 2 + α * ⟪q, s⟫ ^ 2 + m * ⟪r, s⟫ ^ 2 with hg_def
+        have hParseval_pqr : ∀ s : E3, ⟪p, s⟫ ^ 2 + ⟪q, s⟫ ^ 2 + ⟪r, s⟫ ^ 2 = ‖s‖ ^ 2 := by
+          intro s
+          obtain ⟨b, hb0, hb1, hb2⟩ := exists_orthonormalBasis_of_triple' p q r hp hq hr hpq hpr hqr
+          rw [real_inner_comm s p, real_inner_comm s q, real_inner_comm s r]
+          have hh := b.sum_sq_inner_left s
+          rw [Fin.sum_univ_three, hb0, hb1, hb2] at hh
+          exact hh
+        have hclaim : ∀ s : E3, ‖s‖ = 1 →
+            (⟪p, s⟫ = ⟪q, s⟫ ∨ ⟪p, s⟫ = -⟪q, s⟫ ∨ ⟪p, s⟫ = ⟪r, s⟫ ∨ ⟪p, s⟫ = -⟪r, s⟫ ∨
+              ⟪q, s⟫ = ⟪r, s⟫ ∨ ⟪q, s⟫ = -⟪r, s⟫) → f s = g s := by
+          intro s hs hcond
+          have hh := frame_eq_quadratic_of_extremal_triple hf hp hq hr hpq hpr hqr hpmax hRmin_r
+            hqeq' s hs hcond
+          rw [hreq] at hh
+          exact hh
+        have hgframe : IsFrameFunction g W := by
+          intro b
+          have e1 := b.sum_sq_inner_left p
+          have e2 := b.sum_sq_inner_left q
+          have e3 := b.sum_sq_inner_left r
+          rw [hp] at e1
+          rw [hq] at e2
+          rw [hr] at e3
+          norm_num at e1 e2 e3
+          have hsum : ∑ i, g (b i) = M * ∑ i, ⟪p, b i⟫ ^ 2 + α * ∑ i, ⟪q, b i⟫ ^ 2 +
+              m * ∑ i, ⟪r, b i⟫ ^ 2 := by
+            simp only [hg_def, Finset.mul_sum]
+            rw [← Finset.sum_add_distrib, ← Finset.sum_add_distrib]
+          rw [hsum, e1, e2, e3]
+          linarith [hqeq]
+        have hg_bound_le : ∀ s : E3, ‖s‖ = 1 → g s ≤ M := by
+          intro s hs
+          have hPar := hParseval_pqr s
+          rw [hs] at hPar
+          norm_num at hPar
+          have hMeq : M * ⟪p, s⟫ ^ 2 + M * ⟪q, s⟫ ^ 2 + M * ⟪r, s⟫ ^ 2 = M := by
+            rw [← mul_add, ← mul_add, hPar, mul_one]
+          have h1 : α * ⟪q, s⟫ ^ 2 ≤ M * ⟪q, s⟫ ^ 2 := mul_le_mul_of_nonneg_right hαM (sq_nonneg _)
+          have h2 : m * ⟪r, s⟫ ^ 2 ≤ M * ⟪r, s⟫ ^ 2 :=
+            mul_le_mul_of_nonneg_right (by linarith [hαM, hmα]) (sq_nonneg _)
+          simp only [hg_def]
+          linarith [hMeq, h1, h2]
+        have hg_bound_ge : ∀ s : E3, ‖s‖ = 1 → m ≤ g s := by
+          intro s hs
+          have hPar := hParseval_pqr s
+          rw [hs] at hPar
+          norm_num at hPar
+          have hmeq : m * ⟪p, s⟫ ^ 2 + m * ⟪q, s⟫ ^ 2 + m * ⟪r, s⟫ ^ 2 = m := by
+            rw [← mul_add, ← mul_add, hPar, mul_one]
+          have h1 : m * ⟪p, s⟫ ^ 2 ≤ M * ⟪p, s⟫ ^ 2 :=
+            mul_le_mul_of_nonneg_right (by linarith [hαM, hmα]) (sq_nonneg _)
+          have h2 : m * ⟪q, s⟫ ^ 2 ≤ α * ⟪q, s⟫ ^ 2 := mul_le_mul_of_nonneg_right hmα (sq_nonneg _)
+          simp only [hg_def]
+          linarith [hmeq, h1, h2]
+        set h : E3 → ℝ := fun s => g s - f s with hh_def
+        have hhframe : IsFrameFunction h 0 := by
+          have hsub := hgframe.sub hf
+          simpa [hh_def] using hsub
+        have hh_even : ∀ s : E3, ‖s‖ = 1 → h (-s) = h s := by
+          intro s hs
+          simp only [hh_def, hg_def, inner_neg_right]
+          rw [frameFunction_even hf s hs]
+          ring
+        have hh_le : ∀ s : E3, ‖s‖ = 1 → h s ≤ M - m := by
+          intro s hs
+          have h1 := hg_bound_le s hs
+          have h2 : m ≤ f s := hr0lb s hs
+          simp only [hh_def]; linarith
+        have hh_ge : ∀ s : E3, ‖s‖ = 1 → -(M - m) ≤ h s := by
+          intro s hs
+          have h1 := hg_bound_ge s hs
+          have h2 : f s ≤ M := hpmax s hs
+          simp only [hh_def]; linarith
+        have hh_zero : ∀ s : E3, ‖s‖ = 1 →
+            (⟪p, s⟫ = ⟪q, s⟫ ∨ ⟪p, s⟫ = -⟪q, s⟫ ∨ ⟪p, s⟫ = ⟪r, s⟫ ∨ ⟪p, s⟫ = -⟪r, s⟫ ∨
+              ⟪q, s⟫ = ⟪r, s⟫ ∨ ⟪q, s⟫ = -⟪r, s⟫) → h s = 0 := by
+          intro s hs hcond
+          simp only [hh_def]
+          rw [hclaim s hs hcond]
+          ring
+        sorry -- H6-H9
 
 end
 end Gleason
