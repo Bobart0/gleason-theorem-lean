@@ -366,5 +366,303 @@ theorem exists_ultrafilter_tendsto_Icc {m M : ℝ} (u : ℕ → ℝ) (hu : ∀ n
     filter_upwards [univ_mem] with n _ using hu n
   exact isCompact_Icc.ultrafilter_le_nhds (Ultrafilter.map u 𝒰) hmem
 
+/-- **G9 (préliminaire).** Variante de F1b (`exists_inf_approx`) : dérive
+`(m₀, hmlb, hm)` à partir d'une borne supérieure GÉNÉRALE `M` (pas
+nécessairement `f p` pour un pôle) — c'est tout ce qu'il faut pour la borne
+inférieure grossière ; réutilisé pour chaque `hₙ` en G9. -/
+theorem exists_inf_approx_of_le {f : E3 → ℝ} {W M : ℝ} (hf : IsFrameFunction f W)
+    (hM : ∀ t : E3, ‖t‖ = 1 → f t ≤ M) (p0 : E3) (hp0 : ‖p0‖ = 1) :
+    ∃ m₀ : ℝ, (∀ t : E3, ‖t‖ = 1 → m₀ ≤ f t) ∧
+      (∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m₀ + ε) := by
+  set S : Set ℝ := f '' {x : E3 | ‖x‖ = 1} with hS_def
+  have hSne : S.Nonempty := ⟨f p0, p0, hp0, rfl⟩
+  have hSbdd : BddBelow S := by
+    refine ⟨W - 2 * M, ?_⟩
+    rintro y ⟨x, hx, rfl⟩
+    obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst x hx
+    have hsum := hf b
+    rw [Fin.sum_univ_three, hb0] at hsum
+    have h1 : f (b 1) ≤ M := hM (b 1) (b.norm_eq_one 1)
+    have h2 : f (b 2) ≤ M := hM (b 2) (b.norm_eq_one 2)
+    linarith
+  refine ⟨sInf S, ?_, ?_⟩
+  · intro t ht
+    exact csInf_le hSbdd ⟨t, ht, rfl⟩
+  · intro ε hε
+    obtain ⟨y, hyS, hylt⟩ := exists_lt_of_csInf_lt hSne (show sInf S < sInf S + ε by linarith)
+    obtain ⟨x, hx, rfl⟩ := hyS
+    exact ⟨x, hx, hylt⟩
+
+/- ═══════════════════════════════════════════════════════════════════
+   G5-G9. Assemblage : attention du sup d'une frame function bornée.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **G5-G9 (théorème principal).** Toute frame function bornée (au sens
+`∀t unitaire, f t ≤ M`) atteint son sup sur la sphère. Preuve CKM §6 par
+ultrafiltre : limite `p` d'une suite maximisante (G5), symétrisation par
+rotation de 90° et recentrage par isométrie (G3-G4), passage à la limite le
+long de l'ultrafiltre de la forme quadratique exacte (G6, bloc F), puis
+descente radiale à 2 pas (G8) pour exclure une perte de masse en `p` (G9). -/
+theorem frameFunction_attains_sup {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
+    {M : ℝ} (hM : ∀ t : E3, ‖t‖ = 1 → f t ≤ M) :
+    ∃ p₀ : E3, ‖p₀‖ = 1 ∧ ∀ t : E3, ‖t‖ = 1 → f t ≤ f p₀ := by
+  set p0 : E3 := (EuclideanSpace.basisFun (Fin 3) ℝ) 0 with hp0_def
+  have hp0 : ‖p0‖ = 1 := (EuclideanSpace.basisFun (Fin 3) ℝ).norm_eq_one 0
+  have hm_lb : ∀ t : E3, ‖t‖ = 1 → W - 2 * M ≤ f t := by
+    intro t ht
+    obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst t ht
+    have hsum := hf b
+    rw [Fin.sum_univ_three, hb0] at hsum
+    have h1 : f (b 1) ≤ M := hM (b 1) (b.norm_eq_one 1)
+    have h2 : f (b 2) ≤ M := hM (b 2) (b.norm_eq_one 2)
+    linarith
+  set m : ℝ := W - 2 * M with hm_def
+  -- G5 : suite maximisante et limite le long de l'ultrafiltre
+  set S : Set ℝ := f '' {x : E3 | ‖x‖ = 1} with hS_def
+  have hSne : S.Nonempty := ⟨f p0, p0, hp0, rfl⟩
+  have hSbdd : BddAbove S := ⟨M, by rintro y ⟨x, hx, rfl⟩; exact hM x hx⟩
+  set M₀ : ℝ := sSup S with hM₀_def
+  have hM₀_ub : ∀ t : E3, ‖t‖ = 1 → f t ≤ M₀ := fun t ht => le_csSup hSbdd ⟨t, ht, rfl⟩
+  obtain ⟨useq, -, hu_tendsto, hu_mem⟩ := exists_seq_tendsto_sSup hSne hSbdd
+  choose p_seq hp_seq_unit hp_seq_eq using hu_mem
+  have hfp_tendsto : Tendsto (fun n => f (p_seq n)) atTop (𝓝 M₀) := by
+    have heq : (fun n => f (p_seq n)) = useq := funext hp_seq_eq
+    rw [heq]; exact hu_tendsto
+  obtain ⟨p, hp, hp_tendsto⟩ := exists_ultrafilter_tendsto_sphere p_seq hp_seq_unit
+  set 𝒰 : Ultrafilter ℕ := Ultrafilter.of atTop with h𝒰_def
+  have hp_tendsto' : Tendsto p_seq (𝒰 : Filter ℕ) (𝓝 p) := by rw [h𝒰_def]; exact hp_tendsto
+  have h𝒰_le : (𝒰 : Filter ℕ) ≤ atTop := by rw [h𝒰_def]; exact Ultrafilter.of_le atTop
+  have hfp_tendsto' : Tendsto (fun n => f (p_seq n)) (𝒰 : Filter ℕ) (𝓝 M₀) :=
+    hfp_tendsto.mono_left h𝒰_le
+  -- q_seq : représentant nord de p_seq (même valeur de f, par parité)
+  set q_seq : ℕ → E3 := fun n => if 0 ≤ ⟪p, p_seq n⟫ then p_seq n else -(p_seq n) with hq_seq_def
+  have hq_seq_unit : ∀ n, ‖q_seq n‖ = 1 := by
+    intro n
+    simp only [hq_seq_def]
+    split_ifs with h
+    · exact hp_seq_unit n
+    · rw [norm_neg]; exact hp_seq_unit n
+  have hfq_seq_eq : ∀ n, f (q_seq n) = f (p_seq n) := by
+    intro n
+    simp only [hq_seq_def]
+    split_ifs with h
+    · rfl
+    · exact frameFunction_even hf (p_seq n) (hp_seq_unit n)
+  have hq_seq_nonneg : ∀ n, 0 ≤ ⟪p, q_seq n⟫ := by
+    intro n
+    simp only [hq_seq_def]
+    split_ifs with h
+    · exact h
+    · rw [inner_neg_right]; linarith [not_le.mp h]
+  set c'_seq : ℕ → ℝ := fun n => ⟪p, q_seq n⟫ with hc'_seq_def
+  have hc'_seq_eq_abs : ∀ n, c'_seq n = |⟪p, p_seq n⟫| := by
+    intro n
+    simp only [hc'_seq_def, hq_seq_def]
+    split_ifs with h
+    · exact (abs_of_nonneg h).symm
+    · rw [inner_neg_right, abs_of_neg (not_le.mp h)]
+  have hc'_seq_mem : ∀ n, c'_seq n ∈ Set.Icc (0 : ℝ) 1 := by
+    intro n
+    rw [hc'_seq_eq_abs]
+    refine ⟨abs_nonneg _, ?_⟩
+    have h := abs_real_inner_le_norm p (p_seq n)
+    rwa [hp, hp_seq_unit n, mul_one] at h
+  have hpp_eq_one : (⟪p, p⟫ : ℝ) = 1 := by rw [real_inner_self_eq_norm_sq, hp]; norm_num
+  have hcont : Continuous (fun x : E3 => (⟪p, x⟫ : ℝ)) := continuous_const.inner continuous_id
+  have hpp_seq_tendsto : Tendsto (fun n => (⟪p, p_seq n⟫ : ℝ)) (𝒰 : Filter ℕ) (𝓝 (1 : ℝ)) := by
+    have := (hcont.tendsto p).comp hp_tendsto'
+    rwa [hpp_eq_one] at this
+  have hc'_tendsto : Tendsto c'_seq (𝒰 : Filter ℕ) (𝓝 (1 : ℝ)) := by
+    have heq : c'_seq = fun n => |⟪p, p_seq n⟫| := funext hc'_seq_eq_abs
+    rw [heq]
+    have := (continuous_abs.tendsto (1 : ℝ)).comp hpp_seq_tendsto
+    rwa [abs_one] at this
+  -- rotation de 90° (fixée une fois pour toutes) et recentrage par isométrie
+  obtain ⟨phat, u1, u2, hu1, hu2, hpu1, hpu2, hu1u2, hphatp, hphatu1, hphatu2, hphat_equator⟩ :=
+    exists_rotate90 hp
+  set e0 : E3 := u1 with he0_def
+  have hρ_exists : ∀ n, ∃ ρ : E3 ≃ₗᵢ[ℝ] E3, ρ (recenter p e0 (c'_seq n)) = p ∧ ρ p = q_seq n :=
+    fun n => exists_recenter_isometry hp hu1 hpu1 (hq_seq_unit n) (hq_seq_nonneg n)
+  choose ρ_seq hρ_seq1 hρ_seq2 using hρ_exists
+  set g_seq : ℕ → E3 → ℝ := fun n => f ∘ (ρ_seq n) with hg_seq_def
+  have hg_seq_frame : ∀ n, IsFrameFunction (g_seq n) W := fun n => hf.comp_isometry (ρ_seq n)
+  set h_seq : ℕ → E3 → ℝ := fun n s => g_seq n s + g_seq n (phat s) with hh_seq_def
+  have hh_seq_frame : ∀ n, IsFrameFunction (h_seq n) (2 * W) := by
+    intro n
+    have := symmetrize_frame (hg_seq_frame n) phat
+    simpa only [hh_seq_def] using this
+  have hh_seq_p : ∀ n, h_seq n p = 2 * f (q_seq n) := by
+    intro n
+    have h1 : h_seq n p = g_seq n p + g_seq n p := by simp only [hh_seq_def, hphatp]
+    rw [h1, hg_seq_def]
+    simp only [Function.comp_apply]
+    rw [hρ_seq2 n]; ring
+  have hh_seq_equator : ∀ n, ∀ e ∈ equator p, h_seq n e = W - f (q_seq n) := by
+    intro n e he
+    have h1 := symmetrize_equator (hg_seq_frame n) hp hphat_equator he
+    have h2 : g_seq n p = f (q_seq n) := by
+      rw [hg_seq_def]; simp only [Function.comp_apply]; rw [hρ_seq2 n]
+    rw [h2] at h1
+    simpa only [hh_seq_def] using h1
+  have hg_bound : ∀ (n : ℕ) (t : E3), ‖t‖ = 1 → m ≤ g_seq n t ∧ g_seq n t ≤ M₀ := by
+    intro n t ht
+    rw [hg_seq_def]
+    simp only [Function.comp_apply]
+    have htu : ‖(ρ_seq n) t‖ = 1 := by rw [(ρ_seq n).norm_map]; exact ht
+    exact ⟨hm_lb ((ρ_seq n) t) htu, hM₀_ub ((ρ_seq n) t) htu⟩
+  have hh_seq_bounds : ∀ n s, ‖s‖ = 1 → 2 * m ≤ h_seq n s ∧ h_seq n s ≤ 2 * M₀ := by
+    intro n s hs
+    have h1 := hg_bound n s hs
+    have h2 : ‖phat s‖ = 1 := by rw [phat.norm_map]; exact hs
+    have h3 := hg_bound n (phat s) h2
+    rw [hh_seq_def]
+    exact ⟨by linarith [h1.1, h3.1], by linarith [h1.2, h3.2]⟩
+  -- G6 : limite ponctuelle h le long de l'ultrafiltre
+  have hh_exists : ∀ s : E3, ∃ L : ℝ, ‖s‖ = 1 →
+      Tendsto (fun n => h_seq n s) (𝒰 : Filter ℕ) (𝓝 L) := by
+    intro s
+    by_cases hs : ‖s‖ = 1
+    · obtain ⟨L, -, hL⟩ := exists_ultrafilter_tendsto_Icc (m := 2 * m) (M := 2 * M₀)
+        (fun n => h_seq n s) (fun n => ⟨(hh_seq_bounds n s hs).1, (hh_seq_bounds n s hs).2⟩)
+      exact ⟨L, fun _ => hL⟩
+    · exact ⟨0, fun hcon => absurd hcon hs⟩
+  choose h hh_tendsto using hh_exists
+  have hh_frame : IsFrameFunction h (2 * W) := by
+    intro b
+    rw [Fin.sum_univ_three]
+    have h0 := hh_tendsto (b 0) (b.norm_eq_one 0)
+    have h1 := hh_tendsto (b 1) (b.norm_eq_one 1)
+    have h2 := hh_tendsto (b 2) (b.norm_eq_one 2)
+    have hsum_tendsto : Tendsto (fun n => h_seq n (b 0) + h_seq n (b 1) + h_seq n (b 2))
+        (𝒰 : Filter ℕ) (𝓝 (h (b 0) + h (b 1) + h (b 2))) := (h0.add h1).add h2
+    have hsum_const : ∀ n, h_seq n (b 0) + h_seq n (b 1) + h_seq n (b 2) = 2 * W := by
+      intro n
+      have hb := hh_seq_frame n b
+      rwa [Fin.sum_univ_three] at hb
+    have hsum_tendsto' : Tendsto (fun n => h_seq n (b 0) + h_seq n (b 1) + h_seq n (b 2))
+        (𝒰 : Filter ℕ) (𝓝 (2 * W)) := by
+      have heq : (fun n => h_seq n (b 0) + h_seq n (b 1) + h_seq n (b 2)) = fun _ => 2 * W :=
+        funext hsum_const
+      rw [heq]; exact tendsto_const_nhds
+    exact tendsto_nhds_unique hsum_tendsto hsum_tendsto'
+  have hh_bounds : ∀ t : E3, ‖t‖ = 1 → 2 * m ≤ h t ∧ h t ≤ 2 * M₀ := by
+    intro t ht
+    have htend := hh_tendsto t ht
+    exact ⟨ge_of_tendsto' htend (fun n => (hh_seq_bounds n t ht).1),
+      le_of_tendsto' htend (fun n => (hh_seq_bounds n t ht).2)⟩
+  have hfq_tendsto : Tendsto (fun n => f (q_seq n)) (𝒰 : Filter ℕ) (𝓝 M₀) := by
+    have heq2 : (fun n => f (q_seq n)) = fun n => f (p_seq n) := funext hfq_seq_eq
+    rw [heq2]; exact hfp_tendsto'
+  have hhp : h p = 2 * M₀ := by
+    have htend1 : Tendsto (fun n => h_seq n p) (𝒰 : Filter ℕ) (𝓝 (h p)) := hh_tendsto p hp
+    have htend2 : Tendsto (fun n => h_seq n p) (𝒰 : Filter ℕ) (𝓝 (2 * M₀)) := by
+      have heq : (fun n => h_seq n p) = fun n => 2 * f (q_seq n) := funext hh_seq_p
+      rw [heq]
+      exact hfq_tendsto.const_mul 2
+    exact tendsto_nhds_unique htend1 htend2
+  have hh_equator : ∀ e ∈ equator p, h e = W - M₀ := by
+    intro e he
+    have htend1 : Tendsto (fun n => h_seq n e) (𝒰 : Filter ℕ) (𝓝 (h e)) := hh_tendsto e he.1
+    have htend2 : Tendsto (fun n => h_seq n e) (𝒰 : Filter ℕ) (𝓝 (W - M₀)) := by
+      have heq : (fun n => h_seq n e) = fun n => W - f (q_seq n) :=
+        funext (fun n => hh_seq_equator n e he)
+      rw [heq]
+      exact tendsto_const_nhds.sub hfq_tendsto
+    exact tendsto_nhds_unique htend1 htend2
+  have hh_max : ∀ t : E3, ‖t‖ = 1 → h t ≤ h p := by
+    intro t ht; rw [hhp]; exact (hh_bounds t ht).2
+  -- G7 : forme exacte via F
+  have hh_exact := frameFunction_exact_pole hh_frame hp hh_max hh_equator
+  obtain ⟨e_eq, he_eq⟩ := equator_nonempty' hp
+  have hK_nn : 0 ≤ 3 * M₀ - W := by
+    have h1 : h e_eq ≤ h p := hh_max e_eq he_eq.1
+    rw [hh_equator e_eq he_eq, hhp] at h1
+    linarith
+  -- G9 : assemblage final (descente à 2 pas pour exclure toute perte de masse en p)
+  have hfp_eq : f p = M₀ := by
+    apply le_antisymm (hM₀_ub p hp)
+    apply le_of_forall_pos_lt_add
+    intro ε hε
+    set K : ℝ := 3 * M₀ - W with hK_def
+    set δ : ℝ := min 1 (ε / (4 * (K + 1))) with hδ_def
+    have hδpos : 0 < δ := lt_min (by norm_num) (by positivity)
+    have hδle1 : δ ≤ 1 := min_le_left _ _
+    have hKδ_lt : K * δ < ε / 4 := by
+      have h1 : δ ≤ ε / (4 * (K + 1)) := min_le_right _ _
+      have h2 : K * δ ≤ K * (ε / (4 * (K + 1))) := mul_le_mul_of_nonneg_left h1 hK_nn
+      have h3 : K * (ε / (4 * (K + 1))) < ε / 4 := by
+        rw [show K * (ε / (4 * (K + 1))) = (K * ε) / (4 * (K + 1)) from by ring,
+          div_lt_div_iff₀ (by positivity : (0 : ℝ) < 4 * (K + 1)) (by norm_num : (0 : ℝ) < 4)]
+        nlinarith [hK_nn, hε]
+      linarith [h2, h3]
+    set τ : ℝ := Real.sqrt (1 - δ) with hτ_def
+    have hτnn : 0 ≤ τ := Real.sqrt_nonneg _
+    have hτsq : τ ^ 2 = 1 - δ := Real.sq_sqrt (by linarith)
+    have hτlt1 : τ < 1 := (sq_lt_sq₀ hτnn zero_le_one).mp (by rw [one_pow, hτsq]; linarith)
+    set c : E3 := recenter p e0 τ with hc_def
+    have hc_unfold : c = τ • p + Real.sqrt (1 - τ ^ 2) • e0 := hc_def
+    have hc_prop := recenter_prop hp hu1 hpu1 hτnn hτlt1.le
+    have hc_northern := recenter_northern hp hu1 hpu1 hτnn hτlt1.le
+    have hc_unit : ‖c‖ = 1 := hc_prop.1
+    have hc_lat : lat p c = τ ^ 2 := hc_northern.2
+    have hh_c_eq : h c = 2 * M₀ - K * δ := by
+      have heq := hh_exact c hc_unit
+      rw [hc_lat, hτsq, hhp] at heq
+      rw [heq, hK_def]; ring
+    have hhc_gt : h c > 2 * M₀ - ε / 4 := by rw [hh_c_eq]; linarith [hKδ_lt]
+    have hev1 : ∀ᶠ n in (𝒰 : Filter ℕ), 2 * M₀ - ε / 8 < h_seq n p := by
+      have htend : Tendsto (fun n => h_seq n p) (𝒰 : Filter ℕ) (𝓝 (2 * M₀)) := hhp ▸ hh_tendsto p hp
+      exact (tendsto_order.mp htend).1 (2 * M₀ - ε / 8) (by linarith)
+    have hev2 : ∀ᶠ n in (𝒰 : Filter ℕ), h c - ε / 8 < h_seq n c := by
+      exact (tendsto_order.mp (hh_tendsto c hc_unit)).1 (h c - ε / 8) (by linarith)
+    have hev3 : ∀ᶠ n in (𝒰 : Filter ℕ), τ < c'_seq n :=
+      (tendsto_order.mp hc'_tendsto).1 τ hτlt1
+    obtain ⟨n, ⟨hn1, hn2⟩, hn3⟩ := ((hev1.and hev2).and hev3).exists
+    set cn : E3 := recenter p e0 (c'_seq n) with hcn_def
+    have hcn_unfold : cn = c'_seq n • p + Real.sqrt (1 - (c'_seq n) ^ 2) • e0 := hcn_def
+    have hcn_prop := recenter_prop hp hu1 hpu1 (hc'_seq_mem n).1 (hc'_seq_mem n).2
+    have hcn_northern := recenter_northern hp hu1 hpu1 (hc'_seq_mem n).1 (hc'_seq_mem n).2
+    have hcn_unit : ‖cn‖ = 1 := hcn_prop.1
+    have hρn_cn : (ρ_seq n) cn = p := hρ_seq1 n
+    have hgn_cn : g_seq n cn = f p := by
+      rw [hg_seq_def]; simp only [Function.comp_apply]; rw [hρn_cn]
+    have hphat_cn_unit : ‖phat cn‖ = 1 := by rw [phat.norm_map]; exact hcn_unit
+    have hhn_cn_le : h_seq n cn ≤ f p + M₀ := by
+      rw [hh_seq_def]
+      simp only
+      rw [hgn_cn]
+      linarith [(hg_bound n (phat cn) hphat_cn_unit).2]
+    have hhn_cn_gt : h_seq n cn > 2 * M₀ - 3 * ε / 4 := by
+      rcases (hc'_seq_mem n).2.eq_or_lt with hc'eq | hc'lt
+      · have hcn_eq_p : cn = p := by
+          rw [hcn_unfold, hc'eq]; simp
+        rw [hcn_eq_p]
+        linarith [hn1]
+      · have hcn_ne_p : cn ≠ p := by
+          intro heq
+          have h1 : lat p cn = 1 := by rw [heq]; exact lat_self p hp
+          rw [hcn_northern.2] at h1
+          nlinarith [hc'lt, (hc'_seq_mem n).1]
+        obtain ⟨s1, hs1N, hs1p, hs1_desc_cn, hc_desc_s1⟩ :=
+          exists_two_step_descent hp hu1 hpu1 hτnn hn3 hc'lt
+        rw [← hcn_unfold] at hs1_desc_cn
+        rw [← hc_unfold] at hc_desc_s1
+        obtain ⟨m₀n, hmlb_n, hm_n⟩ :=
+          exists_inf_approx_of_le (hh_seq_frame n) (fun t ht => (hh_seq_bounds n t ht).2) p hp
+        set ξ : ℝ := (2 * M₀ - h_seq n p) + ε / 16 with hξ_def
+        have hfp_bound : 2 * M₀ - ξ < h_seq n p := by rw [hξ_def]; linarith
+        have hs1_unit : ‖s1‖ = 1 := hs1N.1
+        have hC3_1 := basic_lemma_approx (hh_seq_frame n) hp
+          (fun t ht => (hh_seq_bounds n t ht).2) hmlb_n hm_n (hh_seq_equator n) hfp_bound
+          hcn_unit hcn_northern.1 hcn_ne_p hs1_desc_cn
+        have hC3_2 := basic_lemma_approx (hh_seq_frame n) hp
+          (fun t ht => (hh_seq_bounds n t ht).2) hmlb_n hm_n (hh_seq_equator n) hfp_bound
+          hs1_unit hs1N hs1p hc_desc_s1
+        have hξ_small : ξ < ε / 8 + ε / 16 := by rw [hξ_def]; linarith [hn1]
+        linarith [hC3_1, hC3_2, hn2, hhc_gt, hξ_small]
+    linarith [hhn_cn_le, hhn_cn_gt]
+  refine ⟨p, hp, fun t ht => ?_⟩
+  rw [hfp_eq]; exact hM₀_ub t ht
+
 end
 end Gleason
