@@ -61,6 +61,38 @@ cette trace est réelle ; on prend la partie réelle pour typer en `ℝ`. -/
 def bornValue (ρ : H n →ₗ[ℂ] H n) (A : Submodule ℂ (H n)) : ℝ :=
   (LinearMap.trace ℂ (H n) (ρ ∘ₗ projL A)).re
 
+/-- Additivité de la projection orthogonale sur une somme orthogonale directe :
+`P_{A⊔B} = P_A + P_B` si `A ⟂ B`. Factorisé depuis les preuves inline de
+`EffectMeasure.toProjMeasure` et `pureState` (mêmes calculs, réutilisés ici). -/
+theorem projL_sup_of_isOrtho {A B : Submodule ℂ (H n)} (hAB : A ⟂ B) :
+    projL (A ⊔ B) = projL A + projL B := by
+  apply LinearMap.ext; intro v
+  show (A ⊔ B).starProjection v = A.starProjection v + B.starProjection v
+  apply Submodule.eq_starProjection_of_mem_of_inner_eq_zero
+  · exact Submodule.add_mem_sup
+      (Submodule.starProjection_apply_mem A v)
+      (Submodule.starProjection_apply_mem B v)
+  · intro w hw
+    obtain ⟨a, ha, b, hb, rfl⟩ := Submodule.mem_sup.mp hw
+    rw [inner_add_right]
+    have h1 : ⟪v - (A.starProjection v + B.starProjection v), a⟫_ℂ = 0 := by
+      rw [show v - (A.starProjection v + B.starProjection v) =
+          (v - A.starProjection v) - B.starProjection v from by abel,
+          inner_sub_left,
+          Submodule.starProjection_inner_eq_zero (K := A) v a ha,
+          Submodule.isOrtho_iff_inner_eq.mp hAB.symm _
+            (Submodule.starProjection_apply_mem B v) _ ha]
+      simp
+    have h2 : ⟪v - (A.starProjection v + B.starProjection v), b⟫_ℂ = 0 := by
+      rw [show v - (A.starProjection v + B.starProjection v) =
+          (v - B.starProjection v) - A.starProjection v from by abel,
+          inner_sub_left,
+          Submodule.starProjection_inner_eq_zero (K := B) v b hb,
+          Submodule.isOrtho_iff_inner_eq.mp hAB _
+            (Submodule.starProjection_apply_mem A v) _ hb]
+      simp
+    rw [h1, h2, add_zero]
+
 namespace ProjMeasure
 
 variable (m : ProjMeasure n)

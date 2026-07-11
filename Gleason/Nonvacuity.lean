@@ -31,26 +31,9 @@ noncomputable def pureState {n : ℕ} (ψ : H n) (hψ : ‖ψ‖ = 1) : ProjMeas
     have hpA := Submodule.starProjection_apply_mem A ψ
     have hpB := Submodule.starProjection_apply_mem B ψ
     have hkey : (A ⊔ B).starProjection ψ = A.starProjection ψ + B.starProjection ψ := by
-      apply Submodule.eq_starProjection_of_mem_of_inner_eq_zero
-      · exact Submodule.add_mem_sup hpA hpB
-      · intro w hw
-        obtain ⟨a, ha, b, hb, rfl⟩ := Submodule.mem_sup.mp hw
-        rw [inner_add_right]
-        have h1 : ⟪ψ - (A.starProjection ψ + B.starProjection ψ), a⟫_ℂ = 0 := by
-          rw [show ψ - (A.starProjection ψ + B.starProjection ψ) =
-              (ψ - A.starProjection ψ) - B.starProjection ψ from by abel]
-          rw [inner_sub_left]
-          rw [Submodule.starProjection_inner_eq_zero (K := A) ψ a ha]
-          rw [Submodule.isOrtho_iff_inner_eq.mp hAB.symm _ hpB _ ha]
-          simp
-        have h2 : ⟪ψ - (A.starProjection ψ + B.starProjection ψ), b⟫_ℂ = 0 := by
-          rw [show ψ - (A.starProjection ψ + B.starProjection ψ) =
-              (ψ - B.starProjection ψ) - A.starProjection ψ from by abel]
-          rw [inner_sub_left]
-          rw [Submodule.starProjection_inner_eq_zero (K := B) ψ b hb]
-          rw [Submodule.isOrtho_iff_inner_eq.mp hAB _ hpA _ hb]
-          simp
-        rw [h1, h2, add_zero]
+      have h : projL (A ⊔ B) ψ = (projL A + projL B) ψ := by
+        rw [projL_sup_of_isOrtho hAB]
+      simpa [projL] using h
     simp only [hkey, sq]
     exact norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero _ _
       (Submodule.isOrtho_iff_inner_eq.mp hAB _ hpA _ hpB)
