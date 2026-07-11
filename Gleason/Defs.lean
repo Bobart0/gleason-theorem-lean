@@ -93,6 +93,64 @@ theorem projL_sup_of_isOrtho {A B : Submodule ℂ (H n)} (hAB : A ⟂ B) :
       simp
     rw [h1, h2, add_zero]
 
+/-- **M4-2(c).** Un opérateur symétrique positif (`Re⟪ρz,z⟫ ≥ 0` partout) qui atteint 0 en
+`y` (`⟪ρy,y⟫ = 0`) y est nul : `ρ y = 0`. N'existe pas tel quel dans Mathlib (le voisinage
+`LinearMap.IsPositive` fournit la positivité mais pas ce cas d'égalité). Preuve autonome :
+`0 ≤ Re⟪ρ(y+t•z),y+t•z⟫ = t²·Re⟪ρz,z⟫ + 2t·Re⟪ρy,z⟫` pour tout `t : ℝ` force le coefficient
+linéaire `Re⟪ρy,z⟫` à s'annuler (témoin explicite `t₀ := -B/(K+1)` sinon) ; on refait
+l'argument avec `I•z` pour la partie imaginaire, d'où `⟪ρy,z⟫ = 0` pour tout `z`, en
+particulier `z := ρy`. -/
+theorem positive_inner_self_eq_zero {ρ : H n →ₗ[ℂ] H n} (hρ : LinearMap.IsSymmetric ρ)
+    (hnn : ∀ z : H n, 0 ≤ (⟪ρ z, z⟫_ℂ).re) {y : H n} (hy : ⟪ρ y, y⟫_ℂ = 0) :
+    ρ y = 0 := by
+  have hy_re : (⟪ρ y, y⟫_ℂ).re = 0 := by rw [hy]; simp
+  have hlin_re : ∀ z : H n, (⟪ρ y, z⟫_ℂ).re = 0 := by
+    intro z
+    have hzy_conj : ⟪ρ z, y⟫_ℂ = starRingEnd ℂ ⟪ρ y, z⟫_ℂ := by
+      rw [hρ z y, ← inner_conj_symm z (ρ y)]
+    have hquad : ∀ t : ℝ, 0 ≤ t * (⟪ρ y, z⟫_ℂ).re + t * (⟪ρ y, z⟫_ℂ).re
+        + t * t * (⟪ρ z, z⟫_ℂ).re := by
+      intro t
+      have hpos := hnn (y + (t : ℂ) • z)
+      have hexpand : ⟪ρ (y + (t : ℂ) • z), y + (t : ℂ) • z⟫_ℂ
+          = ⟪ρ y, y⟫_ℂ + (t : ℂ) * ⟪ρ y, z⟫_ℂ + (t : ℂ) * (starRingEnd ℂ ⟪ρ y, z⟫_ℂ)
+            + ((t * t : ℝ) : ℂ) * ⟪ρ z, z⟫_ℂ := by
+        rw [map_add, map_smul, inner_add_left, inner_add_right, inner_add_right,
+          inner_smul_left, inner_smul_right, inner_smul_left, inner_smul_right,
+          Complex.conj_ofReal, hzy_conj]
+        push_cast
+        ring
+      rw [hexpand] at hpos
+      simp only [Complex.add_re, Complex.re_ofReal_mul, Complex.conj_re, hy_re, zero_add]
+        at hpos
+      linarith [hpos]
+    set K : ℝ := (⟪ρ z, z⟫_ℂ).re with hK_def
+    set B : ℝ := (⟪ρ y, z⟫_ℂ).re with hB_def
+    have hquad' : ∀ t : ℝ, 0 ≤ t ^ 2 * K + 2 * t * B := by
+      intro t; have := hquad t; nlinarith [this]
+    have hK_nonneg : 0 ≤ K := hnn z
+    by_contra hBne
+    set t0 : ℝ := -B / (K + 1) with ht0_def
+    have hden_pos : 0 < K + 1 := by linarith
+    have hcontra : t0 ^ 2 * K + 2 * t0 * B = B ^ 2 * (-K - 2) / (K + 1) ^ 2 := by
+      rw [ht0_def]; field_simp; ring
+    have hBsq_pos : 0 < B ^ 2 := by positivity
+    have hneg : B ^ 2 * (-K - 2) / (K + 1) ^ 2 < 0 := by
+      apply div_neg_of_neg_of_pos
+      · nlinarith [hBsq_pos, hK_nonneg]
+      · positivity
+    linarith [hquad' t0, hcontra, hneg]
+  have hall_zero : ∀ z : H n, ⟪ρ y, z⟫_ℂ = 0 := by
+    intro z
+    have h1 : (⟪ρ y, z⟫_ℂ).re = 0 := hlin_re z
+    have h3 : (⟪ρ y, z⟫_ℂ).im = 0 := by
+      have h2' := hlin_re (Complex.I • z)
+      rw [inner_smul_right, Complex.mul_re, Complex.I_re, Complex.I_im] at h2'
+      linarith [h2']
+    exact Complex.ext h1 h3
+  have hfinal := hall_zero (ρ y)
+  rwa [inner_self_eq_zero] at hfinal
+
 namespace ProjMeasure
 
 variable (m : ProjMeasure n)
