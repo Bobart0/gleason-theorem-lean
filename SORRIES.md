@@ -110,10 +110,35 @@
       règle 3). `#print axioms` : propext, Classical.choice, Quot.sound
       uniquement. **M2 COMPLET.**
 
-## M3 — réduction complexe
-- [ ] ProjMeasure.isCFrameFunction
-- [ ] ProjMeasure.frameFunction_phase
-- [ ] cFrameFunction_regular (Patching)
+## M3 — réduction complexe (source : Dvurečenskij ch. 3, sections réelles)
+- [x] M3-0 à M3-2 : extension de base orthonormée complexe
+      (exists_orthonormalBasis_extension_complex), additivité finie de
+      ProjMeasure.frameFunction, ProjMeasure.isCFrameFunction,
+      ProjMeasure.frameFunction_phase, cframe_sum_invariant/cframe_le_weight
+      (invariance de restriction, RealSections.lean)
+- [x] M3-3 : homogExt (extension homogène de degré 2 de `g`), homogExt_smul/
+      nonneg/le
+- [x] M3-4 : realSection (plongement ℝ-linéaire E3 → H n associé à un
+      triplet orthonormé complexe), isométrique, span-préservant ; exists_Qv
+      + homogExt_realSection (applique frameFunction_regular de M2 !)
+- [x] M3-5 : exists_phase_adjust (a), exists_unit_orthogonal_to_pair_complex
+      (b, LE point d'entrée de n≥3), quadratic_polar_bound/quadratic_lipschitz
+      (c, borne polaire générique), g_lipschitz (d, 2W-lipschitzianité de g),
+      attains_max_on (e, compacité + continuité)
+- [x] M3-6 : peel (identité d'épluchage CKM/Dvurečenskij, cas colinéaire par
+      égalité de Cauchy-Schwarz, cas général par Gram-Schmidt (x,v,z) +
+      tueur de terme croisé avec témoin explicite ε₀ := B/(K+1))
+- [x] M3-7 : infrastructure de sous-espaces — sub_proj_mem_inf_orthogonal (a),
+      finrank_inf_orthogonal_add_one (b, via
+      Submodule.finrank_add_inf_finrank_orthogonal de Mathlib),
+      span_pair_le_of_mem (c)
+- [x] M3-8 : homogExt_peel (peel sans hypothèse de norme unité, par transport
+      d'homogénéité), exists_symmetric_rep_of_finrank (induction sur
+      finrank U, ρ := (g x : ℂ)·rankOne x x + ρ', réutilise
+      InnerProductSpace.rankOne de Busch/Main.lean B8, sans le refaire)
+- [x] M3-9 : cFrameFunction_regular (Patching.lean, assemblage avec U := ⊤).
+      `#print axioms` : propext, Classical.choice, Quot.sound uniquement.
+      **M3 COMPLET.**
 
 ## Phase O — opérateur (partagée Busch/Gleason)
 - [ ] symmetric_ext_of_quadratic
