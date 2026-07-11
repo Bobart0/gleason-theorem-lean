@@ -152,13 +152,50 @@ theorem born_of_quadratic (m : ProjMeasure n) (ρ : H n →ₗ[ℂ] H n)
           (fun i => (ℂ ∙ (e i : H n) : Submodule ℂ (H n))) hortho).symm
     _ = bornValue ρ A := by rw [htop]
 
-/-- (Phase O) Positivité et trace 1 de l'opérateur obtenu, à partir de la positivité
-de la mesure et de `μ ⊤ = 1`. -/
+/-- **O3.** Positivité et trace 1 de l'opérateur obtenu, à partir de la positivité de la
+mesure et de `μ ⊤ = 1`. -/
 theorem isDensityOperator_of_represents (m : ProjMeasure n) (ρ : H n →ₗ[ℂ] H n)
     (hρ : LinearMap.IsSymmetric ρ)
     (h : ∀ x : H n, ‖x‖ = 1 → m.frameFunction x = (⟪ρ x, x⟫_ℂ).re) :
     IsDensityOperator ρ := by
-  sorry
+  refine ⟨hρ, ?_, ?_⟩
+  · -- Positivité : 0 ≤ Re⟪ρ x, x⟫
+    intro x
+    by_cases hx0 : x = 0
+    · subst hx0; simp
+    set t : ℝ := ‖x‖⁻¹ with ht_def
+    have htpos : 0 < t := by rw [ht_def]; positivity
+    set u : H n := (t : ℂ) • x with hu_def
+    have hunorm : ‖u‖ = 1 := by
+      rw [hu_def, norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_of_pos htpos, ht_def,
+        inv_mul_cancel₀ (norm_ne_zero_iff.mpr hx0)]
+    have hframe : m.frameFunction u = m.μ (ℂ ∙ u) := rfl
+    have hre_u : 0 ≤ (⟪ρ u, u⟫_ℂ).re := by
+      rw [← h u hunorm, hframe]; exact m.nonneg _
+    have hscale : ⟪ρ u, u⟫_ℂ = ((t ^ 2 : ℝ) : ℂ) * ⟪ρ x, x⟫_ℂ := by
+      rw [hu_def, map_smul, inner_smul_left, inner_smul_right, Complex.conj_ofReal]
+      push_cast; ring
+    rw [hscale, Complex.re_ofReal_mul] at hre_u
+    exact nonneg_of_mul_nonneg_right hre_u (by positivity)
+  · -- Trace 1 : Re tr ρ = 1 (via O2 en A = ⊤), Im tr ρ = 0 (symétrie de ρ)
+    have hprojL_top : projL (⊤ : Submodule ℂ (H n)) = 1 := by
+      simp [projL, Submodule.starProjection_top']
+    have hcomp : ρ ∘ₗ projL (⊤ : Submodule ℂ (H n)) = ρ := by
+      rw [hprojL_top]; exact mul_one ρ
+    have heq : bornValue ρ (⊤ : Submodule ℂ (H n)) = 1 := by
+      rw [← born_of_quadratic m ρ hρ h ⊤]; exact m.top_eq_one
+    unfold bornValue at heq
+    rw [hcomp] at heq
+    have him : (LinearMap.trace ℂ (H n) ρ).im = 0 := by
+      rw [LinearMap.trace_eq_sum_inner ρ (EuclideanSpace.basisFun (Fin n) ℂ), Complex.im_sum]
+      apply Finset.sum_eq_zero
+      intro i _
+      apply Complex.conj_eq_iff_im.mp
+      set bi := EuclideanSpace.basisFun (Fin n) ℂ i
+      calc (starRingEnd ℂ) ⟪bi, ρ bi⟫_ℂ
+          = ⟪ρ bi, bi⟫_ℂ := inner_conj_symm (𝕜 := ℂ) (ρ bi) bi
+        _ = ⟪bi, ρ bi⟫_ℂ := hρ bi bi
+    exact Complex.ext heq (by simpa using him)
 
 end
 end Gleason

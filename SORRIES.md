@@ -140,11 +140,36 @@
       `#print axioms` : propext, Classical.choice, Quot.sound uniquement.
       **M3 COMPLET.**
 
-## Phase O — opérateur (partagée Busch/Gleason)
-- [ ] symmetric_ext_of_quadratic
-- [ ] bornValue_span_singleton
-- [ ] born_of_quadratic
-- [ ] isDensityOperator_of_represents
+## Phase O — opérateur (partagée Busch/Gleason, bloc d'assemblage, Operator.lean)
+- [x] O0. symmetric_ext_of_quadratic : unicité par polarisation complexe
+      (`ext_inner_map`, Mathlib) — aucune hypothèse de symétrie requise pour la
+      polarisation elle-même, seulement pour passer de l'égalité des parties
+      RÉELLES sur la sphère à l'égalité COMPLEXE partout
+      (`IsSymmetric.conj_inner_sym` + homogénéité réelle `x = ‖x‖·u`)
+- [x] O1. bornValue_span_singleton : même calcul que la positivité de `busch`
+      (`Submodule.starProjection_singleton`, `InnerProductSpace.trace_rankOne`),
+      sans hypothèse de symétrie sur ρ (juste `⟪x,ρx⟫ = conj⟪ρx,x⟫`, mêmes
+      parties réelles)
+- [x] O2a. Infrastructure d'additivité — (i) `Defs.lean` : projL_sup_of_isOrtho
+      factorisé depuis les preuves inline (identiques) de
+      `EffectMeasure.toProjMeasure` et `pureState` (refactor pur, commit dédié) ;
+      (ii) `projL_sup_of_pairwise_isOrtho` (version Finset, même induction que
+      M3-1) ; (iii) `bornValue_sum_of_pairwise_isOrtho` (additivité finie de la
+      valeur de Born, via distributivité de la trace et de `Re`)
+- [x] O2. born_of_quadratic : `A` découpé via `stdOrthonormalBasis ℂ A` (base
+      orthonormée de `A` vu comme espace de Hilbert en soi) transportée dans
+      `H n` par coercion ; `span(range(A.subtype ∘ e.toBasis)) = A` via
+      `Submodule.span_image` + `Basis.span_eq` + `Submodule.map_subtype_top`
+      (seul point de plomberie non trivial du bloc, résolu du premier coup en
+      copiant le motif de `Mathlib/LinearAlgebra/Basis/Fin.lean`) ; aucun cas
+      spécial requis pour `A = ⊥` (la récurrence dégénère correctement)
+- [x] O3. isDensityOperator_of_represents : positivité par transport
+      d'homogénéité (`t := ‖x‖⁻¹`, `Complex.re_ofReal_mul`) depuis la sphère ;
+      trace 1 via O2 en `A := ⊤` pour la partie réelle, symétrie de ρ
+      (`LinearMap.trace_eq_sum_inner` + conjugaison, motif de `busch`) pour la
+      partie imaginaire nulle.
+      `#print axioms` sur les quatre théorèmes : propext, Classical.choice,
+      Quot.sound uniquement. **Phase O COMPLÈTE.**
 
 ## M4 — assemblage
 - [ ] gleason
