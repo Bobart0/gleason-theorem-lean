@@ -231,6 +231,45 @@ theorem cframe_le_weight {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W)
   exact Finset.single_le_sum (fun i _ => hnn (b i) (b.norm_eq_one i)) (Finset.mem_univ _)
 
 /- ═══════════════════════════════════════════════════════════════════
+   M3-7. Infrastructure de sous-espaces pour l'induction d'épluchage
+   (M3-8) : pour `x` unitaire dans `U`, `U' := U ⊓ (ℂ∙x)ᗮ` est le
+   complément orthogonal de `x` DANS `U`.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **M3-7(a).** Pour `x` unitaire dans `U`, la projection `w - ⟪x,w⟫•x` de tout
+`w ∈ U` reste dans `U` (différence de deux éléments de `U`) et est orthogonale à `x`. -/
+theorem sub_proj_mem_inf_orthogonal {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
+    (hxnorm : ‖x‖ = 1) {w : H n} (hw : w ∈ U) :
+    w - ⟪x, w⟫_ℂ • x ∈ U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ := by
+  rw [Submodule.mem_inf]
+  refine ⟨Submodule.sub_mem _ hw (Submodule.smul_mem _ _ hxU), ?_⟩
+  rw [Submodule.mem_orthogonal_singleton_iff_inner_right, inner_sub_right, inner_smul_right,
+    inner_self_eq_norm_sq_to_K, hxnorm]
+  simp
+
+/-- **M3-7(b).** Décomposition orthogonale interne : pour `x` unitaire dans `U`, le complément
+orthogonal `U ⊓ (ℂ∙x)ᗮ` a une dimension de moins que `U`. -/
+theorem finrank_inf_orthogonal_add_one {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
+    (hxnorm : ‖x‖ = 1) :
+    Module.finrank ℂ (U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ : Submodule ℂ (H n))
+      + 1 = Module.finrank ℂ U := by
+  have hx0 : x ≠ 0 := by intro h; rw [h, norm_zero] at hxnorm; norm_num at hxnorm
+  have hle : Submodule.span ℂ ({x} : Set (H n)) ≤ U := by
+    rw [Submodule.span_le, Set.singleton_subset_iff]; exact hxU
+  have hfin1 : Module.finrank ℂ (Submodule.span ℂ ({x} : Set (H n))) = 1 :=
+    finrank_span_singleton hx0
+  have h := Submodule.finrank_add_inf_finrank_orthogonal hle
+  rw [hfin1, inf_comm] at h
+  omega
+
+/-- **M3-7(c).** Le plan complexe engendré par deux éléments d'un sous-espace `U` reste
+dans `U`. -/
+theorem span_pair_le_of_mem {U : Submodule ℂ (H n)} {x y : H n} (hx : x ∈ U) (hy : y ∈ U) :
+    Submodule.span ℂ ({x, y} : Set (H n)) ≤ U := by
+  rw [Submodule.span_le, Set.insert_subset_iff, Set.singleton_subset_iff]
+  exact ⟨hx, hy⟩
+
+/- ═══════════════════════════════════════════════════════════════════
    M3-3 à M3-9 : hypothèses de section communes. `g` frame function
    complexe positive et invariante de phase, `n ≥ 3`.
    ═══════════════════════════════════════════════════════════════════ -/
@@ -958,46 +997,143 @@ theorem peel (x y : H n) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
     rw [homogExt_of_unit hy, hq_sub, hgy_eq]
     ring
 
-end CFrameSections
+include hg hnn hphase hn in
+/-- **M3-6 (forme homogène).** Version de `peel` sans hypothèse de norme unité sur `w`,
+obtenue par transport d'homogénéité (`homogExt_smul`) : c'est cette forme qui sera utilisée
+dans l'induction M3-8. -/
+theorem homogExt_peel (x w : H n) (hx : ‖x‖ = 1)
+    (hmax : ∀ v ∈ Submodule.span ℂ ({x, w} : Set (H n)), ‖v‖ = 1 → g v ≤ g x) :
+    homogExt g w = g x * ‖⟪x, w⟫_ℂ‖ ^ 2 + homogExt g (w - ⟪x, w⟫_ℂ • x) := by
+  by_cases hw0 : w = 0
+  · subst hw0; simp [homogExt]
+  have hwnorm0 : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hw0
+  have hwnorm_pos : (0 : ℝ) < ‖w‖ := norm_pos_iff.mpr hw0
+  set w1 : H n := (‖w‖⁻¹ : ℂ) • w with hw1_def
+  have hw1norm : ‖w1‖ = 1 := by
+    rw [hw1_def, norm_smul, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_norm,
+      inv_mul_cancel₀ hwnorm0]
+  have hw_eq : w = (‖w‖ : ℂ) • w1 := by
+    rw [hw1_def, smul_smul, ← Complex.ofReal_inv, ← Complex.ofReal_mul,
+      mul_inv_cancel₀ hwnorm0, Complex.ofReal_one, one_smul]
+  have hmax' : ∀ v ∈ Submodule.span ℂ ({x, w1} : Set (H n)), ‖v‖ = 1 → g v ≤ g x := by
+    have hspan_eq :
+        Submodule.span ℂ ({x, w1} : Set (H n)) = Submodule.span ℂ ({x, w} : Set (H n)) := by
+      apply le_antisymm
+      · rw [Submodule.span_le, Set.insert_subset_iff, Set.singleton_subset_iff]
+        exact ⟨Submodule.subset_span (by simp),
+          hw1_def ▸ Submodule.smul_mem _ _ (Submodule.subset_span (by simp))⟩
+      · rw [Submodule.span_le, Set.insert_subset_iff, Set.singleton_subset_iff]
+        exact ⟨Submodule.subset_span (by simp),
+          hw_eq ▸ Submodule.smul_mem _ _ (Submodule.subset_span (by simp))⟩
+    rw [hspan_eq]; exact hmax
+  have hpeel := peel hg hnn hphase hn x w1 hx hw1norm hmax'
+  have hxw1 : ⟪x, w1⟫_ℂ = (‖w‖⁻¹ : ℂ) * ⟪x, w⟫_ℂ := by rw [hw1_def, inner_smul_right]
+  have hnorm_xw1 : ‖⟪x, w1⟫_ℂ‖ = ‖w‖⁻¹ * ‖⟪x, w⟫_ℂ‖ := by
+    rw [hxw1, norm_mul, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_of_pos hwnorm_pos]
+  have hsub_eq : w1 - ⟪x, w1⟫_ℂ • x = (‖w‖⁻¹ : ℂ) • (w - ⟪x, w⟫_ℂ • x) := by
+    rw [hxw1, hw1_def, smul_sub, smul_smul, mul_comm]
+  have hA : homogExt g w = ‖w‖ ^ 2 * homogExt g w1 := by
+    conv_lhs => rw [hw_eq]
+    rw [homogExt_smul hphase, Complex.norm_real, Real.norm_eq_abs, abs_of_pos hwnorm_pos]
+  have hB : homogExt g (w1 - ⟪x, w1⟫_ℂ • x)
+      = ‖w‖⁻¹ ^ 2 * homogExt g (w - ⟪x, w⟫_ℂ • x) := by
+    conv_lhs => rw [hsub_eq]
+    rw [homogExt_smul hphase, norm_inv, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_pos hwnorm_pos]
+  rw [hB, hnorm_xw1] at hpeel
+  rw [hA, hpeel]
+  field_simp
 
 /- ═══════════════════════════════════════════════════════════════════
-   M3-7. Infrastructure de sous-espaces pour l'induction d'épluchage
-   (M3-8) : pour `x` unitaire dans `U`, `U' := U ⊓ (ℂ∙x)ᗮ` est le
-   complément orthogonal de `x` DANS `U`.
+   M3-8. Induction d'épluchage : construction de ρ, symétrique, nul hors
+   de `U`, représentant `q := homogExt g` sur `U`, par récurrence sur
+   `finrank ℂ U`. Réutilise la construction rang-un de Busch (M-B, B8) :
+   `InnerProductSpace.rankOne`.
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **M3-7(a).** Pour `x` unitaire dans `U`, la projection `w - ⟪x,w⟫•x` de tout
-`w ∈ U` reste dans `U` (différence de deux éléments de `U`) et est orthogonale à `x`. -/
-theorem sub_proj_mem_inf_orthogonal {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
-    (hxnorm : ‖x‖ = 1) {w : H n} (hw : w ∈ U) :
-    w - ⟪x, w⟫_ℂ • x ∈ U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ := by
-  rw [Submodule.mem_inf]
-  refine ⟨Submodule.sub_mem _ hw (Submodule.smul_mem _ _ hxU), ?_⟩
-  rw [Submodule.mem_orthogonal_singleton_iff_inner_right, inner_sub_right, inner_smul_right,
-    inner_self_eq_norm_sq_to_K, hxnorm]
-  simp
+include hg hnn hphase hn in
+theorem exists_symmetric_rep_of_finrank :
+    ∀ k : ℕ, ∀ U : Submodule ℂ (H n), Module.finrank ℂ U = k →
+    ∃ ρ : H n →ₗ[ℂ] H n, LinearMap.IsSymmetric ρ ∧
+      (∀ z : H n, (∀ u ∈ U, ⟪u, z⟫_ℂ = 0) → ρ z = 0) ∧
+      (∀ w ∈ U, ⟪w, ρ w⟫_ℂ = (homogExt g w : ℂ)) := by
+  intro k
+  induction k with
+  | zero =>
+    intro U hU
+    refine ⟨0, fun _ _ => by simp, fun z _ => by simp, fun w hw => ?_⟩
+    have hUbot : U = ⊥ := Submodule.finrank_eq_zero.mp hU
+    rw [hUbot, Submodule.mem_bot] at hw
+    subst hw
+    simp [homogExt]
+  | succ k ih =>
+    intro U hU
+    have hUne : U ≠ ⊥ := by intro h; rw [h, finrank_bot] at hU; omega
+    obtain ⟨x, hxU, hxnorm, hxmax⟩ := attains_max_on hg hnn hphase hn U hUne
+    set U' : Submodule ℂ (H n) := U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ with hU'_def
+    have hU'fin : Module.finrank ℂ U' = k := by
+      have h := finrank_inf_orthogonal_add_one hxU hxnorm
+      rw [← hU'_def] at h
+      omega
+    obtain ⟨ρ', hρ'_sym, hρ'_zero, hρ'_val⟩ := ih U' hU'fin
+    have hro_sym : (InnerProductSpace.rankOne ℂ x x : H n →L[ℂ] H n).toLinearMap.IsSymmetric := by
+      intro a b
+      simp only [ContinuousLinearMap.coe_coe, InnerProductSpace.rankOne_apply, inner_smul_left,
+        inner_smul_right, inner_conj_symm]
+      ring
+    set ρ : H n →ₗ[ℂ] H n :=
+      (g x : ℂ) • (InnerProductSpace.rankOne ℂ x x : H n →L[ℂ] H n).toLinearMap + ρ'
+      with hρ_def
+    have hρ_sym : ρ.IsSymmetric := by
+      rw [hρ_def]; exact (hro_sym.smul (Complex.conj_ofReal (g x))).add hρ'_sym
+    refine ⟨ρ, hρ_sym, ?_, ?_⟩
+    · intro z hz
+      have hxz : ⟪x, z⟫_ℂ = 0 := hz x hxU
+      have hrx : (InnerProductSpace.rankOne ℂ x x : H n →L[ℂ] H n).toLinearMap z = 0 := by
+        simp [InnerProductSpace.rankOne_apply, hxz]
+      have hρ'z : ρ' z = 0 := hρ'_zero z (fun u hu => hz u (Submodule.mem_inf.mp hu).1)
+      rw [hρ_def]
+      simp [hrx, hρ'z]
+    · intro w hwU
+      have hspan_le : Submodule.span ℂ ({x, w} : Set (H n)) ≤ U := span_pair_le_of_mem hxU hwU
+      have hmaxw : ∀ v ∈ Submodule.span ℂ ({x, w} : Set (H n)), ‖v‖ = 1 → g v ≤ g x :=
+        fun v hv hvnorm => hxmax v (hspan_le hv) hvnorm
+      have hpeel := homogExt_peel hg hnn hphase hn x w hxnorm hmaxw
+      set Pw : H n := w - ⟪x, w⟫_ℂ • x with hPw_def
+      have hPwU' : Pw ∈ U' := sub_proj_mem_inf_orthogonal hxU hxnorm hwU
+      have hPw_val : ⟪Pw, ρ' Pw⟫_ℂ = (homogExt g Pw : ℂ) := hρ'_val Pw hPwU'
+      have hw_decomp : w = ⟪x, w⟫_ℂ • x + Pw := by rw [hPw_def]; abel
+      have hρx0 : ρ' x = 0 := hρ'_zero x (fun u hu =>
+        Submodule.mem_orthogonal_singleton_iff_inner_left.mp (Submodule.mem_inf.mp hu).2)
+      have hρ'w_eq : ρ' w = ρ' Pw := by
+        conv_lhs => rw [hw_decomp]
+        rw [map_add, map_smul, hρx0, smul_zero, zero_add]
+      have hρw_apply : ρ w = (g x : ℂ) • (⟪x, w⟫_ℂ • x) + ρ' Pw := by
+        rw [hρ_def]
+        simp only [LinearMap.add_apply, LinearMap.smul_apply, ContinuousLinearMap.coe_coe,
+          InnerProductSpace.rankOne_apply]
+        rw [hρ'w_eq]
+      have hxw_mul_conj : ⟪x, w⟫_ℂ * starRingEnd ℂ ⟪x, w⟫_ℂ = ((‖⟪x, w⟫_ℂ‖ ^ 2 : ℝ) : ℂ) := by
+        rw [mul_comm, RCLike.conj_mul]; norm_cast
+      have hterm1 : ⟪w, (g x : ℂ) • (⟪x, w⟫_ℂ • x)⟫_ℂ
+          = ((‖⟪x, w⟫_ℂ‖ ^ 2 : ℝ) : ℂ) * (g x : ℂ) := by
+        rw [inner_smul_right, inner_smul_right, (inner_conj_symm w x).symm, hxw_mul_conj]
+        ring
+      have hinner_final : ⟪w, ρ w⟫_ℂ
+          = ((‖⟪x, w⟫_ℂ‖ ^ 2 : ℝ) : ℂ) * (g x : ℂ) + ⟪w, ρ' Pw⟫_ℂ := by
+        rw [hρw_apply, inner_add_right, hterm1]
+      have hcross : ⟪x, ρ' Pw⟫_ℂ = 0 := by
+        rw [← hρ'_sym x Pw, hρx0, inner_zero_left]
+      have hinner2 : ⟪w, ρ' Pw⟫_ℂ = (homogExt g Pw : ℂ) := by
+        rw [hw_decomp, inner_add_left, inner_smul_left, hcross, mul_zero, zero_add]
+        exact hPw_val
+      have hpeelC : (homogExt g w : ℂ)
+          = (g x : ℂ) * ((‖⟪x, w⟫_ℂ‖ ^ 2 : ℝ) : ℂ) + (homogExt g Pw : ℂ) := by
+        exact_mod_cast hpeel
+      rw [hinner_final, hinner2, hpeelC]
+      ring
 
-/-- **M3-7(b).** Décomposition orthogonale interne : pour `x` unitaire dans `U`, le complément
-orthogonal `U ⊓ (ℂ∙x)ᗮ` a une dimension de moins que `U`. -/
-theorem finrank_inf_orthogonal_add_one {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
-    (hxnorm : ‖x‖ = 1) :
-    Module.finrank ℂ (U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ : Submodule ℂ (H n))
-      + 1 = Module.finrank ℂ U := by
-  have hx0 : x ≠ 0 := by intro h; rw [h, norm_zero] at hxnorm; norm_num at hxnorm
-  have hle : Submodule.span ℂ ({x} : Set (H n)) ≤ U := by
-    rw [Submodule.span_le, Set.singleton_subset_iff]; exact hxU
-  have hfin1 : Module.finrank ℂ (Submodule.span ℂ ({x} : Set (H n))) = 1 :=
-    finrank_span_singleton hx0
-  have h := Submodule.finrank_add_inf_finrank_orthogonal hle
-  rw [hfin1, inf_comm] at h
-  omega
-
-/-- **M3-7(c).** Le plan complexe engendré par deux éléments d'un sous-espace `U` reste
-dans `U`. -/
-theorem span_pair_le_of_mem {U : Submodule ℂ (H n)} {x y : H n} (hx : x ∈ U) (hy : y ∈ U) :
-    Submodule.span ℂ ({x, y} : Set (H n)) ≤ U := by
-  rw [Submodule.span_le, Set.insert_subset_iff, Set.singleton_subset_iff]
-  exact ⟨hx, hy⟩
+end CFrameSections
 
 end
 end Gleason
