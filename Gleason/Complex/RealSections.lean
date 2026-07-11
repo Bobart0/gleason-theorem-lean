@@ -298,6 +298,42 @@ theorem homogExt_le (z : H n) : homogExt g z ≤ W * ‖z‖ ^ 2 := by
   have hle := cframe_le_weight hg hnn (by omega) hunit
   nlinarith [sq_nonneg ‖z‖, hle]
 
+/- ═══════════════════════════════════════════════════════════════════
+   M3-4. Sections réelles : plongement `ι_v` de `E3` dans `H n` associé
+   à un triplet orthonormé complexe `v`, isométrique (préserve le
+   produit scalaire réel), fournissant une frame function réelle
+   `f_v := g ∘ ι_v` dont `frameFunction_regular` (M2) donne la forme
+   quadratique `Q_v`.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- Section réelle associée à un triplet orthonormé complexe `v : Fin 3 → H n` :
+plongement ℝ-linéaire (fonction nue, pas de bundling `LinearIsometry`) de `E3`
+dans `H n`. -/
+noncomputable def realSection (v : Fin 3 → H n) (x : E3) : H n := ∑ i, (x i : ℂ) • v i
+
+theorem realSection_inner (v : Fin 3 → H n) (hv : Orthonormal ℂ v) (x y : E3) :
+    ⟪realSection v x, realSection v y⟫_ℂ = (⟪x, y⟫_ℝ : ℂ) := by
+  have hvite := orthonormal_iff_ite.mp hv
+  have hstar_real : ∀ r : ℝ, star (r : ℂ) = (r : ℂ) := fun r => by
+    rw [← starRingEnd_apply, Complex.conj_ofReal]
+  unfold realSection
+  rw [Fin.sum_univ_three, Fin.sum_univ_three]
+  simp only [inner_add_left, inner_add_right, inner_smul_left, inner_smul_right, hvite]
+  simp only [PiLp.inner_apply, RCLike.inner_apply, Fin.sum_univ_three,
+    starRingEnd_apply, star_trivial, hstar_real]
+  push_cast
+  ring
+
+theorem realSection_norm (v : Fin 3 → H n) (hv : Orthonormal ℂ v) (x : E3) :
+    ‖realSection v x‖ = ‖x‖ := by
+  have hkey := realSection_inner v hv x x
+  rw [inner_self_eq_norm_sq_to_K, real_inner_self_eq_norm_sq] at hkey
+  have h2 : ‖realSection v x‖ ^ 2 = ‖x‖ ^ 2 := by
+    apply Complex.ofReal_inj.mp; push_cast at hkey ⊢; exact hkey
+  have hh := Real.sqrt_sq (norm_nonneg (realSection v x))
+  rw [h2, Real.sqrt_sq (norm_nonneg x)] at hh
+  exact hh.symm
+
 end CFrameSections
 
 end
