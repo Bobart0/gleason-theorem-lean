@@ -27,6 +27,40 @@ noncomputable section
 
 variable {n : ℕ}
 
+/- ═══════════════════════════════════════════════════════════════════
+   M3-0. Extension d'une famille orthonormée complexe, à positions
+   prescrites (via `Fin.castLE`), en base orthonormée de `H n`. Généralise
+   `exists_orthonormalBasis_of_triple'` (bloc A, `Real3/SphereGeometry.lean`,
+   hardcodé `ℝ`/`Fin 3`) : ici `k` est arbitraire (`k ≤ n`) et le corps est
+   `ℂ`. Le lemme Mathlib sous-jacent
+   (`Orthonormal.exists_orthonormalBasis_extension_of_card_eq`) est déjà
+   générique en `𝕜`.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- Toute famille orthonormée `v : Fin k → H n` (`k ≤ n`) se complète en une base
+orthonormée de `H n` qui coïncide avec `v` sur les `k` premières positions
+(`Fin.castLE`). -/
+theorem exists_orthonormalBasis_extension_complex {k : ℕ} (hk : k ≤ n) (v : Fin k → H n)
+    (hv : Orthonormal ℂ v) :
+    ∃ b : OrthonormalBasis (Fin n) ℂ (H n), ∀ i : Fin k, b (Fin.castLE hk i) = v i := by
+  have hinj : Function.Injective (Fin.castLE hk : Fin k → Fin n) := Fin.castLE_injective hk
+  set V : Fin n → H n := Function.extend (Fin.castLE hk) v (fun _ => 0) with hV_def
+  have hVv : ∀ i : Fin k, V (Fin.castLE hk i) = v i := fun i =>
+    hinj.extend_apply v (fun _ => (0 : H n)) i
+  set e : Fin k ≃ Set.range (Fin.castLE hk) := Equiv.ofInjective (Fin.castLE hk) hinj with he_def
+  have hcomp : (Fin.castLE hk : Fin k → Fin n) ∘ e.symm = Subtype.val :=
+    Equiv.self_comp_ofInjective_symm hinj
+  have hrestrict : (Set.range (Fin.castLE hk)).restrict V = v ∘ e.symm := by
+    funext x
+    have hx1 : Fin.castLE hk (e.symm x) = (x : Fin n) := congrFun hcomp x
+    show V (x : Fin n) = v (e.symm x)
+    rw [← hx1, hVv]
+  have hOrtho : Orthonormal ℂ ((Set.range (Fin.castLE hk)).restrict V) := by
+    rw [hrestrict]; exact hv.comp e.symm e.symm.injective
+  have hcard : Module.finrank ℂ (H n) = Fintype.card (Fin n) := by simp
+  obtain ⟨b, hb⟩ := hOrtho.exists_orthonormalBasis_extension_of_card_eq hcard
+  exact ⟨b, fun i => by rw [hb (Fin.castLE hk i) ⟨i, rfl⟩, hVv]⟩
+
 /-- **Frame function complexe de poids `W`** sur `ℂⁿ`. -/
 def IsCFrameFunction (g : H n → ℝ) (W : ℝ) : Prop :=
   ∀ b : OrthonormalBasis (Fin n) ℂ (H n), (∑ i, g (b i)) = W
