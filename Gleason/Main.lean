@@ -24,7 +24,20 @@ est représentée par un unique opérateur densité via la règle de Born. -/
 theorem gleason {n : ℕ} (hn : 3 ≤ n) (m : ProjMeasure n) :
     ∃! ρ : H n →ₗ[ℂ] H n, IsDensityOperator ρ ∧
       ∀ A : Submodule ℂ (H n), m.μ A = bornValue ρ A := by
-  sorry
+  have hg_frame : IsCFrameFunction m.frameFunction 1 := m.isCFrameFunction
+  have hg_nn : ∀ x : H n, ‖x‖ = 1 → 0 ≤ m.frameFunction x := fun x _ => m.nonneg _
+  have hg_phase : ∀ (c : ℂ) (x : H n), ‖c‖ = 1 → m.frameFunction (c • x) = m.frameFunction x :=
+    m.frameFunction_phase
+  obtain ⟨ρ, hρ_sym, hρ_rep⟩ := cFrameFunction_regular hn m.frameFunction 1 hg_frame hg_nn hg_phase
+  have hρ_density : IsDensityOperator ρ := isDensityOperator_of_represents m ρ hρ_sym hρ_rep
+  have hρ_born : ∀ A : Submodule ℂ (H n), m.μ A = bornValue ρ A :=
+    born_of_quadratic m ρ hρ_sym hρ_rep
+  refine ⟨ρ, ⟨hρ_density, hρ_born⟩, ?_⟩
+  rintro ρ' ⟨hρ'_density, hρ'_born⟩
+  apply symmetric_ext_of_quadratic hρ'_density.symmetric hρ_sym
+  intro x hx
+  rw [← bornValue_span_singleton ρ' x hx, ← hρ'_born (ℂ ∙ x), hρ_born (ℂ ∙ x),
+    bornValue_span_singleton ρ x hx]
 
 /-- **Test d'intégration** (corollaire classique) : pas de mesure dispersion-free
 (à valeurs dans {0,1}) en dimension ≥ 3. Si `gleason` était vacuement vrai ou mal
