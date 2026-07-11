@@ -102,14 +102,55 @@ theorem bornValue_sum_of_pairwise_isOrtho (ρ : H n →ₗ[ℂ] H n) {ι : Type*
     simp [LinearMap.comp_apply, LinearMap.sum_apply, map_sum]
   rw [hcomp_sum, map_sum, Complex.re_sum]
 
-/-- (Phase O) De la représentation quadratique sur les droites à la formule de Born
-sur TOUS les sous-espaces : découper `A` en droites orthogonales, additivité des deux
-côtés. -/
+/-- **O2.** De la représentation quadratique sur les droites à la formule de Born sur TOUS
+les sous-espaces : `A` se découpe en droites orthogonales (base orthonormée de `A` vu comme
+espace de Hilbert en soi), et l'égalité passe à la somme des deux côtés (M3-1 pour `μ`,
+O2a(iii) pour `bornValue`). -/
 theorem born_of_quadratic (m : ProjMeasure n) (ρ : H n →ₗ[ℂ] H n)
     (hρ : LinearMap.IsSymmetric ρ)
     (h : ∀ x : H n, ‖x‖ = 1 → m.frameFunction x = (⟪ρ x, x⟫_ℂ).re) :
     ∀ A : Submodule ℂ (H n), m.μ A = bornValue ρ A := by
-  sorry
+  intro A
+  set k := Module.finrank ℂ A with hk_def
+  set e : OrthonormalBasis (Fin k) ℂ A := stdOrthonormalBasis ℂ A with he_def
+  have heunit : ∀ i, ‖(e i : H n)‖ = 1 := fun i => by
+    rw [Submodule.norm_coe]; exact e.norm_eq_one i
+  have hortho : ∀ i ∈ (Finset.univ : Finset (Fin k)), ∀ j ∈ (Finset.univ : Finset (Fin k)),
+      i ≠ j → (ℂ ∙ (e i : H n) : Submodule ℂ (H n)) ⟂ (ℂ ∙ (e j : H n) : Submodule ℂ (H n)) := by
+    intro i _ j _ hij
+    rw [Submodule.isOrtho_span]
+    rintro x hx y hy
+    simp only [Set.mem_singleton_iff] at hx hy
+    rw [hx, hy, ← Submodule.coe_inner, e.inner_eq_ite]
+    simp [hij]
+  have hspan_eq : Submodule.span ℂ (Set.range (fun i => (e i : H n))) = A := by
+    have heq : (fun i : Fin k => (e i : H n)) = A.subtype ∘ e.toBasis := by
+      funext i; simp
+    rw [heq, Set.range_comp, Submodule.span_image, e.toBasis.span_eq, Submodule.map_subtype_top]
+  have htop : (Finset.univ : Finset (Fin k)).sup
+      (fun i => (ℂ ∙ (e i : H n) : Submodule ℂ (H n))) = A := by
+    rw [Finset.sup_eq_iSup]
+    simp only [Finset.mem_univ, iSup_pos]
+    rw [← Submodule.span_range_eq_iSup]
+    exact hspan_eq
+  have hsum := m.sum_eq_of_pairwise_isOrtho Finset.univ
+    (fun i => (ℂ ∙ (e i : H n) : Submodule ℂ (H n))) hortho
+  have hstep : ∀ i, m.μ (ℂ ∙ (e i : H n) : Submodule ℂ (H n))
+      = bornValue ρ (ℂ ∙ (e i : H n) : Submodule ℂ (H n)) := by
+    intro i
+    show m.frameFunction (e i : H n) = bornValue ρ (ℂ ∙ (e i : H n) : Submodule ℂ (H n))
+    rw [h (e i : H n) (heunit i), bornValue_span_singleton ρ (e i : H n) (heunit i)]
+  calc m.μ A
+      = m.μ ((Finset.univ : Finset (Fin k)).sup (fun i => (ℂ ∙ (e i : H n) : Submodule ℂ (H n))))
+        := by rw [htop]
+    _ = ∑ i, m.μ (ℂ ∙ (e i : H n) : Submodule ℂ (H n)) := hsum
+    _ = ∑ i, bornValue ρ (ℂ ∙ (e i : H n) : Submodule ℂ (H n)) :=
+        Finset.sum_congr rfl (fun i _ => hstep i)
+    _ = bornValue ρ ((Finset.univ : Finset (Fin k)).sup
+          (fun i => (ℂ ∙ (e i : H n) : Submodule ℂ (H n)))) :=
+        (bornValue_sum_of_pairwise_isOrtho ρ Finset.univ
+          (fun i => (ℂ ∙ (e i : H n) : Submodule ℂ (H n))) hortho).symm
+    _ = bornValue ρ A := by rw [htop]
 
 /-- (Phase O) Positivité et trace 1 de l'opérateur obtenu, à partir de la positivité
 de la mesure et de `μ ⊤ = 1`. -/
