@@ -14,9 +14,9 @@ Passage de ℝ³ (cœur analytique de `Real3/`) au cas complexe ℂⁿ, `n ≥ 3
    noyau de polarisation) devient un THÉORÈME, démontré par la géométrie des sections
    et l'hypothèse `dim ≥ 3`, et non par l'algèbre seule.
 
-⚠️ La définition précise de « section réelle » (image d'une isométrie ℝ-linéaire
-`E3 →ₗᵢ[ℝ] H n` compatible avec les phases) est le livrable d'ouverture du jalon M3 ;
-les énoncés ci-dessous sont provisoires.
+Jalon M3 complet (voir `SORRIES.md`) : `realSection` est le plongement ℝ-linéaire
+`E3 → H n` associé à un triplet orthonormé complexe (isométrique, préserve les phases),
+et `cFrameFunction_regular` (`Patching.lean`) est l'aboutissement de ce fichier.
 -/
 
 namespace Gleason

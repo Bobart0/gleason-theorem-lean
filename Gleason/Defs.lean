@@ -49,10 +49,9 @@ structure IsDensityOperator (ρ : H n →ₗ[ℂ] H n) : Prop where
   nonneg : ∀ x : H n, 0 ≤ (⟪ρ x, x⟫_ℂ).re
   trace_one : LinearMap.trace ℂ (H n) ρ = 1
 
-/-- Projection orthogonale sur `A`, vue comme endomorphisme linéaire de `H n`.
-TODO(M1) : vérifier le nom Mathlib courant (`Submodule.starProjection`,
-anciennement `orthogonalProjection'`). En dimension finie, l'instance
-`HasOrthogonalProjection` est automatique. -/
+/-- Projection orthogonale sur `A`, vue comme endomorphisme linéaire de `H n`
+(`Submodule.starProjection` ; en dimension finie, l'instance
+`HasOrthogonalProjection` est automatique). -/
 def projL (A : Submodule ℂ (H n)) : H n →ₗ[ℂ] H n :=
   (A.starProjection : H n →L[ℂ] H n).toLinearMap
 
