@@ -73,3 +73,14 @@ Après chaque `sorry` fermé et `lake build` vert :
 2. `git add -A && git commit -m "<jalon>: <nom_du_lemme>"`
 3. `git push`
 Ne JAMAIS utiliser `git push --force` sans demander confirmation explicite à l'utilisateur.
+
+## Pattern anti-lenteur : rw sur grosses sommes substituées
+Si un `rw` substitue une variable par une grosse expression (ex. une double somme
+∑ p : Fin n × Fin n, ...), et que des `rw`/`simp` suivants doivent la traverser :
+généralise-la immédiatemnt sous un nom opaque (`generalize h : expr = T`) avant
+de continuer, plutôt que de laisser chaque étape suivante refaire de l'isDefEq/whnf
+dans le terme entier. Si un lemme mélange une élaboration lourde avec une preuve
+par ailleurs simple, extrais la partie lourde dans un lemme séparé à contexte
+minimal (`private theorem ..._assembly`). `maxHeartbeats` élevé masque ce
+symptôme sans le corriger, voir Busch/Main.lean:riesz_rep_assembly pour un
+exemple résolu.
