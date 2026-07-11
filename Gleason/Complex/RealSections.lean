@@ -724,6 +724,38 @@ theorem g_lipschitz (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
       rw [← realSection_norm triple htriple_orth (p - q), hpq_eq]
     rwa [hpq_norm] at hlip
 
+set_option maxHeartbeats 800000 in
+include hg hnn hphase hn in
+/-- **M3-5(e).** `g` atteint son maximum sur la sphère unité de tout sous-espace `U ≠ ⊥`,
+par compacité (sphère de `H n` compacte, `U` fermé car de dimension finie, donc `S := U ∩ sphère`
+compact) et continuité (`g_lipschitz` donne la lipschitzianité de `g` sur `S`). -/
+theorem attains_max_on (U : Submodule ℂ (H n)) (hU : U ≠ ⊥) :
+    ∃ x ∈ U, ‖x‖ = 1 ∧ ∀ w ∈ U, ‖w‖ = 1 → g w ≤ g x := by
+  set S : Set (H n) := (U : Set (H n)) ∩ Metric.sphere (0 : H n) 1 with hS_def
+  have hUclosed : IsClosed (U : Set (H n)) := Submodule.closed_of_finiteDimensional _
+  have hScompact : IsCompact S := (isCompact_sphere (0 : H n) 1).inter_left hUclosed
+  obtain ⟨x0, hx0U, hx0ne⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hU
+  have hx0norm : ‖x0‖ ≠ 0 := norm_ne_zero_iff.mpr hx0ne
+  set x1 : H n := ((‖x0‖ : ℝ)⁻¹ : ℂ) • x0 with hx1_def
+  have hx1U : x1 ∈ U := U.smul_mem _ hx0U
+  have hx1norm : ‖x1‖ = 1 := by
+    rw [hx1_def, norm_smul, norm_inv, Complex.norm_real, Real.norm_eq_abs,
+      abs_of_nonneg (norm_nonneg x0), inv_mul_cancel₀ hx0norm]
+  have hSne : S.Nonempty :=
+    ⟨x1, hx1U, by rw [Metric.mem_sphere, dist_eq_norm, sub_zero, hx1norm]⟩
+  have hLip : LipschitzOnWith (Real.toNNReal (2 * W)) g S :=
+    LipschitzOnWith.of_dist_le' (fun a ha b hb => by
+      have haS : ‖a‖ = 1 := by
+        have h := ha.2; rwa [Metric.mem_sphere, dist_eq_norm, sub_zero] at h
+      have hbS : ‖b‖ = 1 := by
+        have h := hb.2; rwa [Metric.mem_sphere, dist_eq_norm, sub_zero] at h
+      rw [Real.dist_eq, dist_eq_norm]
+      exact g_lipschitz hg hnn hphase hn a b haS hbS)
+  obtain ⟨x, hxS, hxmax⟩ := hScompact.exists_isMaxOn hSne hLip.continuousOn
+  refine ⟨x, hxS.1, ?_, fun w hwU hwnorm => isMaxOn_iff.mp hxmax w ⟨hwU, ?_⟩⟩
+  · have h := hxS.2; rwa [Metric.mem_sphere, dist_eq_norm, sub_zero] at h
+  · rw [Metric.mem_sphere, dist_eq_norm, sub_zero, hwnorm]
+
 end CFrameSections
 
 end
