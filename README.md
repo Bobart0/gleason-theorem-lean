@@ -65,3 +65,6 @@ SORRIES.md                   Suivi des obligations restantes
 Aucun `axiom`, aucun `native_decide` (CI bloquante). Toute structure d'hypothèses a un
 habitant concret dans `Nonvacuity.lean`, même commit. Un `sorry` honnête plutôt qu'un
 énoncé affaibli en silence.
+
+## Licence
+[Apache License 2.0](LICENSE).
