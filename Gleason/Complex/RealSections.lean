@@ -960,5 +960,44 @@ theorem peel (x y : H n) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
 
 end CFrameSections
 
+/- ═══════════════════════════════════════════════════════════════════
+   M3-7. Infrastructure de sous-espaces pour l'induction d'épluchage
+   (M3-8) : pour `x` unitaire dans `U`, `U' := U ⊓ (ℂ∙x)ᗮ` est le
+   complément orthogonal de `x` DANS `U`.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **M3-7(a).** Pour `x` unitaire dans `U`, la projection `w - ⟪x,w⟫•x` de tout
+`w ∈ U` reste dans `U` (différence de deux éléments de `U`) et est orthogonale à `x`. -/
+theorem sub_proj_mem_inf_orthogonal {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
+    (hxnorm : ‖x‖ = 1) {w : H n} (hw : w ∈ U) :
+    w - ⟪x, w⟫_ℂ • x ∈ U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ := by
+  rw [Submodule.mem_inf]
+  refine ⟨Submodule.sub_mem _ hw (Submodule.smul_mem _ _ hxU), ?_⟩
+  rw [Submodule.mem_orthogonal_singleton_iff_inner_right, inner_sub_right, inner_smul_right,
+    inner_self_eq_norm_sq_to_K, hxnorm]
+  simp
+
+/-- **M3-7(b).** Décomposition orthogonale interne : pour `x` unitaire dans `U`, le complément
+orthogonal `U ⊓ (ℂ∙x)ᗮ` a une dimension de moins que `U`. -/
+theorem finrank_inf_orthogonal_add_one {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
+    (hxnorm : ‖x‖ = 1) :
+    Module.finrank ℂ (U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ : Submodule ℂ (H n))
+      + 1 = Module.finrank ℂ U := by
+  have hx0 : x ≠ 0 := by intro h; rw [h, norm_zero] at hxnorm; norm_num at hxnorm
+  have hle : Submodule.span ℂ ({x} : Set (H n)) ≤ U := by
+    rw [Submodule.span_le, Set.singleton_subset_iff]; exact hxU
+  have hfin1 : Module.finrank ℂ (Submodule.span ℂ ({x} : Set (H n))) = 1 :=
+    finrank_span_singleton hx0
+  have h := Submodule.finrank_add_inf_finrank_orthogonal hle
+  rw [hfin1, inf_comm] at h
+  omega
+
+/-- **M3-7(c).** Le plan complexe engendré par deux éléments d'un sous-espace `U` reste
+dans `U`. -/
+theorem span_pair_le_of_mem {U : Submodule ℂ (H n)} {x y : H n} (hx : x ∈ U) (hy : y ∈ U) :
+    Submodule.span ℂ ({x, y} : Set (H n)) ≤ U := by
+  rw [Submodule.span_le, Set.insert_subset_iff, Set.singleton_subset_iff]
+  exact ⟨hx, hy⟩
+
 end
 end Gleason
