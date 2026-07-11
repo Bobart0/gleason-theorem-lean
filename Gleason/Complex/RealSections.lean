@@ -756,6 +756,208 @@ theorem attains_max_on (U : Submodule ℂ (H n)) (hU : U ≠ ⊥) :
   · have h := hxS.2; rwa [Metric.mem_sphere, dist_eq_norm, sub_zero] at h
   · rw [Metric.mem_sphere, dist_eq_norm, sub_zero, hwnorm]
 
+/- ═══════════════════════════════════════════════════════════════════
+   M3-6. Identité d'épluchage (CKM / Dvurečenskij, cœur de la récurrence
+   d'assemblage). Si `x` maximise `g` sur la sphère unité du plan complexe
+   engendré par `x` et `y`, la valeur de l'extension homogène `q := homogExt g`
+   en `y` se décompose selon la projection orthogonale sur `x`.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+set_option maxHeartbeats 1600000 in
+include hg hnn hphase hn in
+theorem peel (x y : H n) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
+    (hmax : ∀ w ∈ Submodule.span ℂ ({x, y} : Set (H n)), ‖w‖ = 1 → g w ≤ g x) :
+    homogExt g y = g x * ‖⟪x, y⟫_ℂ‖ ^ 2 + homogExt g (y - ⟪x, y⟫_ℂ • x) := by
+  have hxx : ⟪x, x⟫_ℂ = 1 := by rw [inner_self_eq_norm_sq_to_K, hx]; norm_num
+  by_cases hcol : ‖⟪x, y⟫_ℂ‖ = 1
+  · -- Cas colinéaire : égalité de Cauchy-Schwarz, y = r • x pour un r unitaire.
+    have hx0 : x ≠ 0 := by intro h; rw [h, norm_zero] at hx; norm_num at hx
+    have hy0 : y ≠ 0 := by intro h; rw [h, norm_zero] at hy; norm_num at hy
+    obtain ⟨r, -, hyr⟩ := (norm_inner_eq_norm_iff hx0 hy0).mp (by rw [hcol, hx, hy]; ring)
+    have hrnorm : ‖r‖ = 1 := by
+      have h := hy; rw [hyr, norm_smul, hx, mul_one] at h; exact h
+    have hzero : y - ⟪x, y⟫_ℂ • x = 0 := by
+      rw [hyr, inner_smul_right, hxx, mul_one, sub_self]
+    rw [hzero, hcol, homogExt_of_unit hy, hyr, hphase r x hrnorm]
+    simp [homogExt]
+  · -- Cas général : Gram-Schmidt (x, v, z), tueur de terme croisé, décomposition quadratique.
+    set α : ℝ := ‖⟪x, y⟫_ℂ‖ with hα_def
+    have hα_nonneg : 0 ≤ α := norm_nonneg _
+    have hα_le1 : α ≤ 1 := by
+      calc α ≤ ‖x‖ * ‖y‖ := norm_inner_le_norm x y
+      _ = 1 := by rw [hx, hy]; ring
+    have hα_lt1 : α < 1 := lt_of_le_of_ne hα_le1 hcol
+    obtain ⟨c', hc'norm, hc'inner, -⟩ := exists_phase_adjust x y hx hy
+    set w : H n := c' • y with hw_def
+    have hwnorm : ‖w‖ = 1 := by rw [hw_def, norm_smul, hc'norm, hy, one_mul]
+    have hxw_inner : ⟪x, w⟫_ℂ = (α : ℂ) := hc'inner
+    have hy_eq : (starRingEnd ℂ c') • w = y := by
+      rw [hw_def, smul_smul, RCLike.conj_mul, hc'norm]; simp
+    have hxy_val : ⟪x, y⟫_ℂ = starRingEnd ℂ c' * (α : ℂ) := by
+      rw [← hy_eq, inner_smul_right, hxw_inner]
+    have hg_wy : g w = g y := by rw [hw_def]; exact hphase c' y hc'norm
+    have hden1 : (0 : ℝ) < 1 - α := by linarith
+    have hden2 : (0 : ℝ) < 1 + α := by linarith
+    have hsq_pos : 0 < 1 - α ^ 2 := by nlinarith [mul_pos hden1 hden2]
+    set s : ℝ := Real.sqrt (1 - α ^ 2) with hs_def
+    have hs_pos : 0 < s := Real.sqrt_pos.mpr hsq_pos
+    have hssq : s ^ 2 = 1 - α ^ 2 := Real.sq_sqrt hsq_pos.le
+    set d : H n := w - (α : ℂ) • x with hd_def
+    have hxd_inner : ⟪x, d⟫_ℂ = 0 := by
+      have hstep : ⟪x, d⟫_ℂ = ⟪x, w⟫_ℂ - (α : ℂ) * ⟪x, x⟫_ℂ := by
+        rw [hd_def, inner_sub_right]; congr 1; exact inner_smul_right x x (α : ℂ)
+      rw [hstep, hxx, mul_one, hxw_inner, sub_self]
+    have hwx_inner : ⟪w, x⟫_ℂ = (α : ℂ) := by
+      rw [(inner_conj_symm w x).symm, hxw_inner, Complex.conj_ofReal]
+    have hαx_inner : ⟪w, (α : ℂ) • x⟫_ℂ = ((α ^ 2 : ℝ) : ℂ) := by
+      rw [inner_smul_right, hwx_inner]; push_cast; ring
+    have hαx_norm : ‖(α : ℂ) • x‖ = α := by
+      rw [norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hα_nonneg, hx, mul_one]
+    have hre_ααsq : RCLike.re (((α ^ 2 : ℝ)) : ℂ) = α ^ 2 := RCLike.ofReal_re _
+    have hd2 : ‖d‖ ^ 2 = s ^ 2 := by
+      rw [hd_def, norm_sub_sq (𝕜 := ℂ), hwnorm, hαx_inner, hre_ααsq, hαx_norm, hssq]; ring
+    have hdnorm : ‖d‖ = s := by
+      have hh := Real.sqrt_sq (norm_nonneg d)
+      rw [hd2, Real.sqrt_sq hs_pos.le] at hh
+      exact hh.symm
+    set v : H n := (s⁻¹ : ℂ) • d with hv_def
+    have hvnorm : ‖v‖ = 1 := by
+      rw [hv_def, norm_smul, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_of_pos hs_pos,
+        hdnorm, inv_mul_cancel₀ hs_pos.ne']
+    have hxv_inner : ⟪x, v⟫_ℂ = 0 := by rw [hv_def, inner_smul_right, hxd_inner, mul_zero]
+    have hvx_inner : ⟪v, x⟫_ℂ = 0 := by
+      rw [(inner_conj_symm v x).symm, hxv_inner, map_zero]
+    have hd_eq_v : d = (s : ℂ) • v := by
+      rw [hv_def, smul_smul, ← Complex.ofReal_inv, ← Complex.ofReal_mul, mul_inv_cancel₀ hs_pos.ne',
+        Complex.ofReal_one, one_smul]
+    obtain ⟨z, hznorm, hzx, hzv⟩ := exists_unit_orthogonal_to_pair_complex hn x v
+    have hxz_inner : ⟪x, z⟫_ℂ = 0 := by
+      rw [(inner_conj_symm x z).symm, hzx, map_zero]
+    have hvz_inner : ⟪v, z⟫_ℂ = 0 := by
+      rw [(inner_conj_symm v z).symm, hzv, map_zero]
+    have hvv1 : ⟪v, v⟫_ℂ = 1 := by rw [inner_self_eq_norm_sq_to_K, hvnorm]; norm_num
+    have hzz1 : ⟪z, z⟫_ℂ = 1 := by rw [inner_self_eq_norm_sq_to_K, hznorm]; norm_num
+    set triple : Fin 3 → H n := ![x, v, z] with htriple_def
+    have htriple_orth : Orthonormal ℂ triple := by
+      rw [orthonormal_iff_ite]
+      intro i j
+      fin_cases i <;> fin_cases j <;>
+        simp [htriple_def, hx, hvnorm, hznorm, hxv_inner, hvx_inner, hxz_inner, hzx, hvz_inner,
+          hzv]
+    obtain ⟨Q, hQ⟩ := homogExt_realSection hg hnn hphase hn triple htriple_orth
+    set e1 : E3 := (!₂[1, 0, 0] : E3) with he1_def
+    set e2 : E3 := (!₂[0, 1, 0] : E3) with he2_def
+    have he1x : realSection triple e1 = x := by
+      unfold realSection; rw [Fin.sum_univ_three]; simp [he1_def, htriple_def]
+    have he2v : realSection triple e2 = v := by
+      unfold realSection; rw [Fin.sum_univ_three]; simp [he2_def, htriple_def]
+    have hQe1 : Q e1 = g x := by rw [← hQ e1, he1x, homogExt_of_unit hx]
+    have hQe2 : Q e2 = g v := by rw [← hQ e2, he2v, homogExt_of_unit hvnorm]
+    have hv_mem : v ∈ Submodule.span ℂ ({x, y} : Set (H n)) := by
+      have hw_mem : w ∈ Submodule.span ℂ ({x, y} : Set (H n)) :=
+        hw_def ▸ Submodule.smul_mem _ _ (Submodule.subset_span (by simp))
+      have hd_mem : d ∈ Submodule.span ℂ ({x, y} : Set (H n)) :=
+        hd_def ▸ Submodule.sub_mem _ hw_mem
+          (Submodule.smul_mem _ _ (Submodule.subset_span (by simp)))
+      exact hv_def ▸ Submodule.smul_mem _ _ hd_mem
+    have hgv_le : g v ≤ g x := hmax v hv_mem hvnorm
+    have hK_nonneg : 0 ≤ g x - g v := by linarith
+    have hcomb_norm : ∀ ε : ℝ, ‖e1 + ε • e2‖ ^ 2 = 1 + ε ^ 2 := by
+      intro ε
+      rw [EuclideanSpace.norm_eq, Real.sq_sqrt (by positivity)]
+      simp [he1_def, he2_def, Fin.sum_univ_three, sq_abs]
+    have hQexpand : ∀ ε : ℝ,
+        Q (e1 + ε • e2) = Q e1 + ε ^ 2 * Q e2 + ε * QuadraticMap.polar Q e1 e2 := by
+      intro ε
+      have h1 := QuadraticMap.map_add Q e1 (ε • e2)
+      simp only [QuadraticMap.map_smul, QuadraticMap.polar_smul_right, smul_eq_mul] at h1
+      nlinarith [h1]
+    have hQ_bound : ∀ ε : ℝ, Q (e1 + ε • e2) ≤ g x * (1 + ε ^ 2) := by
+      intro ε
+      set nrm : ℝ := ‖e1 + ε • e2‖ with hnrm_def
+      have hnrm_sq : nrm ^ 2 = 1 + ε ^ 2 := hcomb_norm ε
+      have hnrm_pos : 0 < nrm := by
+        have hpos : (0 : ℝ) < 1 + ε ^ 2 := by positivity
+        nlinarith [sq_nonneg (nrm - 1), norm_nonneg (e1 + ε • e2), hnrm_sq]
+      set nε : E3 := (nrm⁻¹ : ℝ) • (e1 + ε • e2) with hnε_def
+      have hnε_norm : ‖nε‖ = 1 := by
+        rw [hnε_def, norm_smul, Real.norm_eq_abs, abs_inv, abs_of_pos hnrm_pos,
+          inv_mul_cancel₀ hnrm_pos.ne']
+      have hQnε : Q nε = (nrm ^ 2)⁻¹ * Q (e1 + ε • e2) := by
+        rw [hnε_def, QuadraticMap.map_smul, smul_eq_mul]; ring
+      have hrsnε_norm : ‖realSection triple nε‖ = 1 := by
+        rw [realSection_norm triple htriple_orth]; exact hnε_norm
+      have hcomp : realSection triple (e1 + ε • e2) = (1 : ℂ) • x + (ε : ℂ) • v + (0 : ℂ) • z := by
+        unfold realSection
+        rw [Fin.sum_univ_three]
+        simp [he1_def, he2_def, htriple_def]
+      have hsmul_comp : realSection triple nε = (nrm⁻¹ : ℂ) • realSection triple (e1 + ε • e2) := by
+        rw [hnε_def]
+        unfold realSection
+        rw [Finset.smul_sum]
+        refine Finset.sum_congr rfl (fun i _ => ?_)
+        rw [smul_smul]; congr 1
+        simp only [PiLp.smul_apply, smul_eq_mul]
+        push_cast; ring
+      have hrsnε_mem : realSection triple nε ∈ Submodule.span ℂ ({x, y} : Set (H n)) := by
+        rw [hsmul_comp, hcomp, one_smul, zero_smul, add_zero]
+        exact Submodule.smul_mem _ _ (Submodule.add_mem _ (Submodule.subset_span (by simp))
+          (Submodule.smul_mem _ _ hv_mem))
+      have hglenε : g (realSection triple nε) ≤ g x := hmax _ hrsnε_mem hrsnε_norm
+      have hQeq : Q nε = g (realSection triple nε) := by
+        rw [← hQ nε, homogExt_of_unit hrsnε_norm]
+      rw [hQeq] at hQnε
+      have hle : (nrm ^ 2)⁻¹ * Q (e1 + ε • e2) ≤ g x := by rw [← hQnε]; exact hglenε
+      rw [hnrm_sq] at hle
+      have hpos : (0 : ℝ) < 1 + ε ^ 2 := by positivity
+      have := mul_le_mul_of_nonneg_left hle hpos.le
+      rwa [← mul_assoc, mul_inv_cancel₀ hpos.ne', one_mul, mul_comm (1 + ε ^ 2) (g x)] at this
+    have hbound : ∀ ε : ℝ, ε * QuadraticMap.polar Q e1 e2 ≤ ε ^ 2 * (g x - g v) := by
+      intro ε
+      have h1 := hQ_bound ε
+      rw [hQexpand ε, hQe1, hQe2] at h1
+      nlinarith [h1]
+    have hB_zero : QuadraticMap.polar Q e1 e2 = 0 := by
+      by_contra hBne
+      set K : ℝ := g x - g v with hK_def2
+      set ε0 : ℝ := QuadraticMap.polar Q e1 e2 / (K + 1) with hε0_def
+      have hden_pos : 0 < K + 1 := by linarith
+      have hidentity : ε0 * QuadraticMap.polar Q e1 e2 - ε0 ^ 2 * K
+          = (QuadraticMap.polar Q e1 e2) ^ 2 / (K + 1) ^ 2 := by
+        rw [hε0_def]; field_simp; ring
+      have hpos : 0 < (QuadraticMap.polar Q e1 e2) ^ 2 / (K + 1) ^ 2 := by positivity
+      have h := hbound ε0
+      linarith [hidentity, hpos, h]
+    have hQ_ab : ∀ a b : ℝ, Q (a • e1 + b • e2) = a ^ 2 * g x + b ^ 2 * g v := by
+      intro a b
+      have h1 := QuadraticMap.map_add Q (a • e1) (b • e2)
+      simp only [QuadraticMap.map_smul, QuadraticMap.polar_smul_left,
+        QuadraticMap.polar_smul_right, hB_zero, smul_eq_mul, hQe1, hQe2] at h1
+      nlinarith [h1]
+    have hy_sub : y - ⟪x, y⟫_ℂ • x = (starRingEnd ℂ c' * (s : ℂ)) • v := by
+      rw [hxy_val, ← hy_eq, mul_smul, ← smul_sub, ← hd_def, hd_eq_v, ← smul_smul]
+    have hscalar_norm : ‖starRingEnd ℂ c' * (s : ℂ)‖ = s := by
+      rw [norm_mul, RCLike.norm_conj, hc'norm, one_mul, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_pos hs_pos]
+    have hq_sub : homogExt g (y - ⟪x, y⟫_ℂ • x) = s ^ 2 * g v := by
+      rw [hy_sub, homogExt_smul hphase, hscalar_norm, homogExt_of_unit hvnorm]
+    have hgy_eq : g y = α ^ 2 * g x + s ^ 2 * g v := by
+      have hcombQ := hQ_ab α s
+      have hrs_eq : realSection triple (α • e1 + s • e2) = w := by
+        have hcomp2 : realSection triple (α • e1 + s • e2)
+            = (α : ℂ) • x + (s : ℂ) • v + (0 : ℂ) • z := by
+          unfold realSection
+          rw [Fin.sum_univ_three]
+          simp [he1_def, he2_def, htriple_def]
+        rw [hcomp2, zero_smul, add_zero, ← hd_eq_v, hd_def]
+        abel
+      have hQw : Q (α • e1 + s • e2) = g w := by
+        rw [← hQ (α • e1 + s • e2), hrs_eq, homogExt_of_unit hwnorm]
+      rw [hQw, hg_wy] at hcombQ
+      exact hcombQ
+    rw [homogExt_of_unit hy, hq_sub, hgy_eq]
+    ring
+
 end CFrameSections
 
 end
