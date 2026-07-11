@@ -545,6 +545,43 @@ theorem quadratic_polar_bound {Q : QuadraticForm ℝ E3} {W : ℝ}
   rw [abs_le]
   constructor <;> nlinarith [h1, h2, h3, hval]
 
+/-- **M3-5(c) (corollaire).** Si `0 ≤ Q ≤ W‖·‖²`, `Q` est `2W`-lipschitzienne sur la sphère
+unité. Preuve : `Q.polar (a+b) (a-b) = 2(Q a - Q b)` (identités de polarisation), borné par
+`2W‖a+b‖‖a-b‖ ≤ 4W‖a-b‖` via `quadratic_polar_bound` et `‖a+b‖ ≤ 2`. -/
+theorem quadratic_lipschitz {Q : QuadraticForm ℝ E3} {W : ℝ}
+    (hQ_nonneg : ∀ x : E3, 0 ≤ Q x) (hQ_le : ∀ x : E3, Q x ≤ W * ‖x‖ ^ 2)
+    {a b : E3} (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) :
+    |Q a - Q b| ≤ 2 * W * ‖a - b‖ := by
+  have hWnonneg : 0 ≤ W := by
+    by_contra hW
+    exact absurd ((hQ_nonneg a).trans (hQ_le a))
+      (not_le.mpr (mul_neg_of_neg_of_pos (not_le.mp hW) (by rw [ha]; norm_num)))
+  have hQa_neg : Q (-b) = Q b := by
+    rw [show (-b : E3) = (-1 : ℝ) • b from (neg_one_smul ℝ b).symm, QuadraticMap.map_smul]; ring
+  have hpolar_ab_neg : QuadraticMap.polar Q a (-b) = -QuadraticMap.polar Q a b := by
+    rw [show (-b : E3) = (-1 : ℝ) • b from (neg_one_smul ℝ b).symm, QuadraticMap.polar_smul_right,
+      neg_one_smul]
+  have h1 : Q (a + b) = Q a + Q b + QuadraticMap.polar Q a b := by rw [QuadraticMap.polar]; ring
+  have h2 : Q (a - b) = Q a + Q b - QuadraticMap.polar Q a b := by
+    have heq : a - b = a + -b := by abel
+    have h3 : Q (a + -b) = Q a + Q (-b) + QuadraticMap.polar Q a (-b) := by
+      rw [QuadraticMap.polar]; ring
+    rw [heq, h3, hQa_neg, hpolar_ab_neg]; ring
+  have hpolar_sum : QuadraticMap.polar Q (a + b) (a - b)
+      = Q ((a + b) + (a - b)) - Q (a + b) - Q (a - b) := by rw [QuadraticMap.polar]
+  have hsum2a : (a + b) + (a - b) = (2 : ℝ) • a := by rw [two_smul]; abel
+  have hQ2a : Q ((2 : ℝ) • a) = 4 * Q a := by rw [QuadraticMap.map_smul]; ring
+  have hpolar_eq : QuadraticMap.polar Q (a + b) (a - b) = 2 * (Q a - Q b) := by
+    rw [hpolar_sum, hsum2a, hQ2a, h1, h2]; ring
+  have hbound := quadratic_polar_bound hQ_nonneg hQ_le (a + b) (a - b)
+  rw [hpolar_eq, abs_mul] at hbound
+  norm_num at hbound
+  have hnormab : ‖a + b‖ ≤ 2 := by
+    calc ‖a + b‖ ≤ ‖a‖ + ‖b‖ := norm_add_le a b
+    _ = 2 := by rw [ha, hb]; norm_num
+  nlinarith [hbound, hnormab, norm_nonneg (a - b), abs_nonneg (Q a - Q b),
+    mul_le_mul_of_nonneg_right hnormab (mul_nonneg hWnonneg (norm_nonneg (a - b)))]
+
 end CFrameSections
 
 end
