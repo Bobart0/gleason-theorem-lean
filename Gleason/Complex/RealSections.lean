@@ -412,6 +412,42 @@ theorem homogExt_realSection (v : Fin 3 → H n) (hv : Orthonormal ℂ v) :
         rw [Complex.norm_real, Real.norm_eq_abs, abs_of_pos (norm_pos_iff.mpr hx0)]
     _ = Q x := hgoal
 
+/- ═══════════════════════════════════════════════════════════════════
+   M3-5. Continuité Lipschitz de `g` (via un ajustement de phase et la
+   borne polaire de `Q_v`) puis existence d'un maximum sur toute
+   sous-espace non nul (compacité).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **M3-5(a).** Ajustement de phase : pour deux vecteurs unitaires `u, w`, il existe une
+phase `c` (`‖c‖ = 1`) qui aligne `⟪u, c•w⟫` sur le réel positif `‖⟪u,w⟫‖`, et rapproche
+`c•w` de `u` (au sens large) par rapport à `w`. -/
+theorem exists_phase_adjust (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
+    ∃ c : ℂ, ‖c‖ = 1 ∧ ⟪u, c • w⟫_ℂ = (‖⟪u, w⟫_ℂ‖ : ℂ) ∧ ‖u - c • w‖ ≤ ‖u - w‖ := by
+  by_cases hz : ⟪u, w⟫_ℂ = 0
+  · exact ⟨1, by norm_num, by rw [one_smul, hz]; simp, by rw [one_smul]⟩
+  · set z : ℂ := ⟪u, w⟫_ℂ with hz_def
+    set c : ℂ := (starRingEnd ℂ z) / (‖z‖ : ℂ) with hc_def
+    have hznorm : ‖z‖ ≠ 0 := norm_ne_zero_iff.mpr hz
+    have hznormC : (‖z‖ : ℂ) ≠ 0 := by exact_mod_cast hznorm
+    have hnormz_castnorm : ‖(‖z‖ : ℂ)‖ = ‖z‖ := by simp
+    have hre_castz : RCLike.re ((‖z‖ : ℝ) : ℂ) = ‖z‖ := by simp
+    have hcnorm : ‖c‖ = 1 := by
+      rw [hc_def, norm_div, RCLike.norm_conj, hnormz_castnorm, div_self hznorm]
+    have hinner : ⟪u, c • w⟫_ℂ = (‖z‖ : ℂ) := by
+      rw [inner_smul_right, hc_def, div_mul_eq_mul_div, RCLike.conj_mul, sq]
+      field_simp
+      norm_cast
+    refine ⟨c, hcnorm, hinner, ?_⟩
+    have hcw_norm : ‖c • w‖ = 1 := by rw [norm_smul, hcnorm, hw, one_mul]
+    have h1 : ‖u - c • w‖ ^ 2 = 2 - 2 * ‖z‖ := by
+      rw [norm_sub_sq (𝕜 := ℂ), hu, hcw_norm, hinner, hre_castz]; ring
+    have h2 : ‖u - w‖ ^ 2 = 2 - 2 * RCLike.re (⟪u, w⟫_ℂ) := by
+      rw [norm_sub_sq (𝕜 := ℂ), hu, hw]; ring
+    have h3 : RCLike.re (⟪u, w⟫_ℂ) ≤ ‖z‖ := RCLike.re_le_norm z
+    have h4 : ‖u - c • w‖ ^ 2 ≤ ‖u - w‖ ^ 2 := by rw [h1, h2]; linarith [h3]
+    have h5 := Real.sqrt_le_sqrt h4
+    rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq (norm_nonneg _)] at h5
+
 end CFrameSections
 
 end
