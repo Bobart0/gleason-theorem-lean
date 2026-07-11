@@ -123,5 +123,112 @@ theorem ProjMeasure.frameFunction_phase (m : ProjMeasure n) (c : ℂ) (x : H n)
   unfold ProjMeasure.frameFunction
   rw [Submodule.span_singleton_smul_eq hc0.isUnit]
 
+/- ═══════════════════════════════════════════════════════════════════
+   M3-2. Invariance de `∑ g(v i)` par changement de base orthonormée
+   d'un même sous-espace (engendré par `v` ou par `v'`).
+   ═══════════════════════════════════════════════════════════════════ -/
+
+/-- **M3-2.** Si `v, v' : Fin k → H n` sont orthonormées et engendrent le même
+sous-espace, les sommes `∑ g(v i)` et `∑ g(v' i)` coïncident, pour `g` frame
+function complexe de poids `W`. Preuve : étend `v` en base `b` de `H n`
+(`exists_orthonormalBasis_extension_complex`) ; la famille hybride `w`
+(`v'` sur les `k` premières positions, la queue de `b` ensuite) est
+orthonormée — la queue de `b` est orthogonale à `span(range v) = span(range v')`
+donc à chaque `v' i` — donc base ; les deux sommes valent `W` (`hg`), la
+queue commune s'annule par soustraction. -/
+theorem cframe_sum_invariant {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W)
+    {k : ℕ} (hk : k ≤ n) (v v' : Fin k → H n) (hv : Orthonormal ℂ v) (hv' : Orthonormal ℂ v')
+    (hspan : Submodule.span ℂ (Set.range v) = Submodule.span ℂ (Set.range v')) :
+    ∑ i, g (v i) = ∑ i, g (v' i) := by
+  have hzero_symm : ∀ x y : H n, ⟪x, y⟫_ℂ = 0 → ⟪y, x⟫_ℂ = 0 := by
+    intro x y hxy
+    have h := congrArg (starRingEnd ℂ) hxy
+    rwa [inner_conj_symm, map_zero] at h
+  obtain ⟨b, hb⟩ := exists_orthonormalBasis_extension_complex hk v hv
+  set w : Fin n → H n := fun j => if h : j.1 < k then v' ⟨j.1, h⟩ else b j with hw_def
+  have hw_lt : ∀ j : Fin n, ∀ h : j.1 < k, w j = v' ⟨j.1, h⟩ := fun j h => by simp [hw_def, h]
+  have hw_ge : ∀ j : Fin n, ¬ j.1 < k → w j = b j := fun j h => by simp [hw_def, h]
+  have hw_castLE : ∀ i : Fin k, w (Fin.castLE hk i) = v' i := by
+    intro i
+    rw [hw_lt (Fin.castLE hk i) (by simp)]
+    exact congrArg v' (Fin.ext rfl)
+  have hb_tail_orth : ∀ j : Fin n, ¬ j.1 < k → ∀ x ∈ Submodule.span ℂ (Set.range v),
+      ⟪b j, x⟫_ℂ = 0 := by
+    intro j hj x hx
+    refine Submodule.span_induction ?_ ?_ ?_ ?_ hx
+    · rintro y ⟨i, rfl⟩
+      rw [← hb i]
+      have hij : j ≠ Fin.castLE hk i := by
+        intro heq; apply hj; rw [heq]; simp
+      exact b.orthonormal.2 hij
+    · simp
+    · intro y z _ _ hy hz; rw [inner_add_right, hy, hz, add_zero]
+    · intro c y _ hy; rw [inner_smul_right, hy, mul_zero]
+  have hw_orth : Orthonormal ℂ w := by
+    constructor
+    · intro j
+      by_cases hj : j.1 < k
+      · rw [hw_lt j hj]; exact hv'.1 _
+      · rw [hw_ge j hj]; exact b.orthonormal.1 j
+    · intro i j hij
+      by_cases hi : i.1 < k <;> by_cases hj : j.1 < k
+      · rw [hw_lt i hi, hw_lt j hj]
+        have hij' : (⟨i.1, hi⟩ : Fin k) ≠ ⟨j.1, hj⟩ := by
+          simp only [ne_eq, Fin.mk.injEq]
+          intro heq; exact hij (Fin.ext heq)
+        exact hv'.2 hij'
+      · rw [hw_lt i hi, hw_ge j hj]
+        have hvi : v' ⟨i.1, hi⟩ ∈ Submodule.span ℂ (Set.range v) := by
+          rw [hspan]; exact Submodule.subset_span ⟨⟨i.1, hi⟩, rfl⟩
+        exact hzero_symm _ _ (hb_tail_orth j hj (v' ⟨i.1, hi⟩) hvi)
+      · rw [hw_ge i hi, hw_lt j hj]
+        have hvj : v' ⟨j.1, hj⟩ ∈ Submodule.span ℂ (Set.range v) := by
+          rw [hspan]; exact Submodule.subset_span ⟨⟨j.1, hj⟩, rfl⟩
+        exact hb_tail_orth i hi (v' ⟨j.1, hj⟩) hvj
+      · rw [hw_ge i hi, hw_ge j hj]; exact b.orthonormal.2 hij
+  have hcard : Module.finrank ℂ (H n) = Fintype.card (Fin n) := by simp
+  have hw_univ : Orthonormal ℂ ((Set.univ : Set (Fin n)).restrict w) :=
+    ⟨fun i => hw_orth.1 i.1, fun i j hij => hw_orth.2 (fun h => hij (Subtype.ext h))⟩
+  obtain ⟨bw, hbw⟩ := hw_univ.exists_orthonormalBasis_extension_of_card_eq hcard
+  have hbw' : ∀ i, bw i = w i := fun i => hbw i (Set.mem_univ i)
+  have hsumb := hg b
+  have hsumbw := hg bw
+  have hD_zero_outside : ∀ i : Fin n, (∀ j : Fin k, Fin.castLE hk j ≠ i) →
+      g (b i) - g (bw i) = 0 := by
+    intro i hi
+    have hnotlt : ¬ i.1 < k := fun hlt => hi ⟨i.1, hlt⟩ (Fin.ext rfl)
+    rw [hbw' i, hw_ge i hnotlt]; ring
+  have hsum_eq : ∑ i : Fin n, (g (b i) - g (bw i)) = ∑ j : Fin k, (g (v j) - g (v' j)) := by
+    have hstep1 : ∑ i : Fin n, (g (b i) - g (bw i))
+        = ∑ i ∈ Finset.univ.image (Fin.castLE hk), (g (b i) - g (bw i)) := by
+      symm
+      apply Finset.sum_subset (Finset.subset_univ _)
+      intro i _ hi
+      apply hD_zero_outside i
+      intro j hji
+      exact hi (Finset.mem_image.mpr ⟨j, Finset.mem_univ j, hji⟩)
+    rw [hstep1, Finset.sum_image (fun a _ b _ hab => Fin.castLE_injective hk hab)]
+    apply Finset.sum_congr rfl
+    intro j _
+    rw [hb j, hbw' (Fin.castLE hk j), hw_castLE j]
+  have hsum0 : ∑ i : Fin n, (g (b i) - g (bw i)) = 0 := by
+    rw [Finset.sum_sub_distrib, hsumb, hsumbw, sub_self]
+  rw [hsum0] at hsum_eq
+  have hfinal := hsum_eq.symm
+  rw [Finset.sum_sub_distrib] at hfinal
+  linarith [hfinal]
+
+/-- **M3-2 (corollaire).** Une frame function complexe positive est bornée par son poids :
+complète `x` en base (`k := 1`) et compare au terme isolé, les autres étant `≥ 0` (`hnn`). -/
+theorem cframe_le_weight {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W)
+    (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ g x) (hn1 : 1 ≤ n) {x : H n} (hx : ‖x‖ = 1) : g x ≤ W := by
+  have hvx : Orthonormal ℂ (fun _ : Fin 1 => x) :=
+    ⟨fun _ => hx, fun i j hij => absurd (Subsingleton.elim i j) hij⟩
+  obtain ⟨b, hb⟩ := exists_orthonormalBasis_extension_complex hn1 (fun _ : Fin 1 => x) hvx
+  have hsum := hg b
+  have h0 : b (Fin.castLE hn1 0) = x := hb 0
+  rw [← h0, ← hsum]
+  exact Finset.single_le_sum (fun i _ => hnn (b i) (b.norm_eq_one i)) (Finset.mem_univ _)
+
 end
 end Gleason
