@@ -448,6 +448,39 @@ theorem exists_phase_adjust (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
     have h5 := Real.sqrt_le_sqrt h4
     rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq (norm_nonneg _)] at h5
 
+/-- **M3-5(b).** Version COMPLEXE de `exists_unit_orthogonal_to_pair` (`Real3/SphereGeometry.lean`,
+bloc A) : l'orthogonal (complexe) d'un span engendré par deux vecteurs, de dimension complexe
+`≤ 2`, est non nul dès que `dim_ℂ (H n) ≥ 3`. C'est ICI, et seulement ici, que l'hypothèse
+`n ≥ 3` intervient dans tout le bloc M3 : c'est le théorème qui remplace l'axiome analytique de
+l'ancien développement (comptage de dimension complexe, pas de produit vectoriel en dimension
+`n` quelconque). -/
+theorem exists_unit_orthogonal_to_pair_complex (hn : 3 ≤ n) (a b : H n) :
+    ∃ u : H n, ‖u‖ = 1 ∧ ⟪u, a⟫_ℂ = 0 ∧ ⟪u, b⟫_ℂ = 0 := by
+  classical
+  set K : Submodule ℂ (H n) := Submodule.span ℂ ({a, b} : Set (H n)) with hK_def
+  have hKfin : Module.finrank ℂ K ≤ 2 := by
+    refine le_trans (finrank_span_le_card ({a, b} : Set (H n))) ?_
+    simp only [Set.toFinset_insert, Set.toFinset_singleton]
+    exact (Finset.card_insert_le _ _).trans (by simp)
+  have hHn : Module.finrank ℂ (H n) = n := by simp
+  have hsum : Module.finrank ℂ K + Module.finrank ℂ Kᗮ = Module.finrank ℂ (H n) :=
+    Submodule.finrank_add_finrank_orthogonal K
+  have hKperp : 1 ≤ Module.finrank ℂ Kᗮ := by omega
+  have hne : Kᗮ ≠ ⊥ := by
+    intro h; rw [h, finrank_bot] at hKperp; omega
+  obtain ⟨w, hwK, hw0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hne
+  have haK : a ∈ K := Submodule.subset_span (by simp)
+  have hbK : b ∈ K := Submodule.subset_span (by simp)
+  have hwa : ⟪w, a⟫_ℂ = 0 := Submodule.inner_left_of_mem_orthogonal haK hwK
+  have hwb : ⟪w, b⟫_ℂ = 0 := Submodule.inner_left_of_mem_orthogonal hbK hwK
+  have hwnorm : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hw0
+  have hwnormC : (‖w‖ : ℂ) ≠ 0 := by exact_mod_cast hwnorm
+  refine ⟨(‖w‖⁻¹ : ℂ) • w, ?_, ?_, ?_⟩
+  · rw [norm_smul, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_norm,
+      inv_mul_cancel₀ hwnorm]
+  · rw [inner_smul_left, hwa, mul_zero]
+  · rw [inner_smul_left, hwb, mul_zero]
+
 end CFrameSections
 
 end
