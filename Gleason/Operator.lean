@@ -70,6 +70,38 @@ theorem bornValue_span_singleton (ρ : H n →ₗ[ℂ] H n) (x : H n) (hx : ‖x
   rw [show ⟪x, ρ x⟫_ℂ = starRingEnd ℂ ⟪ρ x, x⟫_ℂ from (inner_conj_symm x (ρ x)).symm,
     Complex.conj_re]
 
+/-- **O2a(ii).** Version `Finset` de `projL_sup_of_isOrtho` : pour une famille finie de
+sous-espaces deux à deux orthogonaux, la projection sur le sup est la somme des
+projections. Même induction que `ProjMeasure.sum_eq_of_pairwise_isOrtho` (M3-1). -/
+theorem projL_sup_of_pairwise_isOrtho {ι : Type*} [DecidableEq ι] (s : Finset ι)
+    (A : ι → Submodule ℂ (H n)) (hortho : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → A i ⟂ A j) :
+    projL (s.sup A) = ∑ i ∈ s, projL (A i) := by
+  induction s using Finset.induction with
+  | empty => simp [projL]
+  | insert i s hi ih =>
+    have hi_ortho : A i ⟂ s.sup A := by
+      apply Finset.sup_induction Submodule.isOrtho_bot_right
+        (fun a1 h1 a2 h2 => Submodule.isOrtho_sup_right.mpr ⟨h1, h2⟩)
+      intro j hj
+      exact hortho i (Finset.mem_insert_self i s) j (Finset.mem_insert_of_mem hj)
+        (fun heq => hi (heq ▸ hj))
+    have hs_sub : ∀ j ∈ s, ∀ k ∈ s, j ≠ k → A j ⟂ A k := fun j hj k hk hjk =>
+      hortho j (Finset.mem_insert_of_mem hj) k (Finset.mem_insert_of_mem hk) hjk
+    rw [Finset.sup_insert, projL_sup_of_isOrtho hi_ortho, ih hs_sub, Finset.sum_insert hi]
+
+/-- **O2a(iii).** `bornValue ρ` est finiment additive sur les familles orthogonales : la
+trace distribue sur `+` (`map_sum`), et `Re` distribue sur les sommes finies. -/
+theorem bornValue_sum_of_pairwise_isOrtho (ρ : H n →ₗ[ℂ] H n) {ι : Type*} [DecidableEq ι]
+    (s : Finset ι) (A : ι → Submodule ℂ (H n))
+    (hortho : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → A i ⟂ A j) :
+    bornValue ρ (s.sup A) = ∑ i ∈ s, bornValue ρ (A i) := by
+  unfold bornValue
+  rw [projL_sup_of_pairwise_isOrtho s A hortho]
+  have hcomp_sum : ρ ∘ₗ (∑ i ∈ s, projL (A i)) = ∑ i ∈ s, ρ ∘ₗ projL (A i) := by
+    ext v
+    simp [LinearMap.comp_apply, LinearMap.sum_apply, map_sum]
+  rw [hcomp_sum, map_sum, Complex.re_sum]
+
 /-- (Phase O) De la représentation quadratique sur les droites à la formule de Born
 sur TOUS les sous-espaces : découper `A` en droites orthogonales, additivité des deux
 côtés. -/
