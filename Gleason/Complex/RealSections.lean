@@ -481,6 +481,70 @@ theorem exists_unit_orthogonal_to_pair_complex (hn : 3 ≤ n) (a b : H n) :
   · rw [inner_smul_left, hwa, mul_zero]
   · rw [inner_smul_left, hwb, mul_zero]
 
+/-- **M3-5(c) (générique, réel).** Si `0 ≤ Q ≤ W‖·‖²` sur `E3`, la forme polaire de `Q` est
+bornée : `|Q.polar a b| ≤ 2W‖a‖‖b‖`. Preuve : rééchelonnage `t := √(‖b‖/‖a‖)` dans
+`0 ≤ Q(t•a ± t⁻¹•b) = t²Q(a) + t⁻²Q(b) ± Q.polar a b`, puis `Q(a) ≤ W‖a‖²` etc. et
+`t²‖a‖² = t⁻²‖b‖² = ‖a‖‖b‖` par le choix de `t`. -/
+theorem quadratic_polar_bound {Q : QuadraticForm ℝ E3} {W : ℝ}
+    (hQ_nonneg : ∀ x : E3, 0 ≤ Q x) (hQ_le : ∀ x : E3, Q x ≤ W * ‖x‖ ^ 2) (a b : E3) :
+    |QuadraticMap.polar Q a b| ≤ 2 * W * ‖a‖ * ‖b‖ := by
+  by_cases ha0 : a = 0
+  · simp [ha0, QuadraticMap.polar]
+  by_cases hb0 : b = 0
+  · simp [hb0, QuadraticMap.polar]
+  have hanorm : (0 : ℝ) < ‖a‖ := norm_pos_iff.mpr ha0
+  have hbnorm : (0 : ℝ) < ‖b‖ := norm_pos_iff.mpr hb0
+  have hWnonneg : 0 ≤ W := by
+    by_contra hW
+    exact absurd ((hQ_nonneg a).trans (hQ_le a))
+      (not_le.mpr (mul_neg_of_neg_of_pos (not_le.mp hW) (by positivity)))
+  set t : ℝ := Real.sqrt (‖b‖ / ‖a‖) with ht_def
+  have ht_pos : 0 < t := Real.sqrt_pos.mpr (div_pos hbnorm hanorm)
+  have ht_ne : t ≠ 0 := ht_pos.ne'
+  have htsq : t ^ 2 = ‖b‖ / ‖a‖ := Real.sq_sqrt (by positivity)
+  have hexpand_plus : Q (t • a + t⁻¹ • b)
+      = t ^ 2 * Q a + t⁻¹ ^ 2 * Q b + QuadraticMap.polar Q a b := by
+    have hpolar_eq : QuadraticMap.polar Q (t • a) (t⁻¹ • b) = QuadraticMap.polar Q a b := by
+      rw [QuadraticMap.polar_smul_left, QuadraticMap.polar_smul_right, smul_smul,
+        mul_inv_cancel₀ ht_ne, one_smul]
+    have hQsum : Q (t • a + t⁻¹ • b)
+        = Q (t • a) + Q (t⁻¹ • b) + QuadraticMap.polar Q (t • a) (t⁻¹ • b) := by
+      rw [QuadraticMap.polar]; ring
+    rw [hQsum, hpolar_eq, QuadraticMap.map_smul, QuadraticMap.map_smul, smul_eq_mul, smul_eq_mul]
+    ring
+  have hexpand_minus : Q (t • a - t⁻¹ • b)
+      = t ^ 2 * Q a + t⁻¹ ^ 2 * Q b - QuadraticMap.polar Q a b := by
+    have heq : t • a - t⁻¹ • b = t • a + (-1 : ℝ) • (t⁻¹ • b) := by
+      rw [neg_one_smul]; abel
+    have hpolar_eq : QuadraticMap.polar Q (t • a) ((-1 : ℝ) • (t⁻¹ • b))
+        = -QuadraticMap.polar Q a b := by
+      rw [QuadraticMap.polar_smul_right, QuadraticMap.polar_smul_left,
+        QuadraticMap.polar_smul_right, smul_smul, smul_smul,
+        show (-1 : ℝ) * t * t⁻¹ = -1 from by field_simp, neg_one_smul]
+    have hQneg : Q ((-1 : ℝ) • (t⁻¹ • b)) = Q (t⁻¹ • b) := by
+      rw [QuadraticMap.map_smul]; ring
+    rw [heq]
+    have hQsum : Q (t • a + (-1 : ℝ) • (t⁻¹ • b)) = Q (t • a) + Q ((-1 : ℝ) • (t⁻¹ • b)) +
+        QuadraticMap.polar Q (t • a) ((-1 : ℝ) • (t⁻¹ • b)) := by
+      rw [QuadraticMap.polar]; ring
+    rw [hQsum, hpolar_eq, hQneg, QuadraticMap.map_smul, QuadraticMap.map_smul, smul_eq_mul,
+      smul_eq_mul]
+    ring
+  have h1 : 0 ≤ t ^ 2 * Q a + t⁻¹ ^ 2 * Q b + QuadraticMap.polar Q a b := by
+    rw [← hexpand_plus]; exact hQ_nonneg _
+  have h2 : 0 ≤ t ^ 2 * Q a + t⁻¹ ^ 2 * Q b - QuadraticMap.polar Q a b := by
+    rw [← hexpand_minus]; exact hQ_nonneg _
+  have h3 : t ^ 2 * Q a + t⁻¹ ^ 2 * Q b ≤ t ^ 2 * (W * ‖a‖ ^ 2) + t⁻¹ ^ 2 * (W * ‖b‖ ^ 2) := by
+    gcongr
+    · exact hQ_le a
+    · exact hQ_le b
+  have hval : t ^ 2 * (W * ‖a‖ ^ 2) + t⁻¹ ^ 2 * (W * ‖b‖ ^ 2) = 2 * W * ‖a‖ * ‖b‖ := by
+    rw [htsq, inv_pow, htsq]
+    field_simp
+    ring
+  rw [abs_le]
+  constructor <;> nlinarith [h1, h2, h3, hval]
+
 end CFrameSections
 
 end
