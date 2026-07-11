@@ -230,5 +230,75 @@ theorem cframe_le_weight {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W)
   rw [← h0, ← hsum]
   exact Finset.single_le_sum (fun i _ => hnn (b i) (b.norm_eq_one i)) (Finset.mem_univ _)
 
+/- ═══════════════════════════════════════════════════════════════════
+   M3-3 à M3-9 : hypothèses de section communes. `g` frame function
+   complexe positive et invariante de phase, `n ≥ 3`.
+   ═══════════════════════════════════════════════════════════════════ -/
+
+section CFrameSections
+
+variable {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ g x)
+  (hphase : ∀ (c : ℂ) (x : H n), ‖c‖ = 1 → g (c • x) = g x) (hn : 3 ≤ n)
+
+/-- **M3-3.** Extension homogène de degré 2 de `g` (nulle en `0`, `g` sur la sphère unité
+sinon, prolongée par `q(c • z) = ‖c‖² q z`). -/
+noncomputable def homogExt (g : H n → ℝ) (z : H n) : ℝ :=
+  if z = 0 then 0 else ‖z‖ ^ 2 * g ((‖z‖⁻¹ : ℂ) • z)
+
+theorem homogExt_of_unit {z : H n} (hz : ‖z‖ = 1) : homogExt g z = g z := by
+  have hz0 : z ≠ 0 := by intro h; rw [h, norm_zero] at hz; norm_num at hz
+  unfold homogExt
+  rw [if_neg hz0, hz]
+  norm_num
+
+include hphase in
+theorem homogExt_smul (c : ℂ) (z : H n) :
+    homogExt g (c • z) = ‖c‖ ^ 2 * homogExt g z := by
+  by_cases hz0 : z = 0
+  · subst hz0; simp [homogExt]
+  by_cases hc0 : c = 0
+  · subst hc0; simp [homogExt]
+  have hcz0 : c • z ≠ 0 := smul_ne_zero hc0 hz0
+  have hcnorm : ‖c‖ ≠ 0 := norm_ne_zero_iff.mpr hc0
+  have hznorm : ‖z‖ ≠ 0 := norm_ne_zero_iff.mpr hz0
+  have hcC : (‖c‖ : ℂ) ≠ 0 := by exact_mod_cast hcnorm
+  have hzC : (‖z‖ : ℂ) ≠ 0 := by exact_mod_cast hznorm
+  unfold homogExt
+  rw [if_neg hcz0, if_neg hz0]
+  have harg : (‖c • z‖⁻¹ : ℂ) • (c • z) = (c / (‖c‖ : ℂ)) • ((‖z‖⁻¹ : ℂ) • z) := by
+    rw [norm_smul, smul_smul, smul_smul]
+    congr 1
+    push_cast
+    field_simp
+  rw [harg, hphase (c / (‖c‖ : ℂ)) ((‖z‖⁻¹ : ℂ) • z) (by
+    rw [norm_div, Complex.norm_real, Real.norm_eq_abs, abs_norm, div_self hcnorm])]
+  rw [norm_smul]
+  ring
+
+include hnn in
+theorem homogExt_nonneg (z : H n) : 0 ≤ homogExt g z := by
+  by_cases hz0 : z = 0
+  · subst hz0; simp [homogExt]
+  unfold homogExt
+  rw [if_neg hz0]
+  have hunit : ‖(‖z‖⁻¹ : ℂ) • z‖ = 1 := by
+    rw [norm_smul, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_norm,
+      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hz0)]
+  exact mul_nonneg (by positivity) (hnn _ hunit)
+
+include hg hnn hn in
+theorem homogExt_le (z : H n) : homogExt g z ≤ W * ‖z‖ ^ 2 := by
+  by_cases hz0 : z = 0
+  · subst hz0; simp [homogExt]
+  unfold homogExt
+  rw [if_neg hz0]
+  have hunit : ‖(‖z‖⁻¹ : ℂ) • z‖ = 1 := by
+    rw [norm_smul, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_norm,
+      inv_mul_cancel₀ (norm_ne_zero_iff.mpr hz0)]
+  have hle := cframe_le_weight hg hnn (by omega) hunit
+  nlinarith [sq_nonneg ‖z‖, hle]
+
+end CFrameSections
+
 end
 end Gleason
