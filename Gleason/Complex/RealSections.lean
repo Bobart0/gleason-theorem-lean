@@ -582,6 +582,148 @@ theorem quadratic_lipschitz {Q : QuadraticForm ℝ E3} {W : ℝ}
   nlinarith [hbound, hnormab, norm_nonneg (a - b), abs_nonneg (Q a - Q b),
     mul_le_mul_of_nonneg_right hnormab (mul_nonneg hWnonneg (norm_nonneg (a - b)))]
 
+include hg hnn in
+/-- Le poids d'une frame function complexe positive est positif (somme de valeurs `≥ 0`
+sur n'importe quelle base). -/
+theorem cframe_weight_nonneg : 0 ≤ W := by
+  have hsum := hg (EuclideanSpace.basisFun (Fin n) ℂ)
+  rw [← hsum]
+  exact Finset.sum_nonneg (fun i _ => hnn _ ((EuclideanSpace.basisFun (Fin n) ℂ).norm_eq_one i))
+
+set_option maxHeartbeats 1000000 in
+include hg hnn hphase hn in
+/-- **M3-5(d).** `g` est `2W`-lipschitzienne sur la sphère unité. Ajustement de phase
+(`exists_phase_adjust`) pour se ramener à `⟪u,w'⟫` réel `≥ 0` ; cas d'égalité de
+Cauchy-Schwarz si `‖⟪u,w'⟫‖ = 1` (alors `w' = u`) ; sinon Gram-Schmidt (`v`, unitaire,
+`⟪u,v⟫ = 0`), complété par `z` (`exists_unit_orthogonal_to_pair_complex`, LE point d'entrée
+de `n ≥ 3`) en triplet orthonormé `(u,v,z)` ; la section réelle associée envoie
+`p := (1,0,0)` sur `u` et `q := (C,s,0)` sur `w'`, et `quadratic_lipschitz` conclut. -/
+theorem g_lipschitz (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
+    |g u - g w| ≤ 2 * W * ‖u - w‖ := by
+  obtain ⟨c₀, hc₀norm, hc₀inner, hc₀close⟩ := exists_phase_adjust u w hu hw
+  set w' : H n := c₀ • w with hw'_def
+  have hw'norm : ‖w'‖ = 1 := by rw [hw'_def, norm_smul, hc₀norm, hw, one_mul]
+  have hgw' : g w' = g w := hphase c₀ w hc₀norm
+  set C : ℝ := ‖⟪u, w⟫_ℂ‖ with hC_def
+  have hCnonneg : 0 ≤ C := norm_nonneg _
+  have hCle1 : C ≤ 1 := by
+    calc C ≤ ‖u‖ * ‖w‖ := norm_inner_le_norm u w
+    _ = 1 := by rw [hu, hw]; ring
+  have hWnonneg : 0 ≤ W := cframe_weight_nonneg hg hnn
+  suffices hsuff : |g u - g w'| ≤ 2 * W * ‖u - w'‖ by
+    calc |g u - g w| = |g u - g w'| := by rw [hgw']
+    _ ≤ 2 * W * ‖u - w'‖ := hsuff
+    _ ≤ 2 * W * ‖u - w‖ := mul_le_mul_of_nonneg_left hc₀close (by positivity)
+  by_cases hC1 : C = 1
+  · have heq_inner : ⟪u, w'⟫_ℂ = (‖u‖ : ℂ) * (‖w'‖ : ℂ) := by
+      rw [hc₀inner, hu, hw'norm, hC1]; norm_num
+    have heq : (‖w'‖ : ℂ) • u = (‖u‖ : ℂ) • w' := inner_eq_norm_mul_iff.mp heq_inner
+    rw [hu, hw'norm] at heq
+    simp only [Complex.ofReal_one, one_smul] at heq
+    rw [heq]; simp
+  · have hCsq_lt : C ^ 2 < 1 := by nlinarith [lt_of_le_of_ne hCle1 hC1, hCnonneg]
+    set s : ℝ := Real.sqrt (1 - C ^ 2) with hs_def
+    have hs_pos : 0 < s := Real.sqrt_pos.mpr (by linarith [hCsq_lt])
+    have hssq : s ^ 2 = 1 - C ^ 2 := Real.sq_sqrt (by linarith [hCsq_lt])
+    have hCssq : C ^ 2 + s ^ 2 = 1 := by rw [hssq]; ring
+    have hwu_inner : ⟪w', u⟫_ℂ = (C : ℂ) := by
+      rw [(inner_conj_symm w' u).symm, hc₀inner, Complex.conj_ofReal]
+    set d : H n := w' - (C : ℂ) • u with hd_def
+    have huu : ⟪u, u⟫_ℂ = 1 := by rw [inner_self_eq_norm_sq_to_K, hu]; norm_num
+    have hud : ⟪u, d⟫_ℂ = 0 := by
+      have hstep : ⟪u, d⟫_ℂ = ⟪u, w'⟫_ℂ - (C : ℂ) * ⟪u, u⟫_ℂ := by
+        rw [hd_def, inner_sub_right]
+        congr 1
+        exact inner_smul_right u u (C : ℂ)
+      rw [hstep, huu, mul_one, hc₀inner, sub_self]
+    have hCu_inner : ⟪w', (C : ℂ) • u⟫_ℂ = ((C ^ 2 : ℝ) : ℂ) := by
+      rw [inner_smul_right, hwu_inner]; push_cast; ring
+    have hCu_norm : ‖(C : ℂ) • u‖ = C := by
+      rw [norm_smul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hCnonneg, hu, mul_one]
+    have hre_Csq : RCLike.re (((C ^ 2 : ℝ)) : ℂ) = C ^ 2 := RCLike.ofReal_re _
+    have hd2 : ‖d‖ ^ 2 = s ^ 2 := by
+      rw [hd_def, norm_sub_sq (𝕜 := ℂ), hw'norm, hCu_inner, hre_Csq, hCu_norm, hssq]; ring
+    have hdnorm : ‖d‖ = s := by
+      have hh := Real.sqrt_sq (norm_nonneg d)
+      rw [hd2, Real.sqrt_sq hs_pos.le] at hh
+      exact hh.symm
+    set v : H n := (s⁻¹ : ℂ) • d with hv_def
+    have hvnorm : ‖v‖ = 1 := by
+      rw [hv_def, norm_smul, norm_inv, Complex.norm_real, Real.norm_eq_abs, abs_of_pos hs_pos,
+        hdnorm, inv_mul_cancel₀ hs_pos.ne']
+    have huv : ⟪u, v⟫_ℂ = 0 := by rw [hv_def, inner_smul_right, hud, mul_zero]
+    have hvu : ⟪v, u⟫_ℂ = 0 := by
+      rw [(inner_conj_symm v u).symm, huv, map_zero]
+    obtain ⟨z, hznorm, hzu, hzv⟩ := exists_unit_orthogonal_to_pair_complex hn u v
+    have huz : ⟪u, z⟫_ℂ = 0 := by
+      rw [(inner_conj_symm u z).symm, hzu, map_zero]
+    have hvz : ⟪v, z⟫_ℂ = 0 := by
+      rw [(inner_conj_symm v z).symm, hzv, map_zero]
+    have hvv : ⟪v, v⟫_ℂ = 1 := by rw [inner_self_eq_norm_sq_to_K, hvnorm]; norm_num
+    have hzz : ⟪z, z⟫_ℂ = 1 := by rw [inner_self_eq_norm_sq_to_K, hznorm]; norm_num
+    set triple : Fin 3 → H n := ![u, v, z] with htriple_def
+    have htriple_orth : Orthonormal ℂ triple := by
+      rw [orthonormal_iff_ite]
+      intro i j
+      fin_cases i <;> fin_cases j <;>
+        simp [htriple_def, hu, hvnorm, hznorm, huv, hvu, huz, hzu, hvz, hzv]
+    obtain ⟨Q, hQ⟩ := homogExt_realSection hg hnn hphase hn triple htriple_orth
+    set p : E3 := (!₂[1, 0, 0] : E3) with hp_def
+    set q : E3 := (!₂[C, s, 0] : E3) with hq_def
+    have hrsp : realSection triple p = u := by
+      unfold realSection
+      rw [Fin.sum_univ_three]
+      simp [hp_def, htriple_def]
+    have hrsq : realSection triple q = w' := by
+      have hcomp : realSection triple q = (C : ℂ) • u + (s : ℂ) • v + (0 : ℂ) • z := by
+        unfold realSection
+        rw [Fin.sum_univ_three]
+        simp [hq_def, htriple_def]
+      rw [hcomp, zero_smul, add_zero, hv_def, hd_def, smul_smul,
+        show (s : ℂ) * (s⁻¹ : ℂ) = 1 from by
+          rw [← Complex.ofReal_inv, ← Complex.ofReal_mul, mul_inv_cancel₀ hs_pos.ne',
+            Complex.ofReal_one],
+        one_smul]
+      abel
+    have hgu_eq : g u = Q p := by
+      have h1 : ‖realSection triple p‖ = 1 := by rw [hrsp]; exact hu
+      rw [← hrsp, ← homogExt_of_unit (g := g) h1]
+      exact hQ p
+    have hgw'_eq : g w' = Q q := by
+      have h1 : ‖realSection triple q‖ = 1 := by rw [hrsq]; exact hw'norm
+      rw [← hrsq, ← homogExt_of_unit (g := g) h1]
+      exact hQ q
+    have hQ_nonneg : ∀ x : E3, 0 ≤ Q x := fun x => by rw [← hQ x]; exact homogExt_nonneg hnn _
+    have hQ_le : ∀ x : E3, Q x ≤ W * ‖x‖ ^ 2 := fun x => by
+      rw [← hQ x, ← realSection_norm triple htriple_orth x]
+      exact homogExt_le hg hnn hn _
+    have hpnorm : ‖p‖ = 1 := by
+      rw [hp_def, EuclideanSpace.norm_eq]
+      simp [Fin.sum_univ_three]
+    have hqnorm : ‖q‖ = 1 := by
+      have hqsq : ‖q‖ ^ 2 = C ^ 2 + s ^ 2 := by
+        rw [hq_def, EuclideanSpace.norm_eq, Real.sq_sqrt (by positivity)]
+        simp [Fin.sum_univ_three, sq_abs]
+      rw [hCssq] at hqsq
+      have hh := Real.sqrt_sq (norm_nonneg q)
+      rw [hqsq] at hh
+      rw [← hh]; norm_num
+    have hlip := quadratic_lipschitz hQ_nonneg hQ_le hpnorm hqnorm
+    rw [← hgu_eq, ← hgw'_eq] at hlip
+    have hpq_eq : realSection triple (p - q) = u - w' := by
+      have hlinear : realSection triple (p - q)
+          = realSection triple p - realSection triple q := by
+        unfold realSection
+        rw [← Finset.sum_sub_distrib]
+        refine Finset.sum_congr rfl (fun i _ => ?_)
+        rw [← sub_smul]
+        congr 1
+        simp [PiLp.sub_apply]
+      rw [hlinear, hrsp, hrsq]
+    have hpq_norm : ‖p - q‖ = ‖u - w'‖ := by
+      rw [← realSection_norm triple htriple_orth (p - q), hpq_eq]
+    rwa [hpq_norm] at hlip
+
 end CFrameSections
 
 end
