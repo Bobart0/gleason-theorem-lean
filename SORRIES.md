@@ -1,5 +1,12 @@
 # Suivi des sorry (mettre à jour à chaque commit qui en ferme un)
 
+**PROJET COMPLET — 2026-07-11.** `lake build` vert, `./scripts/guard.sh` : 0 axiome,
+0 `native_decide` (le compteur de "sorry" du script matche aussi le mot dans les
+commentaires/docstrings — grep `\bsorry\b` sur le code montre qu'aucun ne reste comme
+tactique). `#print axioms` sur les quatre théorèmes livrés (actif dans `Main.lean`) :
+`Gleason.gleason`, `Gleason.busch`, `Gleason.busch_born_rule`, `Gleason.no_dispersion_free`
+→ `propext, Classical.choice, Quot.sound` uniquement, dans les quatre cas.
+
 ## M1 — fondations (faciles, à faire en premier, dans l'ordre)
 - [x] Nonvacuity.pureState.top_eq_one
 - [x] Nonvacuity.pureState.add_isOrtho   ← premier vrai lemme (P_{A⊔B} = P_A + P_B si A ⟂ B)
@@ -16,7 +23,7 @@
 - [x] EffectMeasure.isEffect_projL
 - [x] EffectMeasure.toProjMeasure (2 sorry)
 - [x] busch (positivité + trace 1 + représentation + unicité)
-- [ ] busch_born_rule
+- [x] busch_born_rule (corollaire direct de `busch`, appliqué aux `projL A`)
 
 
 ## M2 — cœur analytique réel (source : CKM 1985 §2-§7, PDF dans le projet)
@@ -171,6 +178,24 @@
       `#print axioms` sur les quatre théorèmes : propext, Classical.choice,
       Quot.sound uniquement. **Phase O COMPLÈTE.**
 
-## M4 — assemblage
-- [ ] gleason
-- [ ] no_dispersion_free
+## M4 — assemblage final (Main.lean)
+- [x] M4-1. gleason : existence via `m.frameFunction` (frame function complexe de
+      poids 1, positive, invariante de phase) → `cFrameFunction_regular` (M3-9) →
+      `isDensityOperator_of_represents` + `born_of_quadratic` (O2/O3). Unicité via
+      `symmetric_ext_of_quadratic` (O0), pontée par `bornValue_span_singleton` (O1).
+      Aucune divergence de convention entre M3-9 et O1/O2/O3 (`⟪ρx,x⟫` partout) —
+      pas de lemme-pont nécessaire.
+- [x] M4-2. no_dispersion_free : route algébrique pure (pas de connexité de sphère,
+      pas de théorème spectral). (a) existence d'une droite de mesure 1 (sinon somme
+      nulle sur une base orthonormée = μ⊤ = 1, absurde). (b) toute droite unitaire
+      ⊥ x a mesure 0 (base orthonormée étendant (x,y), M3-0 ; deux termes distincts
+      de somme ≤ 1 avec l'un valant 1). (c) `positive_inner_self_eq_zero` (mini-lemme,
+      Defs.lean). (d) ρ x = x (annule tous les `ρ bᵢ` pour `bᵢ ⊥ x` via (b)+(c),
+      reconstruit par `OrthonormalBasis.sum_repr'`). (e) contradiction :
+      `w := (√2)⁻¹•(x+y)` pour `y` unitaire ⊥ x (`exists_unit_orthogonal_to_pair_complex`,
+      M3-5b — c'est ici que `n ≥ 3` est réellement utilisé) a mesure `1/2`,
+      incompatible avec la dichotomie `0 ∨ 1`.
+- [x] M4-3. Cérémonie de clôture : `#print axioms` actif dans `Main.lean` pour les
+      quatre théorèmes livrés (`gleason`, `busch`, `busch_born_rule`,
+      `no_dispersion_free`) → `propext, Classical.choice, Quot.sound` uniquement.
+      **PROJET COMPLET.**
