@@ -107,7 +107,7 @@ les sous-espaces : `A` se découpe en droites orthogonales (base orthonormée de
 espace de Hilbert en soi), et l'égalité passe à la somme des deux côtés (M3-1 pour `μ`,
 O2a(iii) pour `bornValue`). -/
 theorem born_of_quadratic (m : ProjMeasure n) (ρ : H n →ₗ[ℂ] H n)
-    (hρ : LinearMap.IsSymmetric ρ)
+    (_hρ : LinearMap.IsSymmetric ρ)
     (h : ∀ x : H n, ‖x‖ = 1 → m.frameFunction x = (⟪ρ x, x⟫_ℂ).re) :
     ∀ A : Submodule ℂ (H n), m.μ A = bornValue ρ A := by
   intro A

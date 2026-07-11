@@ -664,7 +664,7 @@ private theorem riesz_rep_assembly {n : ℕ}
         hD3 _ (fun p : Fin n × Fin n => F p.1 p.2)]
     exact Finset.sum_congr rfl fun p _ => by rw [(hD4 p.1 p.2).2]
 
-theorem riesz_selfAdjoint (hn : 1 ≤ n)
+theorem riesz_selfAdjoint (_hn : 1 ≤ n)
     (g : (H n →ₗ[ℂ] H n) → ℝ)
     (hg_add : ∀ S T : H n →ₗ[ℂ] H n, S.IsSymmetric → T.IsSymmetric →
       g (S + T) = g S + g T)
