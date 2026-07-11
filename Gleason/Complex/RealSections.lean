@@ -334,6 +334,84 @@ theorem realSection_norm (v : Fin 3 → H n) (hv : Orthonormal ℂ v) (x : E3) :
   rw [h2, Real.sqrt_sq (norm_nonneg x)] at hh
   exact hh.symm
 
+theorem realSection_orthonormal (v : Fin 3 → H n) (hv : Orthonormal ℂ v)
+    (b : OrthonormalBasis (Fin 3) ℝ E3) : Orthonormal ℂ (fun i => realSection v (b i)) := by
+  rw [orthonormal_iff_ite]
+  intro i j
+  rw [realSection_inner v hv, b.inner_eq_ite]
+  split_ifs <;> simp
+
+theorem realSection_span (v : Fin 3 → H n) (hv : Orthonormal ℂ v)
+    (b : OrthonormalBasis (Fin 3) ℝ E3) : Submodule.span ℂ (Set.range (fun i => realSection v (b i)))
+    = Submodule.span ℂ (Set.range v) := by
+  have hle : Submodule.span ℂ (Set.range (fun i => realSection v (b i)))
+      ≤ Submodule.span ℂ (Set.range v) := by
+    rw [Submodule.span_le]
+    rintro y ⟨i, rfl⟩
+    unfold realSection
+    exact Submodule.sum_mem _ (fun j _ => Submodule.smul_mem _ _ (Submodule.subset_span ⟨j, rfl⟩))
+  have hfin_v : Module.finrank ℂ (Submodule.span ℂ (Set.range v)) = 3 := by
+    have h := finrank_span_eq_card hv.linearIndependent
+    simpa using h
+  have hfin_b : Module.finrank ℂ (Submodule.span ℂ (Set.range (fun i => realSection v (b i))))
+      = 3 := by
+    have h := finrank_span_eq_card (realSection_orthonormal v hv b).linearIndependent
+    simpa using h
+  exact Submodule.eq_of_le_of_finrank_eq hle (by rw [hfin_b, hfin_v])
+
+include hg hn in
+theorem realSection_isFrameFunction (v : Fin 3 → H n) (hv : Orthonormal ℂ v) :
+    IsFrameFunction (fun x => g (realSection v x)) (∑ i, g (v i)) := by
+  intro b
+  exact (cframe_sum_invariant hg hn v (fun i => realSection v (b i)) hv
+    (realSection_orthonormal v hv b) (realSection_span v hv b).symm).symm
+
+include hnn in
+theorem realSection_nonneg (v : Fin 3 → H n) (hv : Orthonormal ℂ v) {x : E3} (hx : ‖x‖ = 1) :
+    0 ≤ g (realSection v x) := by
+  rw [← realSection_norm v hv x] at hx; exact hnn _ hx
+
+include hg hnn hn in
+theorem exists_Qv (v : Fin 3 → H n) (hv : Orthonormal ℂ v) :
+    ∃ Q : QuadraticForm ℝ E3, ∀ x : E3, ‖x‖ = 1 → g (realSection v x) = Q x :=
+  frameFunction_regular (fun x => g (realSection v x)) (∑ i, g (v i))
+    (realSection_isFrameFunction hg hn v hv) (fun _ hx => realSection_nonneg hnn v hv hx)
+
+include hg hnn hphase hn in
+/-- **M3-4 (assemblage).** Extension homogène de `g` composée avec la section réelle : c'est
+la forme quadratique `Q_v` donnée par `frameFunction_regular` (M2), prolongée à `E3` entier par
+homogénéité (`homogExt_smul` et `QuadraticMap.map_smul` des deux côtés). -/
+theorem homogExt_realSection (v : Fin 3 → H n) (hv : Orthonormal ℂ v) :
+    ∃ Q : QuadraticForm ℝ E3, ∀ x : E3, homogExt g (realSection v x) = Q x := by
+  obtain ⟨Q, hQ⟩ := exists_Qv hg hnn hn v hv
+  refine ⟨Q, fun x => ?_⟩
+  by_cases hx0 : x = 0
+  · subst hx0; simp [homogExt, realSection, map_zero]
+  have hxnorm : ‖x‖ ≠ 0 := norm_ne_zero_iff.mpr hx0
+  have hunit : ‖(‖x‖⁻¹ : ℝ) • x‖ = 1 := by
+    rw [norm_smul, Real.norm_eq_abs, abs_of_pos (by positivity), inv_mul_cancel₀ hxnorm]
+  have hcomp : realSection v x = (‖x‖ : ℂ) • realSection v ((‖x‖⁻¹ : ℝ) • x) := by
+    unfold realSection
+    rw [Finset.smul_sum]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [smul_smul]
+    congr 1
+    simp only [PiLp.smul_apply, smul_eq_mul]
+    push_cast
+    field_simp [show (‖x‖ : ℂ) ≠ 0 from by exact_mod_cast hxnorm]
+  have hunit' : ‖realSection v ((‖x‖⁻¹ : ℝ) • x)‖ = 1 := by
+    rw [realSection_norm v hv]; exact hunit
+  have hgoal : ‖x‖ ^ 2 * homogExt g (realSection v ((‖x‖⁻¹ : ℝ) • x)) = Q x := by
+    rw [homogExt_of_unit hunit', hQ _ hunit, QuadraticMap.map_smul, smul_eq_mul]
+    field_simp
+  calc homogExt g (realSection v x)
+      = homogExt g ((‖x‖ : ℂ) • realSection v ((‖x‖⁻¹ : ℝ) • x)) := by rw [hcomp]
+    _ = ‖(‖x‖ : ℂ)‖ ^ 2 * homogExt g (realSection v ((‖x‖⁻¹ : ℝ) • x)) :=
+        homogExt_smul hphase (‖x‖ : ℂ) (realSection v ((‖x‖⁻¹ : ℝ) • x))
+    _ = ‖x‖ ^ 2 * homogExt g (realSection v ((‖x‖⁻¹ : ℝ) • x)) := by
+        rw [Complex.norm_real, Real.norm_eq_abs, abs_of_pos (norm_pos_iff.mpr hx0)]
+    _ = Q x := hgoal
+
 end CFrameSections
 
 end
