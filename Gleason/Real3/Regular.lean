@@ -1,7 +1,7 @@
 import Gleason.Real3.Attainment
 
 /-!
-# Régularité des frame functions positives sur ℝ³ (CKM 1985 §7)
+**FR.** # Régularité des frame functions positives sur ℝ³ (CKM 1985 §7)
 
 **Théorème central du cœur analytique réel** : toute frame function positive
 sur S² est la restriction d'une forme quadratique. Chemin CKM : cadre extrémal
@@ -14,6 +14,20 @@ argument à h:=g−f (poids nul, H6-H8) conclu par un argument de dénombrement
 `heven` (parité) n'est PAS une hypothèse de ce théorème : elle est dérivable de
 `hf` seule via `frameFunction_even` (P2, bloc A) — retirée de l'énoncé
 d'origine (acté dans SORRIES.md, cf. règle 3 de CLAUDE.md).
+
+**EN.** # Regularity of positive frame functions on ℝ³ (CKM 1985 §7)
+
+**Central theorem of the real analytic core**: every positive frame function on
+S² is the restriction of a quadratic form. CKM route: extremal frame (p,q,r) via
+block G (H1, pivot lemma FILLING a gap in the paper), two axis rotations
+(p̂, r̂) and the identities they induce (H3), a coincidence "Claim" `f=g` on six
+great circles (H4), then a second pass of the same argument on `h:=g−f`
+(zero weight, H6-H8) concluded by a counting argument (H9, six circles / two
+pairs of zeros / pigeonhole) that rules out `h≠0`.
+
+`heven` (parity) is NOT a hypothesis of this theorem: it is derivable from `hf`
+alone via `frameFunction_even` (P2, block A) — removed from the original
+statement (recorded in SORRIES.md, cf. rule 3 of CLAUDE.md).
 -/
 
 namespace Gleason
@@ -29,12 +43,21 @@ noncomputable section
    `φ(S1) = Wφ - φ(P) - φ(R0)` et `φ(U) = φ(R0)`.
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **H1.** `S1` orthogonal à `P` et `R0` (existence garantie en dimension 3,
+/--
+**FR.** **H1.** `S1` orthogonal à `P` et `R0` (existence garantie en dimension 3,
 `exists_unit_orthogonal_to_pair`) ; deux frames `(P,S1,T1)` et `(R0,S1,T2)`
 encadrent `φ(S1)` par les extrema globaux `φ(P)` (max) et `φ(R0)` (min) des
 DEUX côtés à la fois, forçant l'égalité `φ(S1) = Wφ-φ(P)-φ(R0)` (double
 encadrement). `U` complète `(P,S1)` en un troisième frame, donnant
-`φ(U) = φ(R0)` par soustraction. -/
+`φ(U) = φ(R0)` par soustraction.
+
+**EN.** **H1.** `S1` orthogonal to `P` and `R0` (existence guaranteed in
+dimension 3, `exists_unit_orthogonal_to_pair`); two frames `(P,S1,T1)` and
+`(R0,S1,T2)` sandwich `φ(S1)` between the global extrema `φ(P)` (max) and
+`φ(R0)` (min) from BOTH sides at once, forcing the equality
+`φ(S1) = Wφ-φ(P)-φ(R0)` (double sandwich). `U` completes `(P,S1)` into a third
+frame, giving `φ(U) = φ(R0)` by subtraction.
+-/
 theorem exists_extremal_frame {φ : E3 → ℝ} {Wφ : ℝ} (hφ : IsFrameFunction φ Wφ)
     {P : E3} (hP : ‖P‖ = 1) (hPmax : ∀ t : E3, ‖t‖ = 1 → φ t ≤ φ P)
     {R0 : E3} (hR0 : ‖R0‖ = 1) (hR0lb : ∀ t : E3, ‖t‖ = 1 → φ R0 ≤ φ t)
@@ -78,8 +101,13 @@ theorem exists_extremal_frame {φ : E3 → ℝ} {Wφ : ℝ} (hφ : IsFrameFuncti
    nouveau en H8 pour `h`.
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **H3 (préliminaire).** Même preuve que `exists_rotate90`, avec `(X,Y)`
-prescrits au lieu d'auto-générés. -/
+/--
+**FR.** **H3 (préliminaire).** Même preuve que `exists_rotate90`, avec `(X,Y)`
+prescrits au lieu d'auto-générés.
+
+**EN.** **H3 (preliminary).** Same proof as `exists_rotate90`, with `(X,Y)`
+prescribed instead of auto-generated.
+-/
 private theorem exists_axis_rotate {A X Y : E3} (hA : ‖A‖ = 1) (hX : ‖X‖ = 1) (hY : ‖Y‖ = 1)
     (hAX : ⟪A, X⟫ = 0) (hAY : ⟪A, Y⟫ = 0) (hXY : ⟪X, Y⟫ = 0) :
     ∃ ρ : E3 ≃ₗᵢ[ℝ] E3, ρ A = A ∧ ρ X = Y ∧ ρ Y = -X ∧
@@ -112,9 +140,15 @@ private theorem exists_axis_rotate {A X Y : E3} (hA : ‖A‖ = 1) (hX : ‖X‖
     real_inner_self_eq_norm_sq, hX, hY, hXY, hYX]
   ring
 
-/-- **H3 (préliminaire).** Action de `ρ` (issue de `exists_axis_rotate`) sur
+/--
+**FR.** **H3 (préliminaire).** Action de `ρ` (issue de `exists_axis_rotate`) sur
 les coordonnées `⟪A,·⟫, ⟪X,·⟫, ⟪Y,·⟫` : `⟪a,ρs⟫ = ⟪ρ⁻¹a,s⟫` (isométrie),
-puis `ρ⁻¹A=A, ρ⁻¹Y=X, ρ⁻¹X=-Y` (inverse de `ρA=A,ρX=Y,ρY=-X`). -/
+puis `ρ⁻¹A=A, ρ⁻¹Y=X, ρ⁻¹X=-Y` (inverse de `ρA=A,ρX=Y,ρY=-X`).
+
+**EN.** **H3 (preliminary).** Action of `ρ` (from `exists_axis_rotate`) on the
+coordinates `⟪A,·⟫, ⟪X,·⟫, ⟪Y,·⟫`: `⟪a,ρs⟫ = ⟪ρ⁻¹a,s⟫` (isometry), then
+`ρ⁻¹A=A, ρ⁻¹Y=X, ρ⁻¹X=-Y` (inverse of `ρA=A,ρX=Y,ρY=-X`).
+-/
 private theorem axis_rotate_coords {A X Y : E3} {ρ : E3 ≃ₗᵢ[ℝ] E3}
     (hρA : ρ A = A) (hρX : ρ X = Y) (hρY : ρ Y = -X) (s : E3) :
     ⟪A, ρ s⟫ = ⟪A, s⟫ ∧ ⟪X, ρ s⟫ = -⟪Y, s⟫ ∧ ⟪Y, ρ s⟫ = ⟪X, s⟫ := by
@@ -144,7 +178,8 @@ private theorem axis_rotate_coords {A X Y : E3} {ρ : E3 ≃ₗᵢ[ℝ] E3}
    H3-H4 (Claim, lemme générique réutilisable en H8 pour h).
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **H3-H4 (Claim).** Étant `φ` frame function de poids `Wφ`, un triple
+/--
+**FR.** **H3-H4 (Claim).** Étant `φ` frame function de poids `Wφ`, un triple
 orthonormé `(P,Q,R)` avec `P` réalisant le sup, `R` l'inf, et
 `φ(Q) = Wφ-φ(P)-φ(R)` (H1), la forme `g(s) := φ(P)⟪P,s⟫²+φ(Q)⟪Q,s⟫²+φ(R)⟪R,s⟫²`
 coïncide avec `φ` sur les six grands cercles `⟪P,·⟫=±⟪Q,·⟫`, `⟪P,·⟫=±⟪R,·⟫`,
@@ -152,7 +187,20 @@ coïncide avec `φ` sur les six grands cercles `⟪P,·⟫=±⟪Q,·⟫`, `⟪P,
 (I) `φ+φ∘p̂ = g+g∘p̂` et (II) `φ+φ∘r̂ = g+g∘r̂` (F appliqué à `φ+φ∘p̂` au pôle `P`,
 à `-(φ+φ∘r̂)` au pôle `R`) ; les cas `x=y`/`y=z` sont primaires
 (`p̂(p̂(r̂s))=-s` / `p̂(r̂(r̂s))=-s` sous ces conditions précises, + parité), les
-quatre autres s'y ramènent via l'action de `p̂`/`r̂` sur les coordonnées. -/
+quatre autres s'y ramènent via l'action de `p̂`/`r̂` sur les coordonnées.
+
+**EN.** **H3-H4 (Claim).** Given `φ` a frame function of weight `Wφ`, an
+orthonormal triple `(P,Q,R)` with `P` realizing the sup, `R` the inf, and
+`φ(Q) = Wφ-φ(P)-φ(R)` (H1), the form
+`g(s) := φ(P)⟪P,s⟫²+φ(Q)⟪Q,s⟫²+φ(R)⟪R,s⟫²` coincides with `φ` on the six great
+circles `⟪P,·⟫=±⟪Q,·⟫`, `⟪P,·⟫=±⟪R,·⟫`, `⟪Q,·⟫=±⟪R,·⟫`. Two axis rotations
+`P`/`R` (`p̂`,`r̂`) give two identities: (I) `φ+φ∘p̂ = g+g∘p̂` and
+(II) `φ+φ∘r̂ = g+g∘r̂` (F applied to `φ+φ∘p̂` at pole `P`, to `-(φ+φ∘r̂)` at
+pole `R`); the cases `x=y`/`y=z` are primary
+(`p̂(p̂(r̂s))=-s` / `p̂(r̂(r̂s))=-s` under these precise conditions, plus
+parity), the other four reduce to them via the action of `p̂`/`r̂` on the
+coordinates.
+-/
 theorem frame_eq_quadratic_of_extremal_triple {φ : E3 → ℝ} {Wφ : ℝ} (hφ : IsFrameFunction φ Wφ)
     {P Q R : E3} (hP : ‖P‖ = 1) (hQ : ‖Q‖ = 1) (hR : ‖R‖ = 1)
     (hPQ : ⟪P, Q⟫ = 0) (hPR : ⟪P, R⟫ = 0) (hQR : ⟪Q, R⟫ = 0)
@@ -349,9 +397,15 @@ theorem normSqQF_apply (b : OrthonormalBasis (Fin 3) ℝ E3) (s : E3) :
   ring
 
 set_option maxHeartbeats 2000000 in
-/-- **Régularité (Gleason réel, dimension 3).** Toute frame function positive
+/--
+**FR.** **Régularité (Gleason réel, dimension 3).** Toute frame function positive
 est quadratique sur la sphère (`heven` retirée : dérivable via
-`frameFunction_even`, cf. le commentaire d'en-tête). -/
+`frameFunction_even`, cf. le commentaire d'en-tête).
+
+**EN.** **Regularity (real Gleason, dimension 3).** Every positive frame function
+is quadratic on the sphere (`heven` removed: derivable via
+`frameFunction_even`, see the header comment).
+-/
 theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
     (hf : IsFrameFunction f W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ f x) :
     ∃ q : QuadraticForm ℝ E3, ∀ x, ‖x‖ = 1 → f x = q x := by

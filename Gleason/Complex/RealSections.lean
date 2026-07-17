@@ -2,7 +2,7 @@ import Gleason.Defs
 import Gleason.Real3.Regular
 
 /-!
-# Réduction complexe par sections réelles (Dvurečenskij, ch. 3)
+**FR.** # Réduction complexe par sections réelles (Dvurečenskij, ch. 3)
 
 Passage de ℝ³ (cœur analytique de `Real3/`) au cas complexe ℂⁿ, `n ≥ 3` :
 
@@ -17,6 +17,22 @@ Passage de ℝ³ (cœur analytique de `Real3/`) au cas complexe ℂⁿ, `n ≥ 3
 Jalon M3 complet (voir `SORRIES.md`) : `realSection` est le plongement ℝ-linéaire
 `E3 → H n` associé à un triplet orthonormé complexe (isométrique, préserve les phases),
 et `cFrameFunction_regular` (`Patching.lean`) est l'aboutissement de ce fichier.
+
+**EN.** # Complex reduction via real sections (Dvurečenskij, ch. 3)
+
+Passage from ℝ³ (analytic core of `Real3/`) to the complex case ℂⁿ, `n ≥ 3`:
+
+1. a complex frame function, restricted to a completely real REAL subspace of
+   dimension 3 (a "real section"), is a real frame function on ℝ³;
+2. `Real3.frameFunction_regular` gives a quadratic form on each section;
+3. patching the sections together (`Patching.lean`) produces a global sesquilinear
+   form — this is exactly where the old "obligation G" (sesquilinearity of the
+   polarization kernel) becomes a THEOREM, proved via the geometry of the sections
+   and the hypothesis `dim ≥ 3`, rather than by algebra alone.
+
+Milestone M3 complete (see `SORRIES.md`): `realSection` is the ℝ-linear embedding
+`E3 → H n` associated with a complex orthonormal triple (isometric, phase-preserving),
+and `cFrameFunction_regular` (`Patching.lean`) is the culmination of this file.
 -/
 
 namespace Gleason
@@ -37,9 +53,14 @@ variable {n : ℕ}
    générique en `𝕜`.
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- Toute famille orthonormée `v : Fin k → H n` (`k ≤ n`) se complète en une base
+/--
+**FR.** Toute famille orthonormée `v : Fin k → H n` (`k ≤ n`) se complète en une base
 orthonormée de `H n` qui coïncide avec `v` sur les `k` premières positions
-(`Fin.castLE`). -/
+(`Fin.castLE`).
+
+**EN.** Every orthonormal family `v : Fin k → H n` (`k ≤ n`) extends to an orthonormal
+basis of `H n` that agrees with `v` on the first `k` positions (`Fin.castLE`).
+-/
 theorem exists_orthonormalBasis_extension_complex {k : ℕ} (hk : k ≤ n) (v : Fin k → H n)
     (hv : Orthonormal ℂ v) :
     ∃ b : OrthonormalBasis (Fin n) ℂ (H n), ∀ i : Fin k, b (Fin.castLE hk i) = v i := by
@@ -65,14 +86,25 @@ theorem exists_orthonormalBasis_extension_complex {k : ℕ} (hk : k ≤ n) (v : 
 def IsCFrameFunction (g : H n → ℝ) (W : ℝ) : Prop :=
   ∀ b : OrthonormalBasis (Fin n) ℂ (H n), (∑ i, g (b i)) = W
 
-/-- La frame function d'une mesure de projection : `x ↦ μ (ℂ ∙ x)`. -/
+/--
+**FR.** La frame function d'une mesure de projection : `x ↦ μ (ℂ ∙ x)`.
+
+**EN.** The frame function of a projection measure: `x ↦ μ (ℂ ∙ x)`.
+-/
 def ProjMeasure.frameFunction (m : ProjMeasure n) : H n → ℝ :=
   fun x => m.μ (ℂ ∙ x)
 
-/-- **M3-1(b) préliminaire.** Additivité finie sur une famille deux à deux orthogonale
+/--
+**FR.** **M3-1(b) préliminaire.** Additivité finie sur une famille deux à deux orthogonale
 (indexée par un `Finset`) : généralise `add_isOrtho` par récurrence sur le `Finset`.
 `i ∈ s` orthogonal à `s.sup A` s'obtient de `i ⊥ A j` pour tout `j ∈ s` via
-`Submodule.isOrtho_iSup_right` (le sup fini est un cas particulier du sup indexé). -/
+`Submodule.isOrtho_iSup_right` (le sup fini est un cas particulier du sup indexé).
+
+**EN.** **M3-1(b) preliminary.** Finite additivity on a pairwise orthogonal family
+(indexed by a `Finset`): generalizes `add_isOrtho` by induction on the `Finset`.
+`i ∈ s` orthogonal to `s.sup A` follows from `i ⊥ A j` for all `j ∈ s` via
+`Submodule.isOrtho_iSup_right` (the finite sup is a special case of the indexed sup).
+-/
 theorem ProjMeasure.sum_eq_of_pairwise_isOrtho (m : ProjMeasure n) {ι : Type*} [DecidableEq ι]
     (s : Finset ι) (A : ι → Submodule ℂ (H n))
     (hortho : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → A i ⟂ A j) :
@@ -90,9 +122,15 @@ theorem ProjMeasure.sum_eq_of_pairwise_isOrtho (m : ProjMeasure n) {ι : Type*} 
       hortho j (Finset.mem_insert_of_mem hj) k (Finset.mem_insert_of_mem hk) hjk
     rw [Finset.sup_insert, m.add_isOrtho _ _ hi_ortho, ih hs_sub, Finset.sum_insert hi]
 
-/-- (Phase M) La frame function d'une mesure de projection est une frame function
+/--
+**FR.** (Phase M) La frame function d'une mesure de projection est une frame function
 complexe de poids 1. Indication : une base orthonormée découpe `⊤` en droites deux à
-deux orthogonales ; itérer `add_isOrtho` (via `sum_eq_of_pairwise_isOrtho`). -/
+deux orthogonales ; itérer `add_isOrtho` (via `sum_eq_of_pairwise_isOrtho`).
+
+**EN.** (Phase M) The frame function of a projection measure is a complex frame
+function of weight 1. Hint: an orthonormal basis splits `⊤` into pairwise orthogonal
+lines; iterate `add_isOrtho` (via `sum_eq_of_pairwise_isOrtho`).
+-/
 theorem ProjMeasure.isCFrameFunction (m : ProjMeasure n) :
     IsCFrameFunction m.frameFunction 1 := by
   intro b
@@ -114,8 +152,13 @@ theorem ProjMeasure.isCFrameFunction (m : ProjMeasure n) :
   unfold ProjMeasure.frameFunction
   exact hsum.symm
 
-/-- Invariance de phase : `g (c • x) = g x` pour `‖c‖ = 1` — automatique pour les
-frame functions issues de mesures, car `ℂ ∙ (c • x) = ℂ ∙ x`. -/
+/--
+**FR.** Invariance de phase : `g (c • x) = g x` pour `‖c‖ = 1` — automatique pour les
+frame functions issues de mesures, car `ℂ ∙ (c • x) = ℂ ∙ x`.
+
+**EN.** Phase invariance: `g (c • x) = g x` for `‖c‖ = 1` — automatic for frame
+functions arising from measures, since `ℂ ∙ (c • x) = ℂ ∙ x`.
+-/
 theorem ProjMeasure.frameFunction_phase (m : ProjMeasure n) (c : ℂ) (x : H n)
     (hc : ‖c‖ = 1) : m.frameFunction (c • x) = m.frameFunction x := by
   have hc0 : c ≠ 0 := by
@@ -128,14 +171,25 @@ theorem ProjMeasure.frameFunction_phase (m : ProjMeasure n) (c : ℂ) (x : H n)
    d'un même sous-espace (engendré par `v` ou par `v'`).
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **M3-2.** Si `v, v' : Fin k → H n` sont orthonormées et engendrent le même
+/--
+**FR.** **M3-2.** Si `v, v' : Fin k → H n` sont orthonormées et engendrent le même
 sous-espace, les sommes `∑ g(v i)` et `∑ g(v' i)` coïncident, pour `g` frame
 function complexe de poids `W`. Preuve : étend `v` en base `b` de `H n`
 (`exists_orthonormalBasis_extension_complex`) ; la famille hybride `w`
 (`v'` sur les `k` premières positions, la queue de `b` ensuite) est
 orthonormée — la queue de `b` est orthogonale à `span(range v) = span(range v')`
 donc à chaque `v' i` — donc base ; les deux sommes valent `W` (`hg`), la
-queue commune s'annule par soustraction. -/
+queue commune s'annule par soustraction.
+
+**EN.** **M3-2.** If `v, v' : Fin k → H n` are orthonormal and span the same
+subspace, the sums `∑ g(v i)` and `∑ g(v' i)` coincide, for `g` a complex frame
+function of weight `W`. Proof: extend `v` to a basis `b` of `H n`
+(`exists_orthonormalBasis_extension_complex`); the hybrid family `w`
+(`v'` on the first `k` positions, then the tail of `b`) is orthonormal — the tail
+of `b` is orthogonal to `span(range v) = span(range v')` and hence to each `v' i` —
+so it is a basis; both sums equal `W` (`hg`), and the common tail cancels by
+subtraction.
+-/
 theorem cframe_sum_invariant {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W)
     {k : ℕ} (hk : k ≤ n) (v v' : Fin k → H n) (hv : Orthonormal ℂ v) (hv' : Orthonormal ℂ v')
     (hspan : Submodule.span ℂ (Set.range v) = Submodule.span ℂ (Set.range v')) :
@@ -218,8 +272,14 @@ theorem cframe_sum_invariant {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction 
   rw [Finset.sum_sub_distrib] at hfinal
   linarith [hfinal]
 
-/-- **M3-2 (corollaire).** Une frame function complexe positive est bornée par son poids :
-complète `x` en base (`k := 1`) et compare au terme isolé, les autres étant `≥ 0` (`hnn`). -/
+/--
+**FR.** **M3-2 (corollaire).** Une frame function complexe positive est bornée par son poids :
+complète `x` en base (`k := 1`) et compare au terme isolé, les autres étant `≥ 0` (`hnn`).
+
+**EN.** **M3-2 (corollary).** A positive complex frame function is bounded by its
+weight: complete `x` into a basis (`k := 1`) and compare with the isolated term,
+the others being `≥ 0` (`hnn`).
+-/
 theorem cframe_le_weight {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W)
     (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ g x) (hn1 : 1 ≤ n) {x : H n} (hx : ‖x‖ = 1) : g x ≤ W := by
   have hvx : Orthonormal ℂ (fun _ : Fin 1 => x) :=
@@ -236,8 +296,13 @@ theorem cframe_le_weight {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W)
    complément orthogonal de `x` DANS `U`.
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **M3-7(a).** Pour `x` unitaire dans `U`, la projection `w - ⟪x,w⟫•x` de tout
-`w ∈ U` reste dans `U` (différence de deux éléments de `U`) et est orthogonale à `x`. -/
+/--
+**FR.** **M3-7(a).** Pour `x` unitaire dans `U`, la projection `w - ⟪x,w⟫•x` de tout
+`w ∈ U` reste dans `U` (différence de deux éléments de `U`) et est orthogonale à `x`.
+
+**EN.** **M3-7(a).** For `x` a unit vector in `U`, the projection `w - ⟪x,w⟫•x` of any
+`w ∈ U` remains in `U` (difference of two elements of `U`) and is orthogonal to `x`.
+-/
 theorem sub_proj_mem_inf_orthogonal {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
     (hxnorm : ‖x‖ = 1) {w : H n} (hw : w ∈ U) :
     w - ⟪x, w⟫_ℂ • x ∈ U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ := by
@@ -247,8 +312,13 @@ theorem sub_proj_mem_inf_orthogonal {U : Submodule ℂ (H n)} {x : H n} (hxU : x
     inner_self_eq_norm_sq_to_K, hxnorm]
   simp
 
-/-- **M3-7(b).** Décomposition orthogonale interne : pour `x` unitaire dans `U`, le complément
-orthogonal `U ⊓ (ℂ∙x)ᗮ` a une dimension de moins que `U`. -/
+/--
+**FR.** **M3-7(b).** Décomposition orthogonale interne : pour `x` unitaire dans `U`, le complément
+orthogonal `U ⊓ (ℂ∙x)ᗮ` a une dimension de moins que `U`.
+
+**EN.** **M3-7(b).** Internal orthogonal decomposition: for `x` a unit vector in `U`,
+the orthogonal complement `U ⊓ (ℂ∙x)ᗮ` has dimension one less than `U`.
+-/
 theorem finrank_inf_orthogonal_add_one {U : Submodule ℂ (H n)} {x : H n} (hxU : x ∈ U)
     (hxnorm : ‖x‖ = 1) :
     Module.finrank ℂ (U ⊓ (Submodule.span ℂ ({x} : Set (H n)))ᗮ : Submodule ℂ (H n))
@@ -262,8 +332,13 @@ theorem finrank_inf_orthogonal_add_one {U : Submodule ℂ (H n)} {x : H n} (hxU 
   rw [hfin1, inf_comm] at h
   omega
 
-/-- **M3-7(c).** Le plan complexe engendré par deux éléments d'un sous-espace `U` reste
-dans `U`. -/
+/--
+**FR.** **M3-7(c).** Le plan complexe engendré par deux éléments d'un sous-espace `U` reste
+dans `U`.
+
+**EN.** **M3-7(c).** The complex plane spanned by two elements of a subspace `U`
+remains in `U`.
+-/
 theorem span_pair_le_of_mem {U : Submodule ℂ (H n)} {x y : H n} (hx : x ∈ U) (hy : y ∈ U) :
     Submodule.span ℂ ({x, y} : Set (H n)) ≤ U := by
   rw [Submodule.span_le, Set.insert_subset_iff, Set.singleton_subset_iff]
@@ -279,8 +354,13 @@ section CFrameSections
 variable {g : H n → ℝ} {W : ℝ} (hg : IsCFrameFunction g W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ g x)
   (hphase : ∀ (c : ℂ) (x : H n), ‖c‖ = 1 → g (c • x) = g x) (hn : 3 ≤ n)
 
-/-- **M3-3.** Extension homogène de degré 2 de `g` (nulle en `0`, `g` sur la sphère unité
-sinon, prolongée par `q(c • z) = ‖c‖² q z`). -/
+/--
+**FR.** **M3-3.** Extension homogène de degré 2 de `g` (nulle en `0`, `g` sur la sphère unité
+sinon, prolongée par `q(c • z) = ‖c‖² q z`).
+
+**EN.** **M3-3.** Degree-2 homogeneous extension of `g` (zero at `0`, equal to `g` on
+the unit sphere otherwise, extended by `q(c • z) = ‖c‖² q z`).
+-/
 noncomputable def homogExt (g : H n → ℝ) (z : H n) : ℝ :=
   if z = 0 then 0 else ‖z‖ ^ 2 * g ((‖z‖⁻¹ : ℂ) • z)
 
@@ -345,9 +425,15 @@ theorem homogExt_le (z : H n) : homogExt g z ≤ W * ‖z‖ ^ 2 := by
    quadratique `Q_v`.
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- Section réelle associée à un triplet orthonormé complexe `v : Fin 3 → H n` :
+/--
+**FR.** Section réelle associée à un triplet orthonormé complexe `v : Fin 3 → H n` :
 plongement ℝ-linéaire (fonction nue, pas de bundling `LinearIsometry`) de `E3`
-dans `H n`. -/
+dans `H n`.
+
+**EN.** Real section associated with a complex orthonormal triple `v : Fin 3 → H n`:
+the (bare-function, not `LinearIsometry`-bundled) ℝ-linear embedding of `E3` into
+`H n`.
+-/
 noncomputable def realSection (v : Fin 3 → H n) (x : E3) : H n := ∑ i, (x i : ℂ) • v i
 
 theorem realSection_inner (v : Fin 3 → H n) (hv : Orthonormal ℂ v) (x y : E3) :
@@ -417,9 +503,16 @@ theorem exists_Qv (v : Fin 3 → H n) (hv : Orthonormal ℂ v) :
     (realSection_isFrameFunction hg hn v hv) (fun _ hx => realSection_nonneg hnn v hv hx)
 
 include hg hnn hphase hn in
-/-- **M3-4 (assemblage).** Extension homogène de `g` composée avec la section réelle : c'est
+/--
+**FR.** **M3-4 (assemblage).** Extension homogène de `g` composée avec la section réelle : c'est
 la forme quadratique `Q_v` donnée par `frameFunction_regular` (M2), prolongée à `E3` entier par
-homogénéité (`homogExt_smul` et `QuadraticMap.map_smul` des deux côtés). -/
+homogénéité (`homogExt_smul` et `QuadraticMap.map_smul` des deux côtés).
+
+**EN.** **M3-4 (assembly).** The homogeneous extension of `g` composed with the real
+section: this is exactly the quadratic form `Q_v` given by `frameFunction_regular`
+(M2), extended to all of `E3` by homogeneity (`homogExt_smul` and
+`QuadraticMap.map_smul` on both sides).
+-/
 theorem homogExt_realSection (v : Fin 3 → H n) (hv : Orthonormal ℂ v) :
     ∃ Q : QuadraticForm ℝ E3, ∀ x : E3, homogExt g (realSection v x) = Q x := by
   obtain ⟨Q, hQ⟩ := exists_Qv hg hnn hn v hv
@@ -457,9 +550,15 @@ theorem homogExt_realSection (v : Fin 3 → H n) (hv : Orthonormal ℂ v) :
    sous-espace non nul (compacité).
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **M3-5(a).** Ajustement de phase : pour deux vecteurs unitaires `u, w`, il existe une
+/--
+**FR.** **M3-5(a).** Ajustement de phase : pour deux vecteurs unitaires `u, w`, il existe une
 phase `c` (`‖c‖ = 1`) qui aligne `⟪u, c•w⟫` sur le réel positif `‖⟪u,w⟫‖`, et rapproche
-`c•w` de `u` (au sens large) par rapport à `w`. -/
+`c•w` de `u` (au sens large) par rapport à `w`.
+
+**EN.** **M3-5(a).** Phase adjustment: for two unit vectors `u, w`, there exists a
+phase `c` (`‖c‖ = 1`) that aligns `⟪u, c•w⟫` with the nonnegative real number
+`‖⟪u,w⟫‖`, and brings `c•w` (weakly) closer to `u` than `w` was.
+-/
 theorem exists_phase_adjust (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
     ∃ c : ℂ, ‖c‖ = 1 ∧ ⟪u, c • w⟫_ℂ = (‖⟪u, w⟫_ℂ‖ : ℂ) ∧ ‖u - c • w‖ ≤ ‖u - w‖ := by
   by_cases hz : ⟪u, w⟫_ℂ = 0
@@ -487,12 +586,22 @@ theorem exists_phase_adjust (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
     have h5 := Real.sqrt_le_sqrt h4
     rwa [Real.sqrt_sq (norm_nonneg _), Real.sqrt_sq (norm_nonneg _)] at h5
 
-/-- **M3-5(b).** Version COMPLEXE de `exists_unit_orthogonal_to_pair` (`Real3/SphereGeometry.lean`,
+/--
+**FR.** **M3-5(b).** Version COMPLEXE de `exists_unit_orthogonal_to_pair` (`Real3/SphereGeometry.lean`,
 bloc A) : l'orthogonal (complexe) d'un span engendré par deux vecteurs, de dimension complexe
 `≤ 2`, est non nul dès que `dim_ℂ (H n) ≥ 3`. C'est ICI, et seulement ici, que l'hypothèse
 `n ≥ 3` intervient dans tout le bloc M3 : c'est le théorème qui remplace l'axiome analytique de
 l'ancien développement (comptage de dimension complexe, pas de produit vectoriel en dimension
-`n` quelconque). -/
+`n` quelconque).
+
+**EN.** **M3-5(b).** COMPLEX version of `exists_unit_orthogonal_to_pair`
+(`Real3/SphereGeometry.lean`, block A): the (complex) orthogonal complement of a span
+generated by two vectors, of complex dimension `≤ 2`, is nonzero as soon as
+`dim_ℂ (H n) ≥ 3`. This is HERE, and only here, that the hypothesis `n ≥ 3` enters
+the whole M3 block: it is the theorem that replaces the analytic postulate of the
+old development (complex dimension counting, no cross product in arbitrary
+dimension `n`).
+-/
 theorem exists_unit_orthogonal_to_pair_complex (hn : 3 ≤ n) (a b : H n) :
     ∃ u : H n, ‖u‖ = 1 ∧ ⟪u, a⟫_ℂ = 0 ∧ ⟪u, b⟫_ℂ = 0 := by
   classical
@@ -520,10 +629,17 @@ theorem exists_unit_orthogonal_to_pair_complex (hn : 3 ≤ n) (a b : H n) :
   · rw [inner_smul_left, hwa, mul_zero]
   · rw [inner_smul_left, hwb, mul_zero]
 
-/-- **M3-5(c) (générique, réel).** Si `0 ≤ Q ≤ W‖·‖²` sur `E3`, la forme polaire de `Q` est
+/--
+**FR.** **M3-5(c) (générique, réel).** Si `0 ≤ Q ≤ W‖·‖²` sur `E3`, la forme polaire de `Q` est
 bornée : `|Q.polar a b| ≤ 2W‖a‖‖b‖`. Preuve : rééchelonnage `t := √(‖b‖/‖a‖)` dans
 `0 ≤ Q(t•a ± t⁻¹•b) = t²Q(a) + t⁻²Q(b) ± Q.polar a b`, puis `Q(a) ≤ W‖a‖²` etc. et
-`t²‖a‖² = t⁻²‖b‖² = ‖a‖‖b‖` par le choix de `t`. -/
+`t²‖a‖² = t⁻²‖b‖² = ‖a‖‖b‖` par le choix de `t`.
+
+**EN.** **M3-5(c) (generic, real).** If `0 ≤ Q ≤ W‖·‖²` on `E3`, the polar form of `Q`
+is bounded: `|Q.polar a b| ≤ 2W‖a‖‖b‖`. Proof: rescaling `t := √(‖b‖/‖a‖)` in
+`0 ≤ Q(t•a ± t⁻¹•b) = t²Q(a) + t⁻²Q(b) ± Q.polar a b`, then `Q(a) ≤ W‖a‖²` etc. and
+`t²‖a‖² = t⁻²‖b‖² = ‖a‖‖b‖` by the choice of `t`.
+-/
 theorem quadratic_polar_bound {Q : QuadraticForm ℝ E3} {W : ℝ}
     (hQ_nonneg : ∀ x : E3, 0 ≤ Q x) (hQ_le : ∀ x : E3, Q x ≤ W * ‖x‖ ^ 2) (a b : E3) :
     |QuadraticMap.polar Q a b| ≤ 2 * W * ‖a‖ * ‖b‖ := by
@@ -584,9 +700,15 @@ theorem quadratic_polar_bound {Q : QuadraticForm ℝ E3} {W : ℝ}
   rw [abs_le]
   constructor <;> nlinarith [h1, h2, h3, hval]
 
-/-- **M3-5(c) (corollaire).** Si `0 ≤ Q ≤ W‖·‖²`, `Q` est `2W`-lipschitzienne sur la sphère
+/--
+**FR.** **M3-5(c) (corollaire).** Si `0 ≤ Q ≤ W‖·‖²`, `Q` est `2W`-lipschitzienne sur la sphère
 unité. Preuve : `Q.polar (a+b) (a-b) = 2(Q a - Q b)` (identités de polarisation), borné par
-`2W‖a+b‖‖a-b‖ ≤ 4W‖a-b‖` via `quadratic_polar_bound` et `‖a+b‖ ≤ 2`. -/
+`2W‖a+b‖‖a-b‖ ≤ 4W‖a-b‖` via `quadratic_polar_bound` et `‖a+b‖ ≤ 2`.
+
+**EN.** **M3-5(c) (corollary).** If `0 ≤ Q ≤ W‖·‖²`, `Q` is `2W`-Lipschitz on the unit
+sphere. Proof: `Q.polar (a+b) (a-b) = 2(Q a - Q b)` (polarization identities),
+bounded by `2W‖a+b‖‖a-b‖ ≤ 4W‖a-b‖` via `quadratic_polar_bound` and `‖a+b‖ ≤ 2`.
+-/
 theorem quadratic_lipschitz {Q : QuadraticForm ℝ E3} {W : ℝ}
     (hQ_nonneg : ∀ x : E3, 0 ≤ Q x) (hQ_le : ∀ x : E3, Q x ≤ W * ‖x‖ ^ 2)
     {a b : E3} (ha : ‖a‖ = 1) (hb : ‖b‖ = 1) :
@@ -622,8 +744,13 @@ theorem quadratic_lipschitz {Q : QuadraticForm ℝ E3} {W : ℝ}
     mul_le_mul_of_nonneg_right hnormab (mul_nonneg hWnonneg (norm_nonneg (a - b)))]
 
 include hg hnn in
-/-- Le poids d'une frame function complexe positive est positif (somme de valeurs `≥ 0`
-sur n'importe quelle base). -/
+/--
+**FR.** Le poids d'une frame function complexe positive est positif (somme de valeurs `≥ 0`
+sur n'importe quelle base).
+
+**EN.** The weight of a positive complex frame function is positive (sum of values
+`≥ 0` over any basis).
+-/
 theorem cframe_weight_nonneg : 0 ≤ W := by
   have hsum := hg (EuclideanSpace.basisFun (Fin n) ℂ)
   rw [← hsum]
@@ -631,12 +758,22 @@ theorem cframe_weight_nonneg : 0 ≤ W := by
 
 set_option maxHeartbeats 1000000 in
 include hg hnn hphase hn in
-/-- **M3-5(d).** `g` est `2W`-lipschitzienne sur la sphère unité. Ajustement de phase
+/--
+**FR.** **M3-5(d).** `g` est `2W`-lipschitzienne sur la sphère unité. Ajustement de phase
 (`exists_phase_adjust`) pour se ramener à `⟪u,w'⟫` réel `≥ 0` ; cas d'égalité de
 Cauchy-Schwarz si `‖⟪u,w'⟫‖ = 1` (alors `w' = u`) ; sinon Gram-Schmidt (`v`, unitaire,
 `⟪u,v⟫ = 0`), complété par `z` (`exists_unit_orthogonal_to_pair_complex`, LE point d'entrée
 de `n ≥ 3`) en triplet orthonormé `(u,v,z)` ; la section réelle associée envoie
-`p := (1,0,0)` sur `u` et `q := (C,s,0)` sur `w'`, et `quadratic_lipschitz` conclut. -/
+`p := (1,0,0)` sur `u` et `q := (C,s,0)` sur `w'`, et `quadratic_lipschitz` conclut.
+
+**EN.** **M3-5(d).** `g` is `2W`-Lipschitz on the unit sphere. Phase adjustment
+(`exists_phase_adjust`) reduces to `⟪u,w'⟫` real `≥ 0`; equality case of
+Cauchy-Schwarz if `‖⟪u,w'⟫‖ = 1` (then `w' = u`); otherwise Gram-Schmidt (`v`, unit
+vector, `⟪u,v⟫ = 0`), completed by `z` (`exists_unit_orthogonal_to_pair_complex`,
+THE entry point of `n ≥ 3`) into an orthonormal triple `(u,v,z)`; the associated real
+section sends `p := (1,0,0)` to `u` and `q := (C,s,0)` to `w'`, and
+`quadratic_lipschitz` concludes.
+-/
 theorem g_lipschitz (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
     |g u - g w| ≤ 2 * W * ‖u - w‖ := by
   obtain ⟨c₀, hc₀norm, hc₀inner, hc₀close⟩ := exists_phase_adjust u w hu hw
@@ -765,9 +902,16 @@ theorem g_lipschitz (u w : H n) (hu : ‖u‖ = 1) (hw : ‖w‖ = 1) :
 
 set_option maxHeartbeats 800000 in
 include hg hnn hphase hn in
-/-- **M3-5(e).** `g` atteint son maximum sur la sphère unité de tout sous-espace `U ≠ ⊥`,
+/--
+**FR.** **M3-5(e).** `g` atteint son maximum sur la sphère unité de tout sous-espace `U ≠ ⊥`,
 par compacité (sphère de `H n` compacte, `U` fermé car de dimension finie, donc `S := U ∩ sphère`
-compact) et continuité (`g_lipschitz` donne la lipschitzianité de `g` sur `S`). -/
+compact) et continuité (`g_lipschitz` donne la lipschitzianité de `g` sur `S`).
+
+**EN.** **M3-5(e).** `g` attains its maximum on the unit sphere of any subspace
+`U ≠ ⊥`, by compactness (the sphere of `H n` is compact, `U` is closed since
+finite-dimensional, so `S := U ∩ sphere` is compact) and continuity (`g_lipschitz`
+gives the Lipschitz property of `g` on `S`).
+-/
 theorem attains_max_on (U : Submodule ℂ (H n)) (hU : U ≠ ⊥) :
     ∃ x ∈ U, ‖x‖ = 1 ∧ ∀ w ∈ U, ‖w‖ = 1 → g w ≤ g x := by
   set S : Set (H n) := (U : Set (H n)) ∩ Metric.sphere (0 : H n) 1 with hS_def
@@ -998,9 +1142,15 @@ theorem peel (x y : H n) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
     ring
 
 include hg hnn hphase hn in
-/-- **M3-6 (forme homogène).** Version de `peel` sans hypothèse de norme unité sur `w`,
+/--
+**FR.** **M3-6 (forme homogène).** Version de `peel` sans hypothèse de norme unité sur `w`,
 obtenue par transport d'homogénéité (`homogExt_smul`) : c'est cette forme qui sera utilisée
-dans l'induction M3-8. -/
+dans l'induction M3-8.
+
+**EN.** **M3-6 (homogeneous form).** Version of `peel` without the unit-norm
+hypothesis on `w`, obtained by transport of homogeneity (`homogExt_smul`): this is
+the form that will be used in the M3-8 induction.
+-/
 theorem homogExt_peel (x w : H n) (hx : ‖x‖ = 1)
     (hmax : ∀ v ∈ Submodule.span ℂ ({x, w} : Set (H n)), ‖v‖ = 1 → g v ≤ g x) :
     homogExt g w = g x * ‖⟪x, w⟫_ℂ‖ ^ 2 + homogExt g (w - ⟪x, w⟫_ℂ • x) := by

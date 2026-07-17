@@ -1,11 +1,17 @@
 import Gleason.Real3.FrameFunction
 
 /-!
-# Mini-bibliothèque de géométrie sphérique
+**FR.** # Mini-bibliothèque de géométrie sphérique
 
 Lemmes de géométrie sur S² nécessaires à la descente CKM. Stratégie : tout exprimer
 par des TRIPLETS ORTHONORMÉS (extension de bases orthonormées, Gram–Schmidt), en
 évitant SO(3) et les angles d'Euler, mal couverts par Mathlib.
+
+**EN.** # Spherical geometry mini-library
+
+Geometric lemmas on S² needed for the CKM descent. Strategy: express everything
+via ORTHONORMAL TRIPLES (extension of orthonormal bases, Gram–Schmidt), avoiding
+SO(3) and Euler angles, which Mathlib covers poorly.
 -/
 
 namespace Gleason
@@ -14,9 +20,16 @@ open scoped RealInnerProductSpace Real
 
 noncomputable section
 
-/-- Tout vecteur unitaire se complète en base orthonormée de ℝ³.
+/--
+**FR.** Tout vecteur unitaire se complète en base orthonormée de ℝ³.
 Mathlib : chercher l'extension d'une famille orthonormée en `OrthonormalBasis`
-(`Orthonormal` + `exists_orthonormalBasis_extension` ou équivalent). -/
+(`Orthonormal` + `exists_orthonormalBasis_extension` ou équivalent).
+
+**EN.** Every unit vector extends to an orthonormal basis of ℝ³.
+Mathlib: look for the extension of an orthonormal family to an
+`OrthonormalBasis` (`Orthonormal` + `exists_orthonormalBasis_extension` or
+equivalent).
+-/
 theorem exists_orthonormalBasis_fst (x : E3) (hx : ‖x‖ = 1) :
     ∃ b : OrthonormalBasis (Fin 3) ℝ E3, b 0 = x := by
   have hcard : Module.finrank ℝ E3 = Fintype.card (Fin 3) := by simp
@@ -30,7 +43,11 @@ theorem exists_orthonormalBasis_fst (x : E3) (hx : ‖x‖ = 1) :
   obtain ⟨b, hb⟩ := hv.exists_orthonormalBasis_extension_of_card_eq hcard
   exact ⟨b, hb 0 rfl⟩
 
-/-- Toute paire orthonormée se complète en base orthonormée de ℝ³. -/
+/--
+**FR.** Toute paire orthonormée se complète en base orthonormée de ℝ³.
+
+**EN.** Every orthonormal pair extends to an orthonormal basis of ℝ³.
+-/
 theorem exists_orthonormalBasis_pair (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
     (hxy : ⟪x, y⟫ = 0) :
     ∃ b : OrthonormalBasis (Fin 3) ℝ E3, b 0 = x ∧ b 1 = y := by
@@ -56,8 +73,13 @@ theorem exists_orthonormalBasis_pair (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖
   · have := hb 1 (by simp)
     simpa using this
 
-/-- **C1.** Étant donné une paire orthonormée, il existe un troisième vecteur
-unitaire orthogonal aux deux (le 3ᵉ vecteur d'une base les complétant). -/
+/--
+**FR.** **C1.** Étant donné une paire orthonormée, il existe un troisième vecteur
+unitaire orthogonal aux deux (le 3ᵉ vecteur d'une base les complétant).
+
+**EN.** **C1.** Given an orthonormal pair, there exists a third unit vector
+orthogonal to both (the 3rd vector of a basis completing them).
+-/
 theorem exists_third_orthogonal (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1) (hxy : ⟪x, y⟫ = 0) :
     ∃ z, ‖z‖ = 1 ∧ ⟪x, z⟫ = 0 ∧ ⟪y, z⟫ = 0 := by
   obtain ⟨b, hb0, hb1⟩ := exists_orthonormalBasis_pair x y hx hy hxy
@@ -65,10 +87,17 @@ theorem exists_third_orthogonal (x y : E3) (hx : ‖x‖ = 1) (hy : ‖y‖ = 1)
   · rw [← hb0]; exact b.inner_eq_zero (by decide)
   · rw [← hb1]; exact b.inner_eq_zero (by decide)
 
-/-- Un triplet EXPLICITEMENT prescrit (les trois vecteurs, pas seulement deux) qui
+/--
+**FR.** Un triplet EXPLICITEMENT prescrit (les trois vecteurs, pas seulement deux) qui
 est orthonormé coïncide avec une base orthonormée — cas `s = univ` de l'extension.
 Outil de base pour construire des bases par manipulation directe de triplets
-(retournement de signe, produit vectoriel, etc.), utilisé dans toute la suite. -/
+(retournement de signe, produit vectoriel, etc.), utilisé dans toute la suite.
+
+**EN.** An EXPLICITLY prescribed triple (all three vectors, not just two) that is
+orthonormal coincides with an orthonormal basis — the `s = univ` case of the
+extension. Basic tool for building bases by direct manipulation of triples
+(sign flip, cross product, etc.), used throughout the rest of the file.
+-/
 theorem exists_orthonormalBasis_of_triple (v : Fin 3 → E3)
     (hnorm : ∀ i, ‖v i‖ = 1) (hperp : Pairwise (fun i j => ⟪v i, v j⟫ = 0)) :
     ∃ b : OrthonormalBasis (Fin 3) ℝ E3, ∀ i, b i = v i := by
@@ -78,9 +107,15 @@ theorem exists_orthonormalBasis_of_triple (v : Fin 3 → E3)
   obtain ⟨b, hb⟩ := hv.exists_orthonormalBasis_extension_of_card_eq hcard
   exact ⟨b, fun i => hb i (Set.mem_univ i)⟩
 
-/-- Variante « symétrique » de `exists_orthonormalBasis_of_triple` : au lieu d'une
+/--
+**FR.** Variante « symétrique » de `exists_orthonormalBasis_of_triple` : au lieu d'une
 `Pairwise`, les 3 produits scalaires deux-à-deux sont donnés explicitement (plus
-commode à fournir à chaque site d'appel). -/
+commode à fournir à chaque site d'appel).
+
+**EN.** Symmetric variant of `exists_orthonormalBasis_of_triple`: instead of a
+`Pairwise`, the 3 pairwise inner products are given explicitly (more convenient
+to supply at each call site).
+-/
 theorem exists_orthonormalBasis_of_triple' (v0 v1 v2 : E3)
     (h0 : ‖v0‖ = 1) (h1 : ‖v1‖ = 1) (h2 : ‖v2‖ = 1)
     (h01 : ⟪v0, v1⟫ = 0) (h02 : ⟪v0, v2⟫ = 0) (h12 : ⟪v1, v2⟫ = 0) :
@@ -97,11 +132,19 @@ theorem exists_orthonormalBasis_of_triple' (v0 v1 v2 : E3)
   obtain ⟨b, hb⟩ := exists_orthonormalBasis_of_triple _ hnorm hperp
   exact ⟨b, by simpa using hb 0, by simpa using hb 1, by simpa using hb 2⟩
 
-/-- Il existe un vecteur unitaire orthogonal à deux vecteurs donnés : l'orthogonal
+/--
+**FR.** Il existe un vecteur unitaire orthogonal à deux vecteurs donnés : l'orthogonal
 d'un sous-espace engendré par 2 vecteurs, dans un espace de dimension 3, est de
 dimension ≥ 1 (comptage de dimension). Remplace le produit vectoriel : couvre
 uniformément le cas dégénéré où les deux vecteurs sont colinéaires, sans
-disjonction de cas. -/
+disjonction de cas.
+
+**EN.** There exists a unit vector orthogonal to two given vectors: the
+orthogonal complement of a subspace spanned by 2 vectors, in a
+dimension-3 space, has dimension ≥ 1 (dimension counting). Replaces the cross
+product: uniformly covers the degenerate case where the two vectors are
+collinear, with no case split.
+-/
 theorem exists_unit_orthogonal_to_pair (a b : E3) :
     ∃ u : E3, ‖u‖ = 1 ∧ ⟪u, a⟫ = 0 ∧ ⟪u, b⟫ = 0 := by
   classical
@@ -129,13 +172,23 @@ theorem exists_unit_orthogonal_to_pair (a b : E3) :
   · rw [real_inner_smul_left, hwa, mul_zero]
   · rw [real_inner_smul_left, hwb, mul_zero]
 
-/-- **Unicité (à signe près) de l'orthogonal d'une paire indépendante.**
+/--
+**FR.** **Unicité (à signe près) de l'orthogonal d'une paire indépendante.**
 Si `a,b` sont indépendants (`a ≠ 0`, `b` non multiple de `a`), l'orthogonal de
 `span{a,b}` est de rang 1 (`finrank_add_finrank_orthogonal` + rang 2 du span,
 via l'indépendance linéaire) : deux vecteurs unitaires qui y vivent sont égaux
 ou opposés. Complète `exists_unit_orthogonal_to_pair` (existence) : nécessaire
 en bloc H (Regular.lean) pour montrer que deux grands cercles distincts se
-coupent en EXACTEMENT une paire antipodale (pas plus). -/
+coupent en EXACTEMENT une paire antipodale (pas plus).
+
+**EN.** **Uniqueness (up to sign) of the orthogonal of an independent pair.**
+If `a,b` are independent (`a ≠ 0`, `b` not a multiple of `a`), the orthogonal
+complement of `span{a,b}` has rank 1 (`finrank_add_finrank_orthogonal` + rank 2
+of the span, via linear independence): two unit vectors living there are equal
+or opposite. Completes `exists_unit_orthogonal_to_pair` (existence): needed in
+block H (Regular.lean) to show that two distinct great circles meet in EXACTLY
+one antipodal pair (no more).
+-/
 theorem unique_unit_orthogonal_to_pair {a b u v : E3} (ha0 : a ≠ 0)
     (hindep : ∀ c : ℝ, c • a ≠ b)
     (hua : ⟪u, a⟫ = 0) (hub : ⟪u, b⟫ = 0) (hu : ‖u‖ = 1)
@@ -190,9 +243,15 @@ theorem unique_unit_orthogonal_to_pair {a b u v : E3} (ha0 : a ≠ 0)
   · left; rw [← hc, h1, one_smul]
   · right; rw [← hc, h1, neg_one_smul]
 
-/-- Deux bases partageant un vecteur : la somme de `f` sur les deux autres vecteurs
+/--
+**FR.** Deux bases partageant un vecteur : la somme de `f` sur les deux autres vecteurs
 est la même (conséquence directe de la définition de frame function ; utilisé
-partout dans la descente). -/
+partout dans la descente).
+
+**EN.** Two bases sharing a vector: the sum of `f` over the other two vectors is
+the same (direct consequence of the definition of frame function; used
+throughout the descent).
+-/
 theorem frame_pair_sum_eq {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
     (b b' : OrthonormalBasis (Fin 3) ℝ E3) (h : b 0 = b' 0) :
     f (b 1) + f (b 2) = f (b' 1) + f (b' 2) := by
@@ -202,8 +261,13 @@ theorem frame_pair_sum_eq {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
   rw [h] at h1
   linarith
 
-/-- Une frame function positive est bornée par `W` sur la sphère
-(compléter tout vecteur unitaire en base orthonormée, les deux autres termes sont ≥ 0). -/
+/--
+**FR.** Une frame function positive est bornée par `W` sur la sphère
+(compléter tout vecteur unitaire en base orthonormée, les deux autres termes sont ≥ 0).
+
+**EN.** A positive frame function is bounded by `W` on the sphere (complete any
+unit vector into an orthonormal basis, the other two terms are ≥ 0).
+-/
 theorem IsFrameFunction.le_of_nonneg {f : E3 → ℝ} {W : ℝ}
     (hf : IsFrameFunction f W) (hnn : ∀ x, ‖x‖ = 1 → 0 ≤ f x)
     {x : E3} (hx : ‖x‖ = 1) : f x ≤ W := by
@@ -214,9 +278,15 @@ theorem IsFrameFunction.le_of_nonneg {f : E3 → ℝ} {W : ℝ}
   have hn2 : 0 ≤ f (b 2) := hnn (b 2) (b.norm_eq_one 2)
   linarith
 
-/-- **P2 (parité).** `f(-s) = f(s)` : on remplace `b 0` par `-(b 0)` dans une base
+/--
+**FR.** **P2 (parité).** `f(-s) = f(s)` : on remplace `b 0` par `-(b 0)` dans une base
 contenant `s`, les deux triplets sont orthonormés (retournement de signe préserve
-normes et orthogonalité). -/
+normes et orthogonalité).
+
+**EN.** **P2 (parity).** `f(-s) = f(s)`: replace `b 0` by `-(b 0)` in a basis
+containing `s`; both triples are orthonormal (sign flip preserves norms and
+orthogonality).
+-/
 theorem frameFunction_even {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
     (s : E3) (hs : ‖s‖ = 1) : f (-s) = f s := by
   obtain ⟨b, hb0⟩ := exists_orthonormalBasis_fst s hs
@@ -239,9 +309,15 @@ theorem frameFunction_even {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
   rw [hb0] at h1 h2
   linarith
 
-/-- **P3.** Si `(u,s,t)` et `(u,s',t')` sont deux triplets orthonormés partageant
+/--
+**FR.** **P3.** Si `(u,s,t)` et `(u,s',t')` sont deux triplets orthonormés partageant
 `u`, alors `f s + f t = f s' + f t'` — corollaire direct de `frame_pair_sum_eq`
-appliqué aux bases construites sur `(u,s,t)` et `(u,s',t')`. -/
+appliqué aux bases construites sur `(u,s,t)` et `(u,s',t')`.
+
+**EN.** **P3.** If `(u,s,t)` and `(u,s',t')` are two orthonormal triples sharing
+`u`, then `f s + f t = f s' + f t'` — a direct corollary of
+`frame_pair_sum_eq` applied to the bases built on `(u,s,t)` and `(u,s',t')`.
+-/
 theorem frameFunction_pair_swap {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction f W)
     {u s t s' t' : E3}
     (hu : ‖u‖ = 1) (hs : ‖s‖ = 1) (ht : ‖t‖ = 1) (hs' : ‖s'‖ = 1) (ht' : ‖t'‖ = 1)
@@ -254,14 +330,25 @@ theorem frameFunction_pair_swap {f : E3 → ℝ} {W : ℝ} (hf : IsFrameFunction
   have h := frame_pair_sum_eq hf b b' (by rw [hb0, hb0'])
   rwa [hb1, hb2, hb1', hb2'] at h
 
-/-- **P4.** Si `f(s) > M - ξ` (proche du sup) alors il existe `t ⊥ s` avec
+/--
+**FR.** **P4.** Si `f(s) > M - ξ` (proche du sup) alors il existe `t ⊥ s` avec
 `f(t) < m + ξ` (proche de l'inf). Preuve CKM §2 : on choisit `t'` avec
 `f(t') < m + δ` où `δ = ξ - (M - f s) > 0`, un vecteur `u` orthogonal à `s`
 et `t'` (`exists_unit_orthogonal_to_pair`, remplace le produit vectoriel —
 couvre le cas dégénéré `t' = ±s` sans disjonction de cas), puis on complète
 en `t ⊥ (s,u)` et `s' ⊥ (t',u)`. `frameFunction_pair_swap` sur `(u,s,t)` et
 `(u,s',t')` donne `f s + f t = f s' + f t'`, d'où `f t < m + ξ` en
-combinant `f s' ≤ M` et `f t' < m + δ`. -/
+combinant `f s' ≤ M` et `f t' < m + δ`.
+
+**EN.** **P4.** If `f(s) > M - ξ` (close to the sup) then there exists `t ⊥ s`
+with `f(t) < m + ξ` (close to the inf). Proof, CKM §2: choose `t'` with
+`f(t') < m + δ` where `δ = ξ - (M - f s) > 0`, a vector `u` orthogonal to `s`
+and `t'` (`exists_unit_orthogonal_to_pair`, replaces the cross product —
+covers the degenerate case `t' = ±s` with no case split), then complete into
+`t ⊥ (s,u)` and `s' ⊥ (t',u)`. `frameFunction_pair_swap` on `(u,s,t)` and
+`(u,s',t')` gives `f s + f t = f s' + f t'`, hence `f t < m + ξ` by combining
+`f s' ≤ M` and `f t' < m + δ`.
+-/
 theorem frameFunction_P4 {f : E3 → ℝ} {W M m : ℝ} (hf : IsFrameFunction f W)
     (hMub : ∀ x : E3, ‖x‖ = 1 → f x ≤ M)
     (hm : ∀ ε > 0, ∃ x : E3, ‖x‖ = 1 ∧ f x < m + ε)
@@ -293,24 +380,49 @@ section PoleGeometry
 
 variable (p : E3)
 
-/-- **Latitude** de `s` relative au pôle `p` : `⟪p,s⟫²`. -/
+/--
+**FR.** **Latitude** de `s` relative au pôle `p` : `⟪p,s⟫²`.
+
+**EN.** **Latitude** of `s` relative to pole `p`: `⟪p,s⟫²`.
+-/
 def lat (s : E3) : ℝ := ⟪p, s⟫ ^ 2
 
-/-- **Hémisphère nord** : vecteurs unitaires du côté du pôle (`⟪p,·⟫ ≥ 0`). -/
+/--
+**FR.** **Hémisphère nord** : vecteurs unitaires du côté du pôle (`⟪p,·⟫ ≥ 0`).
+
+**EN.** **Northern hemisphere**: unit vectors on the pole's side
+(`⟪p,·⟫ ≥ 0`).
+-/
 def northern : Set E3 := {t : E3 | ‖t‖ = 1 ∧ 0 ≤ ⟪p, t⟫}
 
-/-- **Équateur** : vecteurs unitaires orthogonaux au pôle. -/
+/--
+**FR.** **Équateur** : vecteurs unitaires orthogonaux au pôle.
+
+**EN.** **Equator**: unit vectors orthogonal to the pole.
+-/
 def equator : Set E3 := {t : E3 | ‖t‖ = 1 ∧ ⟪p, t⟫ = 0}
 
-/-- Point de l'équateur (à normalisation près) déterminé par `p` et `s` : la
+/--
+**FR.** Point de l'équateur (à normalisation près) déterminé par `p` et `s` : la
 projection de `s` sur `pᗮ`, complétée par la composante `√(1-⟪p,s⟫²)` sur `p`
 pour former un vecteur unitaire orthogonal à `s` dans le plan `(p,s)`.
-Valeur poubelle en `s = p` (jamais utilisée : voir les hypothèses de B2). -/
+Valeur poubelle en `s = p` (jamais utilisée : voir les hypothèses de B2).
+
+**EN.** Equatorial point (up to normalization) determined by `p` and `s`: the
+projection of `s` onto `pᗮ`, completed by the component `√(1-⟪p,s⟫²)` on `p` to
+form a unit vector orthogonal to `s` in the plane `(p,s)`. Junk value at
+`s = p` (never used: see B2's hypotheses).
+-/
 noncomputable def sperp (s : E3) : E3 :=
   Real.sqrt (1 - ⟪p, s⟫ ^ 2) • p - ⟪p, s⟫ • (‖s - ⟪p, s⟫ • p‖⁻¹ • (s - ⟪p, s⟫ • p))
 
-/-- **Cercle de descente** de `s` relatif au pôle `p` : les points de
-l'hémisphère nord orthogonaux à `sperp p s`. -/
+/--
+**FR.** **Cercle de descente** de `s` relatif au pôle `p` : les points de
+l'hémisphère nord orthogonaux à `sperp p s`.
+
+**EN.** **Descent circle** of `s` relative to pole `p`: the points of the
+northern hemisphere orthogonal to `sperp p s`.
+-/
 def descent (s : E3) : Set E3 := {t : E3 | t ∈ northern p ∧ ⟪sperp p s, t⟫ = 0}
 
 @[simp] theorem mem_northern_iff {t : E3} : t ∈ northern p ↔ ‖t‖ = 1 ∧ 0 ≤ ⟪p, t⟫ := Iff.rfl
@@ -342,7 +454,11 @@ theorem equator_subset_northern : equator p ⊆ northern p := by
 theorem mem_equator_iff_lat_eq_zero (t : E3) : t ∈ equator p ↔ ‖t‖ = 1 ∧ lat p t = 0 := by
   simp [equator, lat]
 
-/-- **F0.** `lat` est paire (`⟪p,-s⟫ = -⟪p,s⟫`, mis au carré). -/
+/--
+**FR.** **F0.** `lat` est paire (`⟪p,-s⟫ = -⟪p,s⟫`, mis au carré).
+
+**EN.** **F0.** `lat` is even (`⟪p,-s⟫ = -⟪p,s⟫`, squared).
+-/
 theorem lat_neg (s : E3) : lat p (-s) = lat p s := by
   unfold lat
   rw [inner_neg_right]
@@ -350,8 +466,13 @@ theorem lat_neg (s : E3) : lat p (-s) = lat p s := by
 
 end PoleGeometry
 
-/-- **B2 (préliminaire).** `‖s - ⟪p,s⟫•p‖² = 1 - ⟪p,s⟫²`, par développement de
-l'inner product (algèbre pure, aucune hypothèse `s ≠ p`). -/
+/--
+**FR.** **B2 (préliminaire).** `‖s - ⟪p,s⟫•p‖² = 1 - ⟪p,s⟫²`, par développement de
+l'inner product (algèbre pure, aucune hypothèse `s ≠ p`).
+
+**EN.** **B2 (preliminary).** `‖s - ⟪p,s⟫•p‖² = 1 - ⟪p,s⟫²`, by expanding the
+inner product (pure algebra, no hypothesis `s ≠ p`).
+-/
 theorem norm_sq_sub_inner_smul {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) :
     ‖s - ⟪p, s⟫ • p‖ ^ 2 = 1 - ⟪p, s⟫ ^ 2 := by
   set c : ℝ := ⟪p, s⟫ with hc_def
@@ -359,8 +480,13 @@ theorem norm_sq_sub_inner_smul {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) 
       norm_smul, hp, mul_one, Real.norm_eq_abs, sq_abs, hs]
   ring
 
-/-- **F0.** Latitude maximale ⇒ pôle : `s ∈ northern p`, `lat p s = 1` force
-`⟪p,s⟫ = 1` (racine positive), d'où `‖s-p‖ = 0` via le préliminaire ci-dessus. -/
+/--
+**FR.** **F0.** Latitude maximale ⇒ pôle : `s ∈ northern p`, `lat p s = 1` force
+`⟪p,s⟫ = 1` (racine positive), d'où `‖s-p‖ = 0` via le préliminaire ci-dessus.
+
+**EN.** **F0.** Maximal latitude ⇒ pole: `s ∈ northern p`, `lat p s = 1` forces
+`⟪p,s⟫ = 1` (positive root), hence `‖s-p‖ = 0` via the preliminary above.
+-/
 theorem eq_pole_of_lat_eq_one {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
     (hsN : s ∈ northern p) (hl : lat p s = 1) : s = p := by
   have hc0 : 0 ≤ ⟪p, s⟫ := hsN.2
@@ -376,8 +502,13 @@ theorem eq_pole_of_lat_eq_one {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
   norm_num at hnorm
   exact sub_eq_zero.mp hnorm
 
-/-- **F0.** Tout vecteur unitaire admet un représentant dans `northern p` de
-même latitude, égal à lui-même ou à son opposé (`⟪p,·⟫ ≥ 0` ou `< 0`). -/
+/--
+**FR.** **F0.** Tout vecteur unitaire admet un représentant dans `northern p` de
+même latitude, égal à lui-même ou à son opposé (`⟪p,·⟫ ≥ 0` ou `< 0`).
+
+**EN.** **F0.** Every unit vector admits a representative in `northern p` of the
+same latitude, equal to itself or to its opposite (`⟪p,·⟫ ≥ 0` or `< 0`).
+-/
 theorem exists_northern_rep {p t : E3} (ht : ‖t‖ = 1) :
     ∃ s : E3, s ∈ northern p ∧ lat p s = lat p t ∧ (s = t ∨ s = -t) := by
   by_cases h : 0 ≤ (⟪p, t⟫ : ℝ)
@@ -386,8 +517,13 @@ theorem exists_northern_rep {p t : E3} (ht : ‖t‖ = 1) :
     refine ⟨-t, ⟨by rwa [norm_neg], ?_⟩, lat_neg p t, Or.inr rfl⟩
     rw [inner_neg_right]; linarith
 
-/-- **B2 (préliminaire).** `⟪p,s⟫ < 1` pour `p,s` unitaires, `s ≠ p` : `⟪p,s⟫ = 1`
-forcerait `‖s-p‖ = 0` (via le préliminaire ci-dessus), donc `s = p`. -/
+/--
+**FR.** **B2 (préliminaire).** `⟪p,s⟫ < 1` pour `p,s` unitaires, `s ≠ p` : `⟪p,s⟫ = 1`
+forcerait `‖s-p‖ = 0` (via le préliminaire ci-dessus), donc `s = p`.
+
+**EN.** **B2 (preliminary).** `⟪p,s⟫ < 1` for `p,s` unit vectors, `s ≠ p`:
+`⟪p,s⟫ = 1` would force `‖s-p‖ = 0` (via the preliminary above), hence `s = p`.
+-/
 theorem sperp_c_lt_one {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsp : s ≠ p) :
     ⟪p, s⟫ < 1 := by
   have hle : ⟪p, s⟫ ≤ 1 := by
@@ -404,10 +540,17 @@ theorem sperp_c_lt_one {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsp : s
     have h0 : s - p = 0 := hnorm
     exact sub_eq_zero.mp h0
 
-/-- **B2 (cœur, groupé).** Les trois faits sur `sperp p s` (norme, orthogonalité
+/--
+**FR.** **B2 (cœur, groupé).** Les trois faits sur `sperp p s` (norme, orthogonalité
 à `s`, produit scalaire avec `p`), établis ensemble car ils partagent la même
 construction intermédiaire (`e`, le vecteur unitaire de `pᗮ` dans le plan
-`(p,s)`). -/
+`(p,s)`).
+
+**EN.** **B2 (core, grouped).** The three facts about `sperp p s` (norm,
+orthogonality to `s`, inner product with `p`), established together since they
+share the same intermediate construction (`e`, the unit vector of `pᗮ` in the
+plane `(p,s)`).
+-/
 private theorem sperp_core {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ northern p)
     (hsp : s ≠ p) :
     ‖sperp p s‖ = 1 ∧ ⟪s, sperp p s⟫ = 0 ∧ ⟪p, sperp p s⟫ = Real.sqrt (1 - ⟪p, s⟫ ^ 2) := by
@@ -494,15 +637,25 @@ theorem lat_sperp {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ 
   unfold lat
   rw [inner_p_sperp hp hs hsN hsp, Real.sq_sqrt hnn]
 
-/-- Cas particulier de vérification : quand `⟪p,s⟫ = 0`, `sperp p s` se réduit à
-`p` (le point de l'équateur "évident"). -/
+/--
+**FR.** Cas particulier de vérification : quand `⟪p,s⟫ = 0`, `sperp p s` se réduit à
+`p` (le point de l'équateur "évident").
+
+**EN.** Special-case check: when `⟪p,s⟫ = 0`, `sperp p s` reduces to `p` (the
+"obvious" equatorial point).
+-/
 example (p s : E3) (hc : ⟪p, s⟫ = 0) : sperp p s = p := by
   unfold sperp
   rw [hc]
   simp
 
-/-- **B3.** La somme des latitudes sur une base orthonormée vaut `1` (Parseval,
-`x = y = p`, puis `real_inner_comm` pour recoller `⟪p,b i⟫²`). -/
+/--
+**FR.** **B3.** La somme des latitudes sur une base orthonormée vaut `1` (Parseval,
+`x = y = p`, puis `real_inner_comm` pour recoller `⟪p,b i⟫²`).
+
+**EN.** **B3.** The sum of latitudes over an orthonormal basis equals `1`
+(Parseval, `x = y = p`, then `real_inner_comm` to reassemble `⟪p,b i⟫²`).
+-/
 theorem sum_lat_eq_one {p : E3} (hp : ‖p‖ = 1) (b : OrthonormalBasis (Fin 3) ℝ E3) :
     ∑ i, lat p (b i) = 1 := by
   have h := b.sum_inner_mul_inner p p
@@ -515,9 +668,16 @@ theorem sum_lat_eq_one {p : E3} (hp : ‖p‖ = 1) (b : OrthonormalBasis (Fin 3)
   rw [real_inner_comm p (b i)]
   ring
 
-/-- **B4a (lemme-outil).** Complète `sperp p s` et `s` en base orthonormée dont
+/--
+**FR.** **B4a (lemme-outil).** Complète `sperp p s` et `s` en base orthonormée dont
 le 3ᵉ vecteur est sur l'équateur : par B3, `lat(b 0) + lat(b 1) + lat(b 2) = 1`
-avec `lat(b 0) = 1 - lat s` (B2) et `lat(b 1) = lat s`, donc `lat(b 2) = 0`. -/
+avec `lat(b 0) = 1 - lat s` (B2) et `lat(b 1) = lat s`, donc `lat(b 2) = 0`.
+
+**EN.** **B4a (tool lemma).** Completes `sperp p s` and `s` into an orthonormal
+basis whose 3rd vector is on the equator: by B3,
+`lat(b 0) + lat(b 1) + lat(b 2) = 1` with `lat(b 0) = 1 - lat s` (B2) and
+`lat(b 1) = lat s`, hence `lat(b 2) = 0`.
+-/
 theorem exists_descent_basis {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ northern p)
     (hsp : s ≠ p) :
     ∃ b : OrthonormalBasis (Fin 3) ℝ E3, b 0 = sperp p s ∧ b 1 = s ∧ b 2 ∈ equator p := by
@@ -531,8 +691,13 @@ theorem exists_descent_basis {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (h
   have hlat2 : lat p (b 2) = 0 := by linarith
   exact ⟨b, hb0, hb1, (mem_equator_iff_lat_eq_zero p (b 2)).mpr ⟨b.norm_eq_one 2, hlat2⟩⟩
 
-/-- **B4b (corollaire).** Le 3ᵉ vecteur de la base de B4a est à la fois dans le
-cercle de descente et sur l'équateur, et orthogonal à `s`. -/
+/--
+**FR.** **B4b (corollaire).** Le 3ᵉ vecteur de la base de B4a est à la fois dans le
+cercle de descente et sur l'équateur, et orthogonal à `s`.
+
+**EN.** **B4b (corollary).** The 3rd vector of B4a's basis lies both in the
+descent circle and on the equator, and is orthogonal to `s`.
+-/
 theorem exists_equator_orthogonal {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
     (hsN : s ∈ northern p) (hsp : s ≠ p) :
     ∃ u, u ∈ descent p s ∩ equator p ∧ ⟪s, u⟫ = 0 := by
@@ -541,18 +706,30 @@ theorem exists_equator_orthogonal {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 
   have hse : ⟪s, b 2⟫ = 0 := by rw [← hb1]; exact b.inner_eq_zero (by decide)
   exact ⟨b 2, ⟨⟨equator_subset_northern p hb2, hd⟩, hb2⟩, hse⟩
 
-/-- **B5.** `s` est toujours dans son propre cercle de descente. -/
+/--
+**FR.** **B5.** `s` est toujours dans son propre cercle de descente.
+
+**EN.** **B5.** `s` always lies in its own descent circle.
+-/
 theorem self_mem_descent {p s : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ northern p)
     (hsp : s ≠ p) : s ∈ descent p s := by
   refine ⟨hsN, ?_⟩
   have h := inner_sperp_self hp hs hsN hsp
   rwa [real_inner_comm (sperp p s) s] at h
 
-/-- **B6.** Le sommet du cercle de descente est le point de latitude maximale :
+/--
+**FR.** **B6.** Le sommet du cercle de descente est le point de latitude maximale :
 `t ∈ descent p s → lat p t ≤ lat p s`. Preuve : Parseval polarisé
 (`x=p,y=t`) sur la base de B4a donne `⟪p,t⟫ = ⟪p,s⟫·⟪s,t⟫` (les deux autres
 termes s'annulent : `⟪sperp,t⟫=0` par définition de la descente,
-`⟪p,b 2⟫=0` par B4a) ; Parseval `x=y=t` donne `⟪s,t⟫² ≤ 1`. -/
+`⟪p,b 2⟫=0` par B4a) ; Parseval `x=y=t` donne `⟪s,t⟫² ≤ 1`.
+
+**EN.** **B6.** The apex of the descent circle is the point of maximal latitude:
+`t ∈ descent p s → lat p t ≤ lat p s`. Proof: polarized Parseval (`x=p,y=t`) on
+B4a's basis gives `⟪p,t⟫ = ⟪p,s⟫·⟪s,t⟫` (the other two terms vanish:
+`⟪sperp,t⟫=0` by definition of descent, `⟪p,b 2⟫=0` by B4a); Parseval
+`x=y=t` gives `⟪s,t⟫² ≤ 1`.
+-/
 theorem lat_le_of_mem_descent {p s t : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1) (hsN : s ∈ northern p)
     (hsp : s ≠ p) (ht : t ∈ descent p s) : lat p t ≤ lat p s := by
   obtain ⟨b, hb0, hb1, hb2⟩ := exists_descent_basis hp hs hsN hsp
@@ -573,11 +750,19 @@ theorem lat_le_of_mem_descent {p s t : E3} (hp : ‖p‖ = 1) (hs : ‖s‖ = 1)
   rw [hlat_eq]
   exact mul_le_of_le_one_right (lat_nonneg p s) hββ
 
-/-- **B7.** Réalisabilité des latitudes : pour tout triplet de latitudes
+/--
+**FR.** **B7.** Réalisabilité des latitudes : pour tout triplet de latitudes
 positives sommant à 1, il existe une base orthonormée les réalisant.
 Construction sans matrices : `v := √l₁•E0+√l₂•E1+√l₃•E2` (`E` = base standard)
 est unitaire ; on transporte `E` par l'isométrie envoyant `v` sur `p`
-(composée des représentations de deux bases étendant `v` et `p`). -/
+(composée des représentations de deux bases étendant `v` et `p`).
+
+**EN.** **B7.** Realizability of latitudes: for any triple of positive latitudes
+summing to 1, there exists an orthonormal basis realizing them. Matrix-free
+construction: `v := √l₁•E0+√l₂•E1+√l₃•E2` (`E` = standard basis) is a unit
+vector; transport `E` via the isometry sending `v` to `p` (composition of the
+representations of two bases extending `v` and `p`).
+-/
 theorem exists_frame_with_lat {p : E3} (hp : ‖p‖ = 1) {l₁ l₂ l₃ : ℝ}
     (h₁ : 0 ≤ l₁) (h₂ : 0 ≤ l₂) (h₃ : 0 ≤ l₃) (hsum : l₁ + l₂ + l₃ = 1) :
     ∃ b : OrthonormalBasis (Fin 3) ℝ E3,

@@ -84,3 +84,98 @@ par ailleurs simple, extrais la partie lourde dans un lemme séparé à contexte
 minimal (`private theorem ..._assembly`). `maxHeartbeats` élevé masque ce
 symptôme sans le corriger, voir Busch/Main.lean:riesz_rep_assembly pour un
 exemple résolu.
+
+---
+
+## English translation
+
+# CLAUDE.md — Formalization of Busch (2003) and Gleason in Lean 4 / Mathlib
+
+## Mission
+Produce the first mechanized, AXIOM-FREE formalization of Busch's theorem
+(2003, effects/POVMs, from dimension 2) and then of Gleason's theorem
+(projections, dimension ≥ 3), in finite dimension on `EuclideanSpace ℂ (Fin n)`.
+Order: Busch first (milestone M-B, purely algebraic), then Gleason
+(CKM/Richman–Bridges analytic core in `Gleason/Real3/`).
+
+The user is a Lean beginner and not a domain specialist: YOU carry the
+mathematics and the Lean. Explain your choices in French, briefly.
+
+## Absolute rules (non-negotiable)
+1. **NEVER `axiom`.** Ever. This project's predecessor (128k lines) died from a
+   mis-quantified axiom that made `False` derivable. `./scripts/guard.sh` and CI
+   fail if the word appears.
+2. **NEVER `native_decide`**, never `admit`, never modify `scripts/guard.sh` to
+   make it pass.
+3. **NEVER weaken a statement to make a difficulty disappear** (dropping a
+   dimension hypothesis, replacing orthogonality with lattice disjointness,
+   restricting a quantifier) without EXPLICITLY flagging it to the user and
+   waiting for their agreement. An honest `sorry` is better than a hollow
+   theorem.
+4. **Inhabitation test in the same commit**: any new hypothesis structure in
+   `Defs.lean` or `Busch/Effects.lean` immediately gets a concrete inhabitant on
+   ℂ³ (or ℂ²) in `Gleason/Nonvacuity.lean`. If you cannot inhabit it, the
+   definition is probably wrong: STOP, flag it.
+5. **`lake build` after every change.** Never chain two changes without a build
+   in between. An error means fixing it before moving on.
+6. Files ≤ 1500 lines. Split beyond that.
+7. Linters stay ENABLED (no global `set_option ... false`).
+
+## Standard workflow
+1. Read the state: `./scripts/guard.sh` (sorry count), `lake build`.
+2. Choose the target sorry (order: Nonvacuity → Defs lemmas → Busch →
+   Real3/Simplex → Real3/SphereGeometry → phase O (Operator) →
+   Real3/Descent+Continuity+Regular → Complex → Main).
+3. Loop: propose a proof → `lake build` → read the errors → fix.
+   Search tactics: insert `exact?`, `apply?`, `rw?` and read the suggestion in
+   the build output; `simp?` to minimize `simp` calls.
+4. Mathlib name search: https://leansearch.net (natural language),
+   https://loogle.lean-lang.org (by signature), and grep in
+   `.lake/packages/mathlib/Mathlib/`.
+5. When a sorry falls: `./scripts/guard.sh`, update SORRIES.md, atomic commit
+   with message `feat(file): lemma_name`.
+
+## First task (milestone M0→M1) — compilation pass
+This skeleton was written WITHOUT a compiler: Mathlib API names may have
+drifted. Fix in order, file by file, keeping the statements mathematically
+identical:
+- `Submodule.IsOrtho` and its `⟂` notation (otherwise write
+  `Submodule.IsOrtho A B`);
+- `Submodule.starProjection` (may be called `orthogonalProjection'` or have
+  changed);
+- `⟪·,·⟫_ℂ` / `⟪·,·⟫` notation (`open scoped InnerProductSpace` /
+  `RealInnerProductSpace`); otherwise `inner ℂ x y` (recent explicit 𝕜
+  argument);
+- `LinearMap.trace`, `LinearMap.IsSymmetric`, `QuadraticForm`,
+  `OrthonormalBasis`;
+- `ℂ ∙ x` (span of a singleton).
+Any API rename: comment `-- Mathlib: old_name → new_name`.
+
+## Mathematical sources
+- Busch 2003, PRL 91 120403 (arXiv quant-ph/9909073): algebraic proof, follow
+  the plan in `Gleason/Busch/Main.lean`.
+- Cooke–Keane–Moran 1985 (elementary proof of Gleason); Richman–Bridges 1999,
+  J. Funct. Anal. 162, 287–312 (quantitative version, MAIN SOURCE for Real3).
+- Dvurečenskij 1992, ch. 3 (complex reduction).
+
+## Definition of "done"
+`lake build` green, `./scripts/guard.sh`: 0 sorry, and
+`#print axioms Gleason.gleason` = `propext, Classical.choice, Quot.sound` only.
+
+## Git
+After every closed `sorry` and green `lake build`:
+1. `./scripts/guard.sh`
+2. `git add -A && git commit -m "<milestone>: <lemma_name>"`
+3. `git push`
+NEVER use `git push --force` without asking the user for explicit confirmation.
+
+## Anti-slowness pattern: `rw` over large substituted sums
+If a `rw` substitutes a variable with a large expression (e.g. a double sum
+∑ p : Fin n × Fin n, ...), and subsequent `rw`/`simp` calls need to traverse
+it: generalize it IMMEDIATELY under an opaque name (`generalize h : expr = T`)
+before continuing, rather than letting each subsequent step redo
+isDefEq/whnf over the whole term. If a lemma mixes heavy elaboration with an
+otherwise simple proof, extract the heavy part into a separate lemma with
+minimal context (`private theorem ..._assembly`). A high `maxHeartbeats`
+masks this symptom without fixing it — see
+Busch/Main.lean:riesz_rep_assembly for a resolved example.

@@ -3,7 +3,7 @@ import Gleason.Nonvacuity
 import Gleason.Busch.Main
 
 /-!
-# Théorème de Gleason — assemblage final
+**FR.** # Théorème de Gleason — assemblage final
 
 `gleason` assemble : mesure → frame function complexe (`RealSections`) → régularité
 complexe (`Patching`, qui repose sur `Real3/Regular`) → opérateur densité et formule
@@ -12,6 +12,16 @@ de Born (`Operator`). L'unicité vient de `symmetric_ext_of_quadratic`.
 Garde de qualité : à la fin du projet, `#print axioms Gleason.gleason` ne doit
 afficher QUE `propext`, `Classical.choice`, `Quot.sound` (et rien d'autre —
 en particulier pas `sorryAx`).
+
+**EN.** # Gleason's theorem — final assembly
+
+`gleason` assembles: measure → complex frame function (`RealSections`) → complex
+regularity (`Patching`, which rests on `Real3/Regular`) → density operator and the
+Born formula (`Operator`). Uniqueness comes from `symmetric_ext_of_quadratic`.
+
+Quality guard: at the end of the project, `#print axioms Gleason.gleason` must show
+ONLY `propext`, `Classical.choice`, `Quot.sound` (and nothing else — in particular
+no `sorryAx`).
 -/
 
 namespace Gleason
@@ -20,9 +30,15 @@ open scoped InnerProductSpace
 
 noncomputable section
 
-/-- **Théorème de Gleason (projections, dimension finie ≥ 3).**
+/--
+**FR.** **Théorème de Gleason (projections, dimension finie ≥ 3).**
 Toute mesure de probabilité finiment additive sur les sous-espaces de ℂⁿ, `n ≥ 3`,
-est représentée par un unique opérateur densité via la règle de Born. -/
+est représentée par un unique opérateur densité via la règle de Born.
+
+**EN.** **Gleason's theorem (projections, finite dimension ≥ 3).**
+Every finitely additive probability measure on the subspaces of ℂⁿ, `n ≥ 3`, is
+represented by a unique density operator via the Born rule.
+-/
 theorem gleason {n : ℕ} (hn : 3 ≤ n) (m : ProjMeasure n) :
     ∃! ρ : H n →ₗ[ℂ] H n, IsDensityOperator ρ ∧
       ∀ A : Submodule ℂ (H n), m.μ A = bornValue ρ A := by
@@ -41,9 +57,16 @@ theorem gleason {n : ℕ} (hn : 3 ≤ n) (m : ProjMeasure n) :
   rw [← bornValue_span_singleton ρ' x hx, ← hρ'_born (ℂ ∙ x), hρ_born (ℂ ∙ x),
     bornValue_span_singleton ρ x hx]
 
-/-- **Test d'intégration** (corollaire classique) : pas de mesure dispersion-free
+/--
+**FR.** **Test d'intégration** (corollaire classique) : pas de mesure dispersion-free
 (à valeurs dans {0,1}) en dimension ≥ 3. Si `gleason` était vacuement vrai ou mal
-énoncé, ce corollaire ne sortirait pas — c'est le détecteur anti-vacuité final. -/
+énoncé, ce corollaire ne sortirait pas — c'est le détecteur anti-vacuité final.
+
+**EN.** **Integration test** (classical corollary): no dispersion-free measure
+(valued in {0,1}) exists in dimension ≥ 3. If `gleason` were vacuously true or
+misstated, this corollary would not follow — it is the final anti-vacuity
+detector.
+-/
 theorem no_dispersion_free {n : ℕ} (hn : 3 ≤ n) (m : ProjMeasure n) :
     ¬ (∀ A : Submodule ℂ (H n), m.μ A = 0 ∨ m.μ A = 1) := by
   intro h

@@ -1,11 +1,17 @@
 import Gleason.Complex.Patching
 
 /-!
-# Réalisation opératorielle (phase O)
+**FR.** # Réalisation opératorielle (phase O)
 
 De la forme quadratique/sesquilinéaire à l'opérateur densité : positivité, trace 1,
 unicité, et formule de Born sur tous les sous-espaces. Cette phase est PARTAGÉE entre
 Busch et Gleason — la prouver d'abord côté Busch (M-B) amortit le travail.
+
+**EN.** # Operator realization (phase O)
+
+From the quadratic/sesquilinear form to the density operator: positivity, trace 1,
+uniqueness, and the Born formula on all subspaces. This phase is SHARED between
+Busch and Gleason — proving it first on the Busch side (M-B) amortizes the work.
 -/
 
 namespace Gleason
@@ -16,11 +22,19 @@ noncomputable section
 
 variable {n : ℕ}
 
-/-- **O0.** Unicité : un opérateur symétrique est déterminé par sa forme quadratique sur la
+/--
+**FR.** **O0.** Unicité : un opérateur symétrique est déterminé par sa forme quadratique sur la
 sphère unité (polarisation complexe ; spécifique à ℂ, faux sur ℝ pour les non-symétriques).
 Mathlib : `ext_inner_map` (polarisation complexe, sans hypothèse de symétrie sur les deux
 opérateurs — la symétrie sert seulement à passer de l'égalité des parties RÉELLES sur la
-sphère à l'égalité COMPLEXE partout). -/
+sphère à l'égalité COMPLEXE partout).
+
+**EN.** **O0.** Uniqueness: a symmetric operator is determined by its quadratic form
+on the unit sphere (complex polarization; specific to ℂ, false over ℝ for
+non-symmetric operators). Mathlib: `ext_inner_map` (complex polarization, with no
+symmetry hypothesis on either operator — symmetry is only used to pass from
+equality of the REAL parts on the sphere to COMPLEX equality everywhere).
+-/
 theorem symmetric_ext_of_quadratic {ρ₁ ρ₂ : H n →ₗ[ℂ] H n}
     (h₁ : LinearMap.IsSymmetric ρ₁) (h₂ : LinearMap.IsSymmetric ρ₂)
     (h : ∀ x : H n, ‖x‖ = 1 → (⟪ρ₁ x, x⟫_ℂ).re = (⟪ρ₂ x, x⟫_ℂ).re) :
@@ -49,11 +63,20 @@ theorem symmetric_ext_of_quadratic {ρ₁ ρ₂ : H n →ₗ[ℂ] H n}
     ring
   rw [hscale ρ₁, hscale ρ₂, hux]
 
-/-- **O1.** La valeur de Born d'une droite est la forme quadratique :
+/--
+**FR.** **O1.** La valeur de Born d'une droite est la forme quadratique :
 `tr (ρ P_{ℂ∙x}) = ⟪ρ x, x⟫` pour `‖x‖ = 1`. Même calcul que la positivité de `busch`
 (`Busch/Main.lean`, via `Submodule.starProjection_singleton` et `trace_rankOne`) ; aucune
 hypothèse de symétrie sur `ρ` n'est nécessaire (seule la conjugaison `⟪x,ρx⟫ = conj ⟪ρx,x⟫`
-sert à passer de l'un à l'autre, qui ont même partie réelle). -/
+sert à passer de l'un à l'autre, qui ont même partie réelle).
+
+**EN.** **O1.** The Born value of a line is the quadratic form:
+`tr (ρ P_{ℂ∙x}) = ⟪ρ x, x⟫` for `‖x‖ = 1`. Same computation as the positivity of
+`busch` (`Busch/Main.lean`, via `Submodule.starProjection_singleton` and
+`trace_rankOne`); no symmetry hypothesis on `ρ` is needed (only the conjugation
+`⟪x,ρx⟫ = conj ⟪ρx,x⟫` is used to pass from one to the other, which share the same
+real part).
+-/
 theorem bornValue_span_singleton (ρ : H n →ₗ[ℂ] H n) (x : H n) (hx : ‖x‖ = 1) :
     bornValue ρ (ℂ ∙ x) = (⟪ρ x, x⟫_ℂ).re := by
   unfold bornValue
@@ -70,9 +93,15 @@ theorem bornValue_span_singleton (ρ : H n →ₗ[ℂ] H n) (x : H n) (hx : ‖x
   rw [show ⟪x, ρ x⟫_ℂ = starRingEnd ℂ ⟪ρ x, x⟫_ℂ from (inner_conj_symm x (ρ x)).symm,
     Complex.conj_re]
 
-/-- **O2a(ii).** Version `Finset` de `projL_sup_of_isOrtho` : pour une famille finie de
+/--
+**FR.** **O2a(ii).** Version `Finset` de `projL_sup_of_isOrtho` : pour une famille finie de
 sous-espaces deux à deux orthogonaux, la projection sur le sup est la somme des
-projections. Même induction que `ProjMeasure.sum_eq_of_pairwise_isOrtho` (M3-1). -/
+projections. Même induction que `ProjMeasure.sum_eq_of_pairwise_isOrtho` (M3-1).
+
+**EN.** **O2a(ii).** `Finset` version of `projL_sup_of_isOrtho`: for a finite family of
+pairwise orthogonal subspaces, the projection onto the sup is the sum of the
+projections. Same induction as `ProjMeasure.sum_eq_of_pairwise_isOrtho` (M3-1).
+-/
 theorem projL_sup_of_pairwise_isOrtho {ι : Type*} [DecidableEq ι] (s : Finset ι)
     (A : ι → Submodule ℂ (H n)) (hortho : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → A i ⟂ A j) :
     projL (s.sup A) = ∑ i ∈ s, projL (A i) := by
@@ -89,8 +118,13 @@ theorem projL_sup_of_pairwise_isOrtho {ι : Type*} [DecidableEq ι] (s : Finset 
       hortho j (Finset.mem_insert_of_mem hj) k (Finset.mem_insert_of_mem hk) hjk
     rw [Finset.sup_insert, projL_sup_of_isOrtho hi_ortho, ih hs_sub, Finset.sum_insert hi]
 
-/-- **O2a(iii).** `bornValue ρ` est finiment additive sur les familles orthogonales : la
-trace distribue sur `+` (`map_sum`), et `Re` distribue sur les sommes finies. -/
+/--
+**FR.** **O2a(iii).** `bornValue ρ` est finiment additive sur les familles orthogonales : la
+trace distribue sur `+` (`map_sum`), et `Re` distribue sur les sommes finies.
+
+**EN.** **O2a(iii).** `bornValue ρ` is finitely additive over orthogonal families: the
+trace distributes over `+` (`map_sum`), and `Re` distributes over finite sums.
+-/
 theorem bornValue_sum_of_pairwise_isOrtho (ρ : H n →ₗ[ℂ] H n) {ι : Type*} [DecidableEq ι]
     (s : Finset ι) (A : ι → Submodule ℂ (H n))
     (hortho : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → A i ⟂ A j) :
@@ -102,10 +136,17 @@ theorem bornValue_sum_of_pairwise_isOrtho (ρ : H n →ₗ[ℂ] H n) {ι : Type*
     simp [LinearMap.comp_apply, LinearMap.sum_apply, map_sum]
   rw [hcomp_sum, map_sum, Complex.re_sum]
 
-/-- **O2.** De la représentation quadratique sur les droites à la formule de Born sur TOUS
+/--
+**FR.** **O2.** De la représentation quadratique sur les droites à la formule de Born sur TOUS
 les sous-espaces : `A` se découpe en droites orthogonales (base orthonormée de `A` vu comme
 espace de Hilbert en soi), et l'égalité passe à la somme des deux côtés (M3-1 pour `μ`,
-O2a(iii) pour `bornValue`). -/
+O2a(iii) pour `bornValue`).
+
+**EN.** **O2.** From the quadratic representation on lines to the Born formula on ALL
+subspaces: `A` splits into orthogonal lines (an orthonormal basis of `A` viewed as a
+Hilbert space in its own right), and the equality passes to the sum on both sides
+(M3-1 for `μ`, O2a(iii) for `bornValue`).
+-/
 theorem born_of_quadratic (m : ProjMeasure n) (ρ : H n →ₗ[ℂ] H n)
     (_hρ : LinearMap.IsSymmetric ρ)
     (h : ∀ x : H n, ‖x‖ = 1 → m.frameFunction x = (⟪ρ x, x⟫_ℂ).re) :
@@ -152,8 +193,13 @@ theorem born_of_quadratic (m : ProjMeasure n) (ρ : H n →ₗ[ℂ] H n)
           (fun i => (ℂ ∙ (e i : H n) : Submodule ℂ (H n))) hortho).symm
     _ = bornValue ρ A := by rw [htop]
 
-/-- **O3.** Positivité et trace 1 de l'opérateur obtenu, à partir de la positivité de la
-mesure et de `μ ⊤ = 1`. -/
+/--
+**FR.** **O3.** Positivité et trace 1 de l'opérateur obtenu, à partir de la positivité de la
+mesure et de `μ ⊤ = 1`.
+
+**EN.** **O3.** Positivity and trace 1 of the resulting operator, from the positivity
+of the measure and `μ ⊤ = 1`.
+-/
 theorem isDensityOperator_of_represents (m : ProjMeasure n) (ρ : H n →ₗ[ℂ] H n)
     (hρ : LinearMap.IsSymmetric ρ)
     (h : ∀ x : H n, ‖x‖ = 1 → m.frameFunction x = (⟪ρ x, x⟫_ℂ).re) :

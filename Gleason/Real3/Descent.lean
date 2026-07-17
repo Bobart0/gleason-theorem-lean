@@ -3,7 +3,7 @@ import Gleason.Real3.SphereCoords
 import Gleason.Real3.Simplex
 
 /-!
-# Basic Lemma (CKM 1985 §4, PDF du projet p. 122-123)
+**FR.** # Basic Lemma (CKM 1985 §4, PDF du projet p. 122-123)
 
 Remplace l'énoncé provisoire `exists_continuity_point` (qui ne correspondait pas à la
 structure réelle de CKM — acté dans SORRIES.md, bloc C) par le Basic Lemma : si `f p`
@@ -11,6 +11,15 @@ est proche du sup et `f` est constante sur l'équateur de `p`, alors `f` décro�
 de toute descente. Architecture inversée par rapport au papier : la version approchée
 (`basic_lemma_approx`) est établie d'abord, la version exacte (`basic_lemma`) en est un
 corollaire (limite `ξ → 0`).
+
+**EN.** # Basic Lemma (CKM 1985 §4, project PDF p. 122-123)
+
+Replaces the provisional statement `exists_continuity_point` (which did not match
+the actual structure of CKM — recorded in SORRIES.md, block C) with the Basic
+Lemma: if `f p` is close to the sup and `f` is constant on `p`'s equator, then `f`
+decreases along any descent. Architecture reversed relative to the paper: the
+approximate version (`basic_lemma_approx`) is established first, the exact version
+(`basic_lemma`) is a corollary of it (limit `ξ → 0`).
 -/
 
 namespace Gleason
@@ -19,10 +28,18 @@ open scoped RealInnerProductSpace Real
 
 noncomputable section
 
-/-- **C2.** Si `f` est une frame function bornée par `M`, dont l'inf `m₀` est
+/--
+**FR.** **C2.** Si `f` est une frame function bornée par `M`, dont l'inf `m₀` est
 approché (même forme que `hm` dans `frameFunction_P4`), constante `= c` sur
 l'équateur de `p`, et `f p` est proche du sup (`M - ξ < f p`), alors `c < m₀ + ξ` :
-P4 en `s := p` fournit un point de l'équateur avec `f < m₀ + ξ`, qui vaut donc `c`. -/
+P4 en `s := p` fournit un point de l'équateur avec `f < m₀ + ξ`, qui vaut donc `c`.
+
+**EN.** **C2.** If `f` is a frame function bounded by `M`, whose inf `m₀` is
+approximated (same form as `hm` in `frameFunction_P4`), constant `= c` on `p`'s
+equator, and `f p` is close to the sup (`M - ξ < f p`), then `c < m₀ + ξ`:
+P4 at `s := p` gives a point of the equator with `f < m₀ + ξ`, which therefore
+equals `c`.
+-/
 theorem equator_value_lt {f : E3 → ℝ} {W M m₀ c ξ : ℝ} (hf : IsFrameFunction f W)
     {p : E3} (hp : ‖p‖ = 1)
     (hM : ∀ t : E3, ‖t‖ = 1 → f t ≤ M)
@@ -35,14 +52,25 @@ theorem equator_value_lt {f : E3 → ℝ} {W M m₀ c ξ : ℝ} (hf : IsFrameFun
   rw [← hconst t hteq]
   exact htlt
 
-/-- **C3 (le cœur, version approchée).** Mêmes hypothèses que C2 (avec en plus
+/--
+**FR.** **C3 (le cœur, version approchée).** Mêmes hypothèses que C2 (avec en plus
 `hmlb`, un minorant EXPLICITE de `m₀` — l'approché seul ne suffit pas à borner
 `f t'` par en dessous à l'étape (iv)), `s ∈ northern p`, `s ≠ p`,
 `s' ∈ descent p s` : `f` décroît le long de la descente, à `ξ` près. Preuve :
 point de B4b (`∈ descent p s ∩ equator p`, orthogonal à `s`) ; second point par
 C1 sur `(sperp p s, s')` ; `frameFunction_pair_swap` (P3) avec `sperp p s`
 comme vecteur partagé sur les deux paires donne `f s + f t = f s' + f t'` ;
-`f t = c` (`hconst`), `f t' ≥ m₀` (`hmlb`), `c < m₀ + ξ` (C2) ; `linarith`. -/
+`f t = c` (`hconst`), `f t' ≥ m₀` (`hmlb`), `c < m₀ + ξ` (C2) ; `linarith`.
+
+**EN.** **C3 (the core, approximate version).** Same hypotheses as C2 (plus
+`hmlb`, an EXPLICIT lower bound on `m₀` — the approximate one alone is not
+enough to bound `f t'` from below in step (iv)), `s ∈ northern p`, `s ≠ p`,
+`s' ∈ descent p s`: `f` decreases along the descent, up to `ξ`. Proof: point from
+B4b (`∈ descent p s ∩ equator p`, orthogonal to `s`); second point via C1 applied
+to `(sperp p s, s')`; `frameFunction_pair_swap` (P3) with `sperp p s` as the
+shared vector of both pairs gives `f s + f t = f s' + f t'`; `f t = c` (`hconst`),
+`f t' ≥ m₀` (`hmlb`), `c < m₀ + ξ` (C2); `linarith`.
+-/
 theorem basic_lemma_approx {f : E3 → ℝ} {W M m₀ c ξ : ℝ} (hf : IsFrameFunction f W)
     {p : E3} (hp : ‖p‖ = 1)
     (hM : ∀ t : E3, ‖t‖ = 1 → f t ≤ M)
@@ -72,11 +100,18 @@ theorem basic_lemma_approx {f : E3 → ℝ} {W M m₀ c ξ : ℝ} (hf : IsFrameF
   have hcltm : c < m₀ + ξ := equator_value_lt hf hp hM hm hconst hfp
   linarith [h, hft, hft', hcltm]
 
-/-- **C4 (exact, corollaire de C3).** Mêmes hypothèses que C3 avec `hfp`
+/--
+**FR.** **C4 (exact, corollaire de C3).** Mêmes hypothèses que C3 avec `hfp`
 remplacé par `hmax : ∀ t unitaire, f t ≤ f p` (`p` réalise le sup) : la
 descente ne fait jamais AUGMENTER `f`. Preuve : pour tout `ξ > 0`, C3 avec
 `M := f p` (`f p - ξ < f p` trivialement) donne `f s' < f s + ξ` ;
-`le_of_forall_pos_lt_add` conclut. -/
+`le_of_forall_pos_lt_add` conclut.
+
+**EN.** **C4 (exact, corollary of C3).** Same hypotheses as C3 with `hfp` replaced
+by `hmax : ∀ unit t, f t ≤ f p` (`p` realizes the sup): the descent never
+INCREASES `f`. Proof: for every `ξ > 0`, C3 with `M := f p` (`f p - ξ < f p`
+trivially) gives `f s' < f s + ξ`; `le_of_forall_pos_lt_add` concludes.
+-/
 theorem basic_lemma {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction f W)
     {p : E3} (hp : ‖p‖ = 1)
     (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
@@ -92,10 +127,17 @@ theorem basic_lemma {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction f W)
   have h := basic_lemma_approx hf hp hmax hmlb hm hconst hfp hs hsN hsp hs'd
   linarith
 
-/-- **C5 (corollaire, pour le bloc F).** Sous les hypothèses de C4, la valeur
+/--
+**FR.** **C5 (corollaire, pour le bloc F).** Sous les hypothèses de C4, la valeur
 constante `c` sur l'équateur de `p` est un minorant global de `f` : `c ≤ m₀`
 par C2 appliqué à `M := f p` pour tout `ξ > 0` (même mécanisme que C4), puis
-`c ≤ m₀ ≤ f t` (`hmlb`). -/
+`c ≤ m₀ ≤ f t` (`hmlb`).
+
+**EN.** **C5 (corollary, for block F).** Under the hypotheses of C4, the constant
+value `c` on `p`'s equator is a global lower bound for `f`: `c ≤ m₀` by C2 applied
+to `M := f p` for every `ξ > 0` (same mechanism as C4), then `c ≤ m₀ ≤ f t`
+(`hmlb`).
+-/
 theorem equator_value_le {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction f W)
     {p : E3} (hp : ‖p‖ = 1)
     (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
@@ -118,12 +160,21 @@ theorem equator_value_le {f : E3 → ℝ} {W m₀ c : ℝ} (hf : IsFrameFunction
    gain de distance pur (deux pas d'azimut opposé, dans E4).
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **E2.** Pour tout écart d'azimut `Δ` et tout facteur d'amplification cible
+/--
+**FR.** **E2.** Pour tout écart d'azimut `Δ` et tout facteur d'amplification cible
 `ρ > 1`, il existe `n` pas d'angle égal `Δ/n` (avec `|Δ/n| < π/2`, condition de
 validité du critère de descente) dont l'amplification cumulée
 `(cos(Δ/n))⁻¹ⁿ` reste `≤ ρ`. Preuve : `cos x ≥ 1 - x²/2` (borne de Taylor) +
 Bernoulli donnent `cos(Δ/n)ⁿ ≥ 1 - Δ²/(2n)`, minoré par `1/ρ` dès que `n`
-dépasse un seuil explicite. -/
+dépasse un seuil explicite.
+
+**EN.** **E2.** For every azimuth gap `Δ` and every target amplification factor
+`ρ > 1`, there exists `n` equal-angle steps `Δ/n` (with `|Δ/n| < π/2`, the
+validity condition of the descent criterion) whose cumulative amplification
+`(cos(Δ/n))⁻¹ⁿ` stays `≤ ρ`. Proof: `cos x ≥ 1 - x²/2` (Taylor bound) together
+with Bernoulli give `cos(Δ/n)ⁿ ≥ 1 - Δ²/(2n)`, bounded below by `1/ρ` once `n`
+exceeds an explicit threshold.
+-/
 theorem spiral_amplification (Δ : ℝ) {ρ : ℝ} (hρ : 1 < ρ) :
     ∃ n : ℕ, 0 < n ∧ |Δ| / n < π / 2 ∧ (Real.cos (Δ / n))⁻¹ ^ n ≤ ρ := by
   have hρ0 : 0 < ρ - 1 := by linarith
@@ -182,12 +233,21 @@ theorem spiral_amplification (Δ : ℝ) {ρ : ℝ} (hρ : 1 < ρ) :
   rw [inv_pow, inv_eq_one_div, div_le_iff₀ (by positivity : (0 : ℝ) < Real.cos x ^ n)]
   linarith [step1, step2, step3]
 
-/-- **E4 (assemblage, cas où la cible est sur l'équateur).** `n` pas de phase A
+/--
+**FR.** **E4 (assemblage, cas où la cible est sur l'équateur).** `n` pas de phase A
 (ajustement d'azimut à rayon `tan θs` croissant géométriquement, via
 `spiral_amplification` sur l'azimut cible `ψt - π/2` avec `ρ := 2` arbitraire —
 seul l'angle de pas compte ici, pas l'amplification) puis un pas équatorial
 terminal (`spherePoint_mem_descent_equatorial`) atterrissant exactement sur
-`spherePoint b (π/2) ψt`. -/
+`spherePoint b (π/2) ψt`.
+
+**EN.** **E4 (assembly, case where the target is on the equator).** `n` phase-A
+steps (azimuth adjustment at geometrically increasing radius `tan θs`, via
+`spiral_amplification` on the target azimuth `ψt - π/2` with `ρ := 2` arbitrary —
+only the step angle matters here, not the amplification) then a terminal
+equatorial step (`spherePoint_mem_descent_equatorial`) landing exactly on
+`spherePoint b (π/2) ψt`.
+-/
 private theorem piron_chain_equator_case {p : E3} {b : OrthonormalBasis (Fin 3) ℝ E3}
     (hb0 : b 0 = p) {θs : ℝ} (hθs0 : 0 < θs) (hθs1 : θs < π / 2) (ψt : ℝ) :
     ∃ (n : ℕ) (c : ℕ → E3), c 0 = spherePoint b θs 0 ∧ c n = spherePoint b (π / 2) ψt ∧
@@ -243,10 +303,18 @@ private theorem piron_chain_equator_case {p : E3} {b : OrthonormalBasis (Fin 3) 
       rw [hazimuth_n] at hstep
       rwa [hb0] at hstep
 
-/-- E4bis (cas général, `0 < θt < π/2`) : `n` pas de phase A (spirale de rayon
+/--
+**FR.** E4bis (cas général, `0 < θt < π/2`) : `n` pas de phase A (spirale de rayon
 `tan θ` amenant `tan θs` à un rayon `Xn ≤ tan θt`, angle net `ψt`) puis 2 pas de
 phase B d'azimuts opposés `±φB` (`cos²φB = Xn/tan θt`) qui remontent le rayon
-exactement à `tan θt` en azimut net nul, atterrissant sur `spherePoint b θt ψt`. -/
+exactement à `tan θt` en azimut net nul, atterrissant sur `spherePoint b θt ψt`.
+
+**EN.** E4bis (general case, `0 < θt < π/2`): `n` phase-A steps (spiral of radius
+`tan θ` bringing `tan θs` to a radius `Xn ≤ tan θt`, net angle `ψt`) then 2
+phase-B steps of opposite azimuths `±φB` (`cos²φB = Xn/tan θt`) which bring the
+radius exactly back to `tan θt` at zero net azimuth, landing on
+`spherePoint b θt ψt`.
+-/
 private theorem piron_chain_main_case {p : E3} {b : OrthonormalBasis (Fin 3) ℝ E3}
     (hb0 : b 0 = p) {θs θt : ℝ} (hθs0 : 0 < θs) (hθs1 : θs < π / 2)
     (hθt0 : 0 < θt) (hθt1 : θt < π / 2) (hθorder : θs < θt) (ψt : ℝ) :
@@ -350,14 +418,25 @@ private theorem piron_chain_main_case {p : E3} {b : OrthonormalBasis (Fin 3) ℝ
       rw [hringstep, hcos2φB]
       field_simp
 
-/-- **E4 (assemblage final).** Chaîne de descente de Piron : si `t` est
+/--
+**FR.** **E4 (assemblage final).** Chaîne de descente de Piron : si `t` est
 strictement plus proche de l'équateur de `p` que `s` (`lat p t < lat p s`),
 il existe une chaîne finie de descentes reliant `s` à `t`. On aligne `s` en
 azimut nul via `exists_basis_aligned`, on lit les coordonnées de `t` dans la
 même base via `exists_sphereCoords`, on convertit `lat p t < lat p s` en
 `θs < θt` (`cos` strictement décroissante sur `[0,π]`), puis on dispatche
 entre `piron_chain_equator_case` (`θt = π/2`) et `piron_chain_main_case`
-(`θt < π/2`). -/
+(`θt < π/2`).
+
+**EN.** **E4 (final assembly).** Piron descent chain: if `t` is strictly closer to
+`p`'s equator than `s` (`lat p t < lat p s`), there exists a finite chain of
+descents joining `s` to `t`. `s` is aligned to zero azimuth via
+`exists_basis_aligned`, the coordinates of `t` are read in the same basis via
+`exists_sphereCoords`, `lat p t < lat p s` is converted to `θs < θt`
+(`cos` strictly decreasing on `[0,π]`), then dispatched between
+`piron_chain_equator_case` (`θt = π/2`) and `piron_chain_main_case`
+(`θt < π/2`).
+-/
 theorem piron_chain {p : E3} (hp : ‖p‖ = 1) {s t : E3}
     (hs : ‖s‖ = 1) (hsN : s ∈ northern p) (hsp : s ≠ p)
     (ht : ‖t‖ = 1) (htN : t ∈ northern p) (htp : t ≠ p)
@@ -394,9 +473,15 @@ theorem piron_chain {p : E3} (hp : ‖p‖ = 1) {s t : E3}
     · rw [hc0, hs_eq]
     · rw [hcn, ht_eq, hθt_eq]
 
-/-- **E5 (préliminaire).** Le long d'une chaîne de descente `c`, tous les
+/--
+**FR.** **E5 (préliminaire).** Le long d'une chaîne de descente `c`, tous les
 points restent dans `northern p` : `c 0` par hypothèse, puis hérité pas à pas
-via la première composante de `descent`. -/
+via la première composante de `descent`.
+
+**EN.** **E5 (preliminary).** Along a descent chain `c`, all points remain in
+`northern p`: `c 0` by hypothesis, then inherited step by step through the first
+component of `descent`.
+-/
 private theorem chain_mem_northern {p : E3} {c : ℕ → E3} (hc0N : c 0 ∈ northern p)
     {n : ℕ} (hstep : ∀ i < n, c i ≠ p ∧ c (i + 1) ∈ descent p (c i)) :
     ∀ i ≤ n, c i ∈ northern p := by
@@ -408,12 +493,21 @@ private theorem chain_mem_northern {p : E3} {c : ℕ → E3} (hc0N : c 0 ∈ nor
     have _hkN : c k ∈ northern p := ih (by omega)
     exact (hstep k (by omega)).2.1
 
-/-- **E5 (corollaire, décroissance le long d'une chaîne).** Si `f` vérifie les
+/--
+**FR.** **E5 (corollaire, décroissance le long d'une chaîne).** Si `f` vérifie les
 hypothèses de `basic_lemma` (bornée, sup en `p`, minorée par `m₀` approché,
 constante sur l'équateur de `p`) et `c` est une chaîne de descente issue de
 `c 0 ∈ northern p`, alors `f (c n) ≤ f (c 0)`. Récurrence sur `n` : chaque pas
 `c i → c (i+1)` applique `basic_lemma` (via `chain_mem_northern` pour la
-membre `c i ∈ northern p` nécessaire à `hsN`). -/
+membre `c i ∈ northern p` nécessaire à `hsN`).
+
+**EN.** **E5 (corollary, decrease along a chain).** If `f` satisfies the hypotheses
+of `basic_lemma` (bounded, sup at `p`, bounded below by approximated `m₀`,
+constant on `p`'s equator) and `c` is a descent chain starting at
+`c 0 ∈ northern p`, then `f (c n) ≤ f (c 0)`. Induction on `n`: each step
+`c i → c (i+1)` applies `basic_lemma` (via `chain_mem_northern` for the
+membership `c i ∈ northern p` needed for `hsN`).
+-/
 theorem chain_decreasing {f : E3 → ℝ} {W m₀ cst : ℝ} (hf : IsFrameFunction f W)
     {p : E3} (hp : ‖p‖ = 1)
     (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
@@ -436,9 +530,15 @@ theorem chain_decreasing {f : E3 → ℝ} {W m₀ cst : ℝ} (hf : IsFrameFuncti
       basic_lemma hf hp hmax hmlb hm hconst hcnunit hcnN hcnne hstepn
     linarith [hih, hdec]
 
-/-- **E5 (assemblage).** Corollaire de `piron_chain` + `chain_decreasing` :
+/--
+**FR.** **E5 (assemblage).** Corollaire de `piron_chain` + `chain_decreasing` :
 sous les hypothèses de `basic_lemma`, une frame function décroît entre deux
-points de `northern p \ {p}` dès que la latitude (par rapport à `p`) augmente. -/
+points de `northern p \ {p}` dès que la latitude (par rapport à `p`) augmente.
+
+**EN.** **E5 (assembly).** Corollary of `piron_chain` + `chain_decreasing`: under
+the hypotheses of `basic_lemma`, a frame function decreases between two points of
+`northern p \ {p}` as soon as the latitude (relative to `p`) increases.
+-/
 theorem frameFunction_le_of_lat_lt {f : E3 → ℝ} {W m₀ cst : ℝ} (hf : IsFrameFunction f W)
     {p : E3} (hp : ‖p‖ = 1)
     (hmax : ∀ t : E3, ‖t‖ = 1 → f t ≤ f p)
@@ -462,13 +562,23 @@ theorem frameFunction_le_of_lat_lt {f : E3 → ℝ} {W m₀ cst : ℝ} (hf : IsF
    ═══════════════════════════════════════════════════════════════════ -/
 
 set_option maxHeartbeats 1000000 in
-/-- **G8.** Descente radiale à 2 pas dans le plan méridien `(p,e0)` : pour
+/--
+**FR.** **G8.** Descente radiale à 2 pas dans le plan méridien `(p,e0)` : pour
 `s := a•p+a'•e0`, `t := b•p+b'•e0` (`a' := √(1-a²)`, `b' := √(1-b²)`,
 `0 ≤ b < a < 1`), il existe `s₁ ∈ northern p \ {p}` avec `s₁ ∈ descent p s`
 et `t ∈ descent p s₁`. Construction (CKM §6, sans trigonométrie) : `n0`
 orthogonal à `(p,e0)` (C1), `x := √(b/(a·⟪s,t⟫))` (`⟪s,t⟫ = ab+a'b' > 0`),
 `s₁ := x•s+√(1-x²)•n0`. Le point clé (`t ∈ descent p s₁`) se réduit à
-l'identité `x²·a·⟪s,t⟫ = b`, vraie par définition de `x`. -/
+l'identité `x²·a·⟪s,t⟫ = b`, vraie par définition de `x`.
+
+**EN.** **G8.** 2-step radial descent in the meridian plane `(p,e0)`: for
+`s := a•p+a'•e0`, `t := b•p+b'•e0` (`a' := √(1-a²)`, `b' := √(1-b²)`,
+`0 ≤ b < a < 1`), there exists `s₁ ∈ northern p \ {p}` with `s₁ ∈ descent p s`
+and `t ∈ descent p s₁`. Construction (CKM §6, trigonometry-free): `n0` orthogonal
+to `(p,e0)` (C1), `x := √(b/(a·⟪s,t⟫))` (`⟪s,t⟫ = ab+a'b' > 0`),
+`s₁ := x•s+√(1-x²)•n0`. The key point (`t ∈ descent p s₁`) reduces to the
+identity `x²·a·⟪s,t⟫ = b`, true by definition of `x`.
+-/
 theorem exists_two_step_descent {p e0 : E3} (hp : ‖p‖ = 1) (he0 : ‖e0‖ = 1) (hpe0 : ⟪p, e0⟫ = 0)
     {a b : ℝ} (hb0 : 0 ≤ b) (hba : b < a) (ha1 : a < 1) :
     ∃ s1 : E3, s1 ∈ northern p ∧ s1 ≠ p ∧

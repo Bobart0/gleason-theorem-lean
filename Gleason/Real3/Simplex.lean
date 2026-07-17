@@ -1,7 +1,7 @@
 import Gleason.Real3.FrameFunction
 
 /-!
-# Lemme du simplexe (échauffement, semaine 1)
+**FR.** # Lemme du simplexe (échauffement, semaine 1)
 
 Version abstraite du « warm-up » de Cooke–Keane–Moran / du lemme quantitatif de
 Richman–Bridges : une fonction bornée sur `[0,1]` dont la somme sur les paires ne
@@ -10,6 +10,16 @@ bornitude (aucun choix, aucune continuité supposée).
 
 C'est le PREMIER lemme analytique à prouver : il valide le style de preuve
 (récurrences dyadiques, encadrements) avant d'attaquer la sphère.
+
+**EN.** # Simplex lemma (warm-up, week 1)
+
+Abstract version of the Cooke–Keane–Moran "warm-up" / of the Richman–Bridges
+quantitative lemma: a bounded function on `[0,1]` whose sum over pairs depends
+only on the sum of the arguments is affine. Proof by dyadic induction +
+boundedness (no choice, no continuity assumed).
+
+This is the FIRST analytic lemma to prove: it validates the proof style (dyadic
+inductions, sandwich bounds) before tackling the sphere.
 -/
 
 namespace Gleason
@@ -26,8 +36,14 @@ namespace Gleason
    dyadique à la main (étapes ci-dessous, toutes prouvées : 0 `sorry`).
    ═══════════════════════════════════════════════════════════════════ -/
 
-/-- **Étape 1.** `g x := h x - h 0 - x * (h 1 - h 0)` s'annule en `0` et en `1`,
-reste bornée sur `[0,1]` (par `4C`), et hérite de l'additivité restreinte de `h`. -/
+/--
+**FR.** **Étape 1.** `g x := h x - h 0 - x * (h 1 - h 0)` s'annule en `0` et en `1`,
+reste bornée sur `[0,1]` (par `4C`), et hérite de l'additivité restreinte de `h`.
+
+**EN.** **Step 1.** `g x := h x - h 0 - x * (h 1 - h 0)` vanishes at `0` and `1`,
+stays bounded on `[0,1]` (by `4C`), and inherits the restricted additivity of
+`h`.
+-/
 private theorem simplex_g_props (h : ℝ → ℝ) (C : ℝ)
     (hb : ∀ x ∈ Set.Icc (0 : ℝ) 1, |h x| ≤ C)
     (hadd : ∀ x y u v : ℝ, x ∈ Set.Icc (0 : ℝ) 1 → y ∈ Set.Icc (0 : ℝ) 1 →
@@ -70,8 +86,13 @@ private theorem simplex_g_props (h : ℝ → ℝ) (C : ℝ)
       rw [← add_mul, ← add_mul, hsum]
     linarith [heq, key]
 
-/-- **Étape 2.** Spécialisation de l'additivité restreinte à `y = 0`, `v = x - u` :
-pour `0 ≤ u ≤ x ≤ 1`, `g x = g u + g (x - u)`. -/
+/--
+**FR.** **Étape 2.** Spécialisation de l'additivité restreinte à `y = 0`, `v = x - u` :
+pour `0 ≤ u ≤ x ≤ 1`, `g x = g u + g (x - u)`.
+
+**EN.** **Step 2.** Specialization of the restricted additivity at `y = 0`,
+`v = x - u`: for `0 ≤ u ≤ x ≤ 1`, `g x = g u + g (x - u)`.
+-/
 private theorem simplex_split (g : ℝ → ℝ) (hg0 : g 0 = 0)
     (hgadd : ∀ x y u v : ℝ, x ∈ Set.Icc (0 : ℝ) 1 → y ∈ Set.Icc (0 : ℝ) 1 →
       u ∈ Set.Icc (0 : ℝ) 1 → v ∈ Set.Icc (0 : ℝ) 1 → x + y = u + v →
@@ -87,8 +108,13 @@ private theorem simplex_split (g : ℝ → ℝ) (hg0 : g 0 = 0)
   rw [hg0] at heq
   linarith
 
-/-- **Étape 3a (halving).** Récurrence sur `n` via `simplex_split` (avec
-`u = x / 2`) : `g (x / 2^n) = g x / 2^n` pour `x ∈ [0,1]`. -/
+/--
+**FR.** **Étape 3a (halving).** Récurrence sur `n` via `simplex_split` (avec
+`u = x / 2`) : `g (x / 2^n) = g x / 2^n` pour `x ∈ [0,1]`.
+
+**EN.** **Step 3a (halving).** Induction on `n` via `simplex_split` (with
+`u = x / 2`): `g (x / 2^n) = g x / 2^n` for `x ∈ [0,1]`.
+-/
 private theorem simplex_halve (g : ℝ → ℝ)
     (hsplit : ∀ x u : ℝ, u ∈ Set.Icc (0 : ℝ) 1 → x ∈ Set.Icc (0 : ℝ) 1 → u ≤ x →
       g x = g u + g (x - u)) :
@@ -115,13 +141,23 @@ private theorem simplex_halve (g : ℝ → ℝ)
   intro x hx n
   exact main n x hx
 
-/-- **Étape 3b (multiples entiers, base réelle arbitraire).** Récurrence sur `k`
+/--
+**FR.** **Étape 3b (multiples entiers, base réelle arbitraire).** Récurrence sur `k`
 via `simplex_split` (avec `u = k * t`, `x = (k+1) * t`) : `g (k * t) = k * g t`
 pour tout réel `t ≥ 0` tel que `k * t ≤ 1`. Généralise le cas dyadique
 `t = 1/2^n` : nécessaire pour `simplex_vanish`, où l'amplification
 `g (2^n * r) = 2^n * g r` porte sur un réel `r` quelconque (le reste de
 `Int.fract`), pas seulement sur `t = 1/2^n`. Le cas de base `k = 0` utilise
-`g 0 = 0`, lui-même dérivable de `hsplit` en `x = u = 0`. -/
+`g 0 = 0`, lui-même dérivable de `hsplit` en `x = u = 0`.
+
+**EN.** **Step 3b (integer multiples, arbitrary real base).** Induction on `k`
+via `simplex_split` (with `u = k * t`, `x = (k+1) * t`): `g (k * t) = k * g t`
+for every real `t ≥ 0` such that `k * t ≤ 1`. Generalizes the dyadic case
+`t = 1/2^n`: needed for `simplex_vanish`, where the amplification
+`g (2^n * r) = 2^n * g r` applies to an arbitrary real `r` (the remainder of
+`Int.fract`), not just to `t = 1/2^n`. The base case `k = 0` uses `g 0 = 0`,
+itself derivable from `hsplit` at `x = u = 0`.
+-/
 private theorem simplex_nat_mul (g : ℝ → ℝ)
     (hsplit : ∀ x u : ℝ, u ∈ Set.Icc (0 : ℝ) 1 → x ∈ Set.Icc (0 : ℝ) 1 → u ≤ x →
       g x = g u + g (x - u)) :
@@ -149,11 +185,18 @@ private theorem simplex_nat_mul (g : ℝ → ℝ)
     rw [heq]
     ring
 
-/-- **Étape 3 (assemblage, corollaire dyadique de `simplex_nat_mul`).** Combine
+/--
+**FR.** **Étape 3 (assemblage, corollaire dyadique de `simplex_nat_mul`).** Combine
 `simplex_halve` en `x = 1` (donnant `g (1/2^n) = g 1 / 2^n = 0`) avec
 `simplex_nat_mul` en `t = 1/2^n` : `g` s'annule sur tous les dyadiques de
 `[0,1]`. Purement algébrique, AUCUNE bornitude requise (contrairement à
-l'étape 4). -/
+l'étape 4).
+
+**EN.** **Step 3 (assembly, dyadic corollary of `simplex_nat_mul`).** Combines
+`simplex_halve` at `x = 1` (giving `g (1/2^n) = g 1 / 2^n = 0`) with
+`simplex_nat_mul` at `t = 1/2^n`: `g` vanishes on all dyadics of `[0,1]`. Purely
+algebraic, NO boundedness required (unlike step 4).
+-/
 private theorem simplex_dyadic_vanish (g : ℝ → ℝ) (hg1 : g 1 = 0)
     (hhalve : ∀ x ∈ Set.Icc (0 : ℝ) 1, ∀ n : ℕ, g (x / 2 ^ n) = g x / 2 ^ n)
     (hmul : ∀ (k : ℕ) (t : ℝ), 0 ≤ t → (k : ℝ) * t ≤ 1 → g ((k : ℝ) * t) = (k : ℝ) * g t) :
@@ -175,14 +218,24 @@ private theorem simplex_dyadic_vanish (g : ℝ → ℝ) (hg1 : g 1 = 0)
   rw [hcast]
   exact heq
 
-/-- **Étape 4 (le cœur analytique).** Pour `x ∈ [0,1]` et tout `n`, en posant
+/--
+**FR.** **Étape 4 (le cœur analytique).** Pour `x ∈ [0,1]` et tout `n`, en posant
 `k = ⌊x·2^n⌋` et `r = x - k/2^n ∈ [0, 1/2^n)`, `simplex_split` donne
 `g x = g (k/2^n) + g r = g r` (dyadique nul). Puis `simplex_nat_mul` en
 `k' = 2^n`, `t = r` (licite car `2^n · r < 1`) donne
 `g (2^n · r) = 2^n · g r`, donc `|g r| ≤ C / 2^n` (bornitude de `g (2^n r)`
 via `hb`), d'où `|g x| ≤ C / 2^n` pour tout `n` : `g x = 0` par la propriété
 d'Archimède. C'est ici, et seulement ici, que la bornitude de `g` est
-utilisée. -/
+utilisée.
+
+**EN.** **Step 4 (the analytic core).** For `x ∈ [0,1]` and every `n`, setting
+`k = ⌊x·2^n⌋` and `r = x - k/2^n ∈ [0, 1/2^n)`, `simplex_split` gives
+`g x = g (k/2^n) + g r = g r` (dyadic, zero). Then `simplex_nat_mul` at
+`k' = 2^n`, `t = r` (valid since `2^n · r < 1`) gives
+`g (2^n · r) = 2^n · g r`, so `|g r| ≤ C / 2^n` (boundedness of `g (2^n r)` via
+`hb`), hence `|g x| ≤ C / 2^n` for every `n`: `g x = 0` by the Archimedean
+property. This is the only place where boundedness of `g` is used.
+-/
 private theorem simplex_vanish (g : ℝ → ℝ) (C : ℝ)
     (hb : ∀ x ∈ Set.Icc (0 : ℝ) 1, |g x| ≤ C)
     (hsplit : ∀ x u : ℝ, u ∈ Set.Icc (0 : ℝ) 1 → x ∈ Set.Icc (0 : ℝ) 1 → u ≤ x →
@@ -247,10 +300,16 @@ private theorem simplex_vanish (g : ℝ → ℝ) (C : ℝ)
   rw [le_div_iff₀ (by positivity : (0:ℝ) < 2 ^ n)] at hb2
   linarith
 
-/-- **Étape 5 / Lemme du simplexe (assemblage final).** `g ≡ 0` sur `[0,1]` se
+/--
+**FR.** **Étape 5 / Lemme du simplexe (assemblage final).** `g ≡ 0` sur `[0,1]` se
 retraduit en `h x = a * x + b` avec `a = h 1 - h 0`, `b = h 0`. Si `h` est bornée
 sur `[0,1]` et si `h x + h y` ne dépend que de `x + y`, alors `h` est affine
-sur `[0,1]`. -/
+sur `[0,1]`.
+
+**EN.** **Step 5 / Simplex lemma (final assembly).** `g ≡ 0` on `[0,1]` translates
+back to `h x = a * x + b` with `a = h 1 - h 0`, `b = h 0`. If `h` is bounded on
+`[0,1]` and `h x + h y` depends only on `x + y`, then `h` is affine on `[0,1]`.
+-/
 theorem bounded_additive_affine (h : ℝ → ℝ) (C : ℝ)
     (hb : ∀ x ∈ Set.Icc (0 : ℝ) 1, |h x| ≤ C)
     (hadd : ∀ x y u v : ℝ, x ∈ Set.Icc (0 : ℝ) 1 → y ∈ Set.Icc (0 : ℝ) 1 →
@@ -279,7 +338,12 @@ theorem bounded_additive_affine (h : ℝ → ℝ) (C : ℝ)
 -- Set.Countable.measure_zero mais alourdit les imports).
 -- ═══════════════════════════════════════════════════════════════════
 
-/-- **D1.** `f 1 = 1`, via le triplet `(0,0,1)` (`0,1 ∉ C` car `C ⊆ Ioo 0 1`). -/
+/--
+**FR.** **D1.** `f 1 = 1`, via le triplet `(0,0,1)` (`0,1 ∉ C` car `C ⊆ Ioo 0 1`).
+
+**EN.** **D1.** `f 1 = 1`, via the triple `(0,0,1)` (`0,1 ∉ C` since
+`C ⊆ Ioo 0 1`).
+-/
 private theorem warmup_II_D1 {C : Set ℝ} (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) (f : ℝ → ℝ)
     (hf0 : f 0 = 0)
     (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
@@ -295,11 +359,20 @@ private theorem warmup_II_D1 {C : Set ℝ} (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) (
   rw [hf0] at h
   linarith
 
-/-- **D2.** Il existe un point `a₀ ∈ (0,1)` « générique » : pour tous `p q : ℕ`
+/--
+**FR.** **D2.** Il existe un point `a₀ ∈ (0,1)` « générique » : pour tous `p q : ℕ`
 avec `q > 0` et `(p/q)·a₀ ≤ 1`, ni `(p/q)·a₀` ni `1 - (p/q)·a₀` ne sont dans `C`.
 Construit via l'ensemble dénombrable `⋃_{c∈C} ℚ·c ∪ ⋃_{c∈C} ℚ·(1-c)` : tout point
 hors de cet ensemble a la propriété (sinon `a₀` s'écrirait `(q/p)·c` ou
-`(q/p)·(1-c)` pour un `c ∈ C`, avec `p ≠ 0` car `c ∈ (0,1)`). -/
+`(q/p)·(1-c)` pour un `c ∈ C`, avec `p ≠ 0` car `c ∈ (0,1)`).
+
+**EN.** **D2.** There exists a "generic" point `a₀ ∈ (0,1)`: for all `p q : ℕ`
+with `q > 0` and `(p/q)·a₀ ≤ 1`, neither `(p/q)·a₀` nor `1 - (p/q)·a₀` lies in
+`C`. Built from the countable set
+`⋃_{c∈C} ℚ·c ∪ ⋃_{c∈C} ℚ·(1-c)`: any point outside this set has the property
+(otherwise `a₀` would be `(q/p)·c` or `(q/p)·(1-c)` for some `c ∈ C`, with
+`p ≠ 0` since `c ∈ (0,1)`).
+-/
 private theorem warmup_II_D2 {C : Set ℝ} (hC : C.Countable) (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) :
     ∃ a₀ ∈ Set.Ioo (0 : ℝ) 1, ∀ p q : ℕ, 0 < q → (p : ℝ) / q * a₀ ≤ 1 →
       (p : ℝ) / q * a₀ ∉ C ∧ 1 - (p : ℝ) / q * a₀ ∉ C := by
@@ -339,9 +412,16 @@ private theorem warmup_II_D2 {C : Set ℝ} (hC : C.Countable) (hCsub : C ⊆ Set
     field_simp
     ring
 
-/-- **D3.** Additivité sur l'orbite de `a₀` : deux applications de `htriple`
+/--
+**FR.** **D3.** Additivité sur l'orbite de `a₀` : deux applications de `htriple`
 (`(p/q·a₀, p'/q·a₀, 1-(p+p')/q·a₀)` puis `((p+p')/q·a₀, 1-(p+p')/q·a₀, 0)`),
-soustraction, `hf0`. Toutes les appartenances viennent de `hgen` (D2). -/
+soustraction, `hf0`. Toutes les appartenances viennent de `hgen` (D2).
+
+**EN.** **D3.** Additivity on the orbit of `a₀`: two applications of `htriple`
+(`(p/q·a₀, p'/q·a₀, 1-(p+p')/q·a₀)` then
+`((p+p')/q·a₀, 1-(p+p')/q·a₀, 0)`), subtraction, `hf0`. All memberships come
+from `hgen` (D2).
+-/
 private theorem warmup_II_D3 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
     (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
       c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1)
@@ -379,9 +459,16 @@ private theorem warmup_II_D3 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
   rw [hf0] at heq2
   linarith
 
-/-- **D4.** Homogénéité rationnelle sur l'orbite : `f((p/q)·a₀) = (p/q)·f(a₀)`.
+/--
+**FR.** **D4.** Homogénéité rationnelle sur l'orbite : `f((p/q)·a₀) = (p/q)·f(a₀)`.
 Deux temps : (i) récurrence sur `p` via D3 pour `f(p·(a₀/q)) = p·f(a₀/q)` tant
-que `p·(a₀/q) ≤ 1` ; (ii) cas `p = q` donne `f(a₀) = q·f(a₀/q)` ; combiner. -/
+que `p·(a₀/q) ≤ 1` ; (ii) cas `p = q` donne `f(a₀) = q·f(a₀/q)` ; combiner.
+
+**EN.** **D4.** Rational homogeneity on the orbit:
+`f((p/q)·a₀) = (p/q)·f(a₀)`. Two steps: (i) induction on `p` via D3 for
+`f(p·(a₀/q)) = p·f(a₀/q)` as long as `p·(a₀/q) ≤ 1`; (ii) case `p = q` gives
+`f(a₀) = q·f(a₀/q)`; combine.
+-/
 private theorem warmup_II_D4 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
     (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
       c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1)
@@ -426,8 +513,13 @@ private theorem warmup_II_D4 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
   rw [hstep p hle, hinv]
   ring
 
-/-- **D6-existence.** Il existe `b ∈ (0,1)` avec `b ∉ C` et `1 - b ∉ C`
-(l'ensemble `C ∪ {x | 1 - x ∈ C}` est dénombrable, ne peut recouvrir `(0,1)`). -/
+/--
+**FR.** **D6-existence.** Il existe `b ∈ (0,1)` avec `b ∉ C` et `1 - b ∉ C`
+(l'ensemble `C ∪ {x | 1 - x ∈ C}` est dénombrable, ne peut recouvrir `(0,1)`).
+
+**EN.** **D6-existence.** There exists `b ∈ (0,1)` with `b ∉ C` and `1 - b ∉ C`
+(the set `C ∪ {x | 1 - x ∈ C}` is countable, cannot cover `(0,1)`).
+-/
 private theorem warmup_II_D6_exists {C : Set ℝ} (hC : C.Countable) :
     ∃ b ∈ Set.Ioo (0 : ℝ) 1, b ∉ C ∧ 1 - b ∉ C := by
   set C' : Set ℝ := C ∪ (fun x => 1 - x) '' C with hC'_def
@@ -444,11 +536,20 @@ private theorem warmup_II_D6_exists {C : Set ℝ} (hC : C.Countable) :
   apply hbnotin
   exact Set.mem_union_right _ ⟨1 - b, h1bC, by ring⟩
 
-/-- **D5 (le cœur, squeeze).** Pour `a ∈ [0,1) \ C`, `f a = (f a₀ / a₀) · a`.
+/--
+**FR.** **D5 (le cœur, squeeze).** Pour `a ∈ [0,1) \ C`, `f a = (f a₀ / a₀) · a`.
 Par `le_antisymm`, chaque sens via `∀ ε > 0` : `exists_rat_btwn` donne des
 rationnels `r < a/a₀ < r'` (dénominateur commun `q`) avec `r'·a₀ ≤ 1` et
 `(r' - r)·a₀` arbitrairement petit ; `hmono` encadre `f a` par
-`f(r·a₀) ≤ f a ≤ f(r'·a₀)`, D4 réécrit les bornes en `r·f(a₀)` et `r'·f(a₀)`. -/
+`f(r·a₀) ≤ f a ≤ f(r'·a₀)`, D4 réécrit les bornes en `r·f(a₀)` et `r'·f(a₀)`.
+
+**EN.** **D5 (the core, squeeze).** For `a ∈ [0,1) \ C`, `f a = (f a₀ / a₀) · a`.
+By `le_antisymm`, each direction via `∀ ε > 0`: `exists_rat_btwn` gives rationals
+`r < a/a₀ < r'` (common denominator `q`) with `r'·a₀ ≤ 1` and
+`(r' - r)·a₀` arbitrarily small; `hmono` sandwiches `f a` between
+`f(r·a₀) ≤ f a ≤ f(r'·a₀)`, D4 rewrites the bounds as `r·f(a₀)` and
+`r'·f(a₀)`.
+-/
 private theorem warmup_II_D5 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
     (hmono : ∀ a b, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C → a ≤ b → f a ≤ f b)
     {a₀ : ℝ} (ha₀ : a₀ ∈ Set.Ioo (0 : ℝ) 1)
@@ -541,9 +642,15 @@ private theorem warmup_II_D5 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
   have hpos : 0 < |f a - β * a| := abs_pos.mpr (sub_ne_zero.mpr hne)
   exact absurd (hbound (|f a - β * a| / 2) (by linarith)) (by linarith)
 
-/-- **D6.** `f a₀ / a₀ = 1` : triplet `(b, 1-b, 0)` (`htriple`) donne
+/--
+**FR.** **D6.** `f a₀ / a₀ = 1` : triplet `(b, 1-b, 0)` (`htriple`) donne
 `f b + f(1-b) = 1` (avec `f 0 = 0`) ; D5 sur `b` et `1-b` (tous deux `< 1`)
-donne `β·b + β·(1-b) = β = 1`. -/
+donne `β·b + β·(1-b) = β = 1`.
+
+**EN.** **D6.** `f a₀ / a₀ = 1`: the triple `(b, 1-b, 0)` (`htriple`) gives
+`f b + f(1-b) = 1` (with `f 0 = 0`); D5 applied to `b` and `1-b` (both `< 1`)
+gives `β·b + β·(1-b) = β = 1`.
+-/
 private theorem warmup_II_D6 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
     (htriple : ∀ a b c, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C →
       c ∈ Set.Icc (0 : ℝ) 1 \ C → a + b + c = 1 → f a + f b + f c = 1)
@@ -569,9 +676,15 @@ private theorem warmup_II_D6 {C : Set ℝ} (f : ℝ → ℝ) (hf0 : f 0 = 0)
   rw [hfactor] at htr
   linarith
 
-/-- **D7 / Warmup Theorem II (CKM 1985 §3).** Si `f` est monotone et
+/--
+**FR.** **D7 / Warmup Theorem II (CKM 1985 §3).** Si `f` est monotone et
 « additive-à-1 » sur `[0,1] \ C` (`C` dénombrable, `C ⊆ (0,1)`), avec `f 0 = 0`,
-alors `f = id` sur `[0,1] \ C`. -/
+alors `f = id` sur `[0,1] \ C`.
+
+**EN.** **D7 / Warmup Theorem II (CKM 1985 §3).** If `f` is monotone and
+"additive-to-1" on `[0,1] \ C` (`C` countable, `C ⊆ (0,1)`), with `f 0 = 0`,
+then `f = id` on `[0,1] \ C`.
+-/
 theorem warmup_II (C : Set ℝ) (hC : C.Countable) (hCsub : C ⊆ Set.Ioo (0 : ℝ) 1) (f : ℝ → ℝ)
     (hf0 : f 0 = 0)
     (hmono : ∀ a b, a ∈ Set.Icc (0 : ℝ) 1 \ C → b ∈ Set.Icc (0 : ℝ) 1 \ C → a ≤ b → f a ≤ f b)

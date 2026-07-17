@@ -1,7 +1,7 @@
 import Gleason.Busch.Effects
 
 /-!
-# Théorème de Busch (2003) — énoncé principal
+**FR.** # Théorème de Busch (2003) — énoncé principal
 
 **Cible du jalon M-B** (avant Gleason). Le chemin de preuve, entièrement algébrique
 (aucune analyse fine sur la sphère, contrairement à Gleason) :
@@ -16,6 +16,22 @@ import Gleason.Busch.Effects
 6. positivité de `ρ` (tester sur les effets de rang 1) et trace 1 (tester sur `1`).
 
 Chaque étape est un lemme séparé à ajouter ici en M-B ; seul l'énoncé final est figé.
+
+**EN.** # Busch's theorem (2003) — main statement
+
+**Target of milestone M-B** (before Gleason). The proof path is entirely algebraic
+(no fine analysis on the sphere, unlike Gleason):
+
+1. `f 0 = 0`, iterated finite additivity;
+2. rational homogeneity: `f (q • T) = q * f T` for `q ∈ ℚ≥0` (dyadic bisection);
+3. monotonicity (already in `Effects.lean`) ⇒ REAL homogeneity by rational sandwiching;
+4. extension of `f` to a real-linear functional on self-adjoint operators
+   (every self-adjoint operator is a difference of effects up to a positive factor);
+5. Riesz representation in finite dimension: the functional is `T ↦ Re tr (ρ T)`
+   for a unique self-adjoint `ρ`;
+6. positivity of `ρ` (tested on rank-1 effects) and trace 1 (tested on `1`).
+
+Each step is a separate lemma to be added here at M-B; only the final statement is fixed.
 -/
 
 namespace Gleason
@@ -945,9 +961,15 @@ theorem riesz_selfAdjoint (_hn : 1 ≤ n)
 -- ÉNONCÉS PRINCIPAUX (figés — ne pas modifier)
 -- ═══════════════════════════════════════════════════════════════════
 
-/-- **Théorème de Busch (2003), dimension finie.** Toute mesure d'effets est
+/--
+**FR.** **Théorème de Busch (2003), dimension finie.** Toute mesure d'effets est
 représentée par un unique opérateur densité. Vaut dès `n = 1` (et surtout `n = 2`,
-où Gleason échoue). -/
+où Gleason échoue).
+
+**EN.** **Busch's theorem (2003), finite dimension.** Every effect measure is
+represented by a unique density operator. Holds already at `n = 1` (and especially
+`n = 2`, where Gleason fails).
+-/
 theorem busch {n : ℕ} (hn : 1 ≤ n) (F : EffectMeasure n) :
     ∃! ρ : H n →ₗ[ℂ] H n, IsDensityOperator ρ ∧
       ∀ T, IsEffect T → F.f T = (LinearMap.trace ℂ (H n) (ρ ∘ₗ T)).re := by
@@ -1010,8 +1032,13 @@ theorem busch {n : ℕ} (hn : 1 ≤ n) (F : EffectMeasure n) :
     have hre : ∀ x : ℂ, ((↑c : ℂ) * x).re = c * x.re := fun x => RCLike.re_ofReal_mul c x
     simp only [Complex.sub_re, hre]
 
-/-- Corollaire : règle de Born sur les projections, dès la dimension 1, sous
-l'hypothèse (plus forte que celle de Gleason) d'additivité sur les effets. -/
+/--
+**FR.** Corollaire : règle de Born sur les projections, dès la dimension 1, sous
+l'hypothèse (plus forte que celle de Gleason) d'additivité sur les effets.
+
+**EN.** Corollary: the Born rule on projections, already in dimension 1, under the
+(stronger than Gleason's) hypothesis of additivity on effects.
+-/
 theorem busch_born_rule {n : ℕ} (hn : 1 ≤ n) (F : EffectMeasure n) :
     ∃ ρ : H n →ₗ[ℂ] H n, IsDensityOperator ρ ∧
       ∀ A : Submodule ℂ (H n), F.toProjMeasure.μ A = bornValue ρ A := by
