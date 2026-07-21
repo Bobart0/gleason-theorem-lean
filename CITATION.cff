@@ -10,6 +10,9 @@ authors:
     affiliation: "Independent Researcher"
     orcid: "https://orcid.org/0009-0000-2457-375X"
 
+version: "1.0.4-jar-audit"
+date-released: "2026-07-21"
+
 repository-code: "https://github.com/Bobart0/gleason-theorem-lean"
 url: "https://github.com/Bobart0/gleason-theorem-lean"
 
