@@ -13,7 +13,7 @@ argument à h:=g−f (poids nul, H6-H8) conclu par un argument de dénombrement
 
 `heven` (parité) n'est PAS une hypothèse de ce théorème : elle est dérivable de
 `hf` seule via `frameFunction_even` (P2, bloc A) — retirée de l'énoncé
-d'origine (acté dans SORRIES.md, cf. règle 3 de CLAUDE.md).
+d'origine (acté dans SORRIES.md, cf. règle 3 de AGENTS.md).
 
 **EN.** # Regularity of positive frame functions on ℝ³ (CKM 1985 §7)
 
@@ -27,7 +27,7 @@ pairs of zeros / pigeonhole) that rules out `h≠0`.
 
 `heven` (parity) is NOT a hypothesis of this theorem: it is derivable from `hf`
 alone via `frameFunction_even` (P2, block A) — removed from the original
-statement (recorded in SORRIES.md, cf. rule 3 of CLAUDE.md).
+statement (recorded in SORRIES.md, cf. rule 3 of AGENTS.md).
 -/
 
 namespace Gleason
@@ -654,7 +654,7 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
             · exact absurd (by linarith [hMm2eq, hM20, hM2_def] : h p2 = h r2) hMm2
           -- Rend `g`, `h`, `Q0`, `M2` opaques : leur définition ne sert plus, seules
           -- les propriétés déjà établies (hhframe, hh_zero, hclaim_h, hQ0_apply...)
-          -- sont utilisées à partir d'ici (cf. CLAUDE.md, pattern anti-lenteur).
+          -- sont utilisées à partir d'ici (cf. AGENTS.md, pattern anti-lenteur).
           clear_value Q0 M2 h g
           have hqp : ⟪q, p⟫ = 0 := by rw [real_inner_comm]; exact hpq
           have hrp : ⟪r, p⟫ = 0 := by rw [real_inner_comm]; exact hpr
@@ -981,7 +981,7 @@ theorem frameFunction_regular (f : E3 → ℝ) (W : ℝ)
             ring
           -- `u`, `w` deviennent opaques : leur définition explicite (combinaison de
           -- p,q,r) ne sert plus, seules leurs propriétés déjà établies sont utilisées
-          -- (évite un sur-filtrage de `rw` via le dépliage de `set`, CLAUDE.md).
+          -- (évite un sur-filtrage de `rw` via le dépliage de `set`, AGENTS.md).
           clear_value u w
           have hune_w : u ≠ w := by
             intro heq

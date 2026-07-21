@@ -1,4 +1,4 @@
-# CLAUDE.md — Formalisation de Busch (2003) et Gleason en Lean 4 / Mathlib
+# AGENTS.md — Formalisation de Busch (2003) et Gleason en Lean 4 / Mathlib
 
 ## Mission
 Maintenir une formalisation complète en Lean 4 et Mathlib de versions complexes de
@@ -7,8 +7,9 @@ théorème de Gleason (projections, dimension ≥ 3), sur
 `EuclideanSpace ℂ (Fin n)`. L'architecture achevée traite Busch au jalon M-B, puis
 Gleason avec le cœur analytique CKM/Richman–Bridges dans `Gleason/Real3/`.
 
-L'utilisateur est débutant en Lean et non spécialiste du domaine : c'est TOI qui
-portes les mathématiques et le Lean. Explique tes choix en français, brièvement.
+L'utilisateur est débutant en Lean et non spécialiste du domaine : l'agent de
+codage porte les mathématiques et le Lean. Expliquer les choix en français,
+brièvement.
 
 ## Règles absolues (non négociables)
 1. **JAMAIS de `axiom`.** Jamais. Le prédécesseur de ce projet (128k lignes) est mort
@@ -86,7 +87,7 @@ exemple résolu.
 
 ## English translation
 
-# CLAUDE.md — Formalization of Busch (2003) and Gleason in Lean 4 / Mathlib
+# AGENTS.md — Formalization of Busch (2003) and Gleason in Lean 4 / Mathlib
 
 ## Mission
 Maintain a complete Lean 4 and Mathlib formalization of finite-dimensional complex
@@ -95,8 +96,8 @@ theorem (projections, dimension ≥ 3), on `EuclideanSpace ℂ (Fin n)`. The com
 architecture treats Busch at milestone M-B, then Gleason with the
 CKM/Richman–Bridges analytic core in `Gleason/Real3/`.
 
-The user is a Lean beginner and not a domain specialist: YOU carry the
-mathematics and the Lean. Explain your choices in French, briefly.
+The user is a Lean beginner and not a domain specialist: the coding agent carries
+the mathematics and the Lean. Explain choices briefly in French.
 
 ## Absolute rules (non-negotiable)
 1. **NEVER `axiom`.** Ever. This project's predecessor (128k lines) died from a

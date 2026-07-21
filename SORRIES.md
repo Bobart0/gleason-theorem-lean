@@ -113,7 +113,7 @@ compteur lexical inclut aussi les occurrences dans les commentaires/docstrings).
       nouvelle brique dans SphereGeometry.lean, unicité à signe près de
       l'orthogonal d'une paire indépendante) ; r2' ∈ span{u,w} hérite de
       y=z par linéarité ⟹ contradiction M2>0 ⟹ h≡0). `heven` retirée de
-      l'énoncé (dérivable via frameFunction_even, bloc A, cf. CLAUDE.md
+      l'énoncé (dérivable via frameFunction_even, bloc A, cf. AGENTS.md
       règle 3). `#print axioms` : propext, Classical.choice, Quot.sound
       uniquement. **M2 COMPLET.**
 
@@ -321,7 +321,7 @@ four cases.
       new brick in SphereGeometry.lean, uniqueness up to sign of
       the orthogonal of an independent pair); r2' ∈ span{u,w} inherits
       y=z by linearity ⟹ contradiction M2>0 ⟹ h≡0). `heven` removed from
-      the statement (derivable via frameFunction_even, block A, cf. CLAUDE.md
+      the statement (derivable via frameFunction_even, block A, cf. AGENTS.md
       rule 3). `#print axioms`: propext, Classical.choice, Quot.sound
       only. **M2 COMPLETE.**
 

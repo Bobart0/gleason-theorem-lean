@@ -69,7 +69,7 @@ Gleason/Real3/               Cœur analytique réel sur ℝ³ (CKM/RB)          
 Gleason/Complex/             Sections réelles + recollement (Dvurečenskij) [jalon M3]
 Gleason/Operator.lean        Forme quadratique → opérateur densité         [phase O]
 Gleason/Main.lean            Théorème de Gleason + corollaire dispersion-free
-CLAUDE.md                    Règles pour l'agent (à lire par Claude Code au démarrage)
+AGENTS.md                    Règles agnostiques pour les agents IA de codage
 SORRIES.md                   Historique des obligations désormais closes
 ```
 
@@ -183,7 +183,7 @@ Gleason/Real3/                Real analytic core on ℝ³ (CKM/RB)              
 Gleason/Complex/              Real sections + patching (Dvurečenskij)              [milestone M3]
 Gleason/Operator.lean          Quadratic form → density operator                     [phase O]
 Gleason/Main.lean               Gleason's theorem + dispersion-free corollary
-CLAUDE.md                      Agent rules (read by Claude Code at startup)
+AGENTS.md                      Agent-agnostic rules for AI coding agents
 SORRIES.md                     Historical record of completed obligations
 ```
 
