@@ -1,7 +1,7 @@
 import Gleason.Real3.FrameFunction
 
 /-!
-**FR.** # Lemme du simplexe (échauffement, semaine 1)
+**FR.** # Lemme du simplexe (échauffement analytique)
 
 Version abstraite du « warm-up » de Cooke–Keane–Moran / du lemme quantitatif de
 Richman–Bridges : une fonction bornée sur `[0,1]` dont la somme sur les paires ne
@@ -11,7 +11,7 @@ bornitude (aucun choix, aucune continuité supposée).
 Premier bloc analytique de l'architecture achevée, il établit le style de preuve
 par récurrences dyadiques et encadrements utilisé ensuite sur la sphère.
 
-**EN.** # Simplex lemma (warm-up, week 1)
+**EN.** # Simplex lemma (analytic warm-up)
 
 Abstract version of the Cooke–Keane–Moran "warm-up" / of the Richman–Bridges
 quantitative lemma: a bounded function on `[0,1]` whose sum over pairs depends

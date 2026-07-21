@@ -2,7 +2,7 @@
 
 ## Mission
 Maintenir une formalisation complète en Lean 4 et Mathlib de versions complexes de
-dimension finie du théorème de Busch (2003, effets/POVM, dès la dimension 2) et du
+dimension finie du théorème de Busch (2003, effets/POVM, dès la dimension 1) et du
 théorème de Gleason (projections, dimension ≥ 3), sur
 `EuclideanSpace ℂ (Fin n)`. L'architecture achevée traite Busch au jalon M-B, puis
 Gleason avec le cœur analytique CKM/Richman–Bridges dans `Gleason/Real3/`.
@@ -32,7 +32,7 @@ brièvement.
 7. Les linters restent ACTIVÉS (pas de `set_option ... false` global).
 
 ## Workflow standard
-1. Lire l'état : `./scripts/guard.sh` et `lake build`.
+1. Lire l'état : `./scripts/verify.sh`.
 2. Localiser précisément le changement demandé dans l'architecture achevée.
 3. Boucle : proposer une modification → `lake build` → lire les erreurs → corriger.
    Tactiques de recherche : insérer `exact?`, `apply?`, `rw?` et lire la suggestion
@@ -40,7 +40,7 @@ brièvement.
 4. Recherche de noms Mathlib : https://leansearch.net (langage naturel),
    https://loogle.lean-lang.org (par signature), et grep dans
    `.lake/packages/mathlib/Mathlib/`.
-5. Après toute modification : `./scripts/guard.sh`, mettre à jour la documentation
+5. Après toute modification : `./scripts/verify.sh`, mettre à jour la documentation
    d'audit si nécessaire, puis créer un commit atomique.
 
 ## Historique du jalon M0→M1 — passe de compilation
@@ -62,7 +62,7 @@ Tout renommage d'API : commentaire `-- Mathlib: ancien_nom → nouveau_nom`.
 - Dvurečenskij 1992, ch. 3 (réduction complexe).
 
 ## Définition de « terminé »
-`lake build` vert, `./scripts/guard.sh` : 0 sorry, et
+`lake build` vert, `./scripts/verify.sh` vert, sans preuve admise, et
 `#print axioms Gleason.gleason` = `propext, Classical.choice, Quot.sound` uniquement.
 
 ## Git
@@ -91,7 +91,7 @@ exemple résolu.
 
 ## Mission
 Maintain a complete Lean 4 and Mathlib formalization of finite-dimensional complex
-versions of Busch's theorem (2003, effects/POVMs, from dimension 2) and Gleason's
+versions of Busch's theorem (2003, effects/POVMs, from dimension 1) and Gleason's
 theorem (projections, dimension ≥ 3), on `EuclideanSpace ℂ (Fin n)`. The completed
 architecture treats Busch at milestone M-B, then Gleason with the
 CKM/Richman–Bridges analytic core in `Gleason/Real3/`.
@@ -120,7 +120,7 @@ the mathematics and the Lean. Explain choices briefly in French.
 7. Linters stay ENABLED (no global `set_option ... false`).
 
 ## Standard workflow
-1. Read the state: `./scripts/guard.sh` and `lake build`.
+1. Read the state: `./scripts/verify.sh`.
 2. Locate the requested change precisely in the completed architecture.
 3. Loop: propose a change → `lake build` → read the errors → fix.
    Search tactics: insert `exact?`, `apply?`, `rw?` and read the suggestion in
@@ -128,7 +128,7 @@ the mathematics and the Lean. Explain choices briefly in French.
 4. Mathlib name search: https://leansearch.net (natural language),
    https://loogle.lean-lang.org (by signature), and grep in
    `.lake/packages/mathlib/Mathlib/`.
-5. After any change: `./scripts/guard.sh`, update audit documentation if needed,
+5. After any change: `./scripts/verify.sh`, update audit documentation if needed,
    then create an atomic commit.
 
 ## Milestone M0→M1 history — compilation pass
@@ -154,7 +154,7 @@ Any API rename: comment `-- Mathlib: old_name → new_name`.
 - Dvurečenskij 1992, ch. 3 (complex reduction).
 
 ## Definition of "done"
-`lake build` green, `./scripts/guard.sh`: 0 sorry, and
+`lake build` green, `./scripts/verify.sh` green, with no admitted proof, and
 `#print axioms Gleason.gleason` = `propext, Classical.choice, Quot.sound` only.
 
 ## Git

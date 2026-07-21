@@ -9,11 +9,17 @@ only », dimension finie) et du théorème de Busch (2003).
 ## Orthogonalité et disjonction du treillis
 
 L'additivité de `ProjMeasure` est exigée pour l'ORTHOGONALITÉ (`Submodule.IsOrtho`),
-et non simplement pour la disjonction du treillis (`Disjoint`). Cette dernière
-imposerait une condition différente et nettement plus forte : elle n'est pas
-équivalente à l'hypothèse du théorème de Gleason et n'est pas satisfaite par les
-mesures de Born générales. Les témoins explicites de `Gleason/Nonvacuity.lean`
-établissent séparément que les structures utilisées ici sont habitées.
+et non pour la seule disjonction du treillis (`Disjoint`), qui exprime une
+intersection nulle. L'orthogonalité implique l'intersection nulle, mais la
+réciproque est fausse. Demander l'additivité sur toute paire d'intersection nulle
+constituerait donc un principe de valuation différent et strictement plus fort que
+l'additivité orthogonale de Gleason. Ce principe n'est pas incohérent en dimension
+finie positive : la valuation normalisée `A ↦ dim(A) / dim(H)` est additive sur les
+sommes directes. En revanche, il exclut en général les mesures de Born d'état pur
+sur des droites non orthogonales et n'est pas l'hypothèse quantique visée. La
+structure `ProjMeasure` utilise correctement `Submodule.IsOrtho`. La valuation de
+dimension mentionnée ici sert seulement d'explication mathématique et n'est pas
+formalisée dans ce dépôt.
 
 ## Conventions
 
@@ -29,11 +35,16 @@ variant, finite dimension) and of Busch's theorem (2003).
 ## Orthogonality and lattice disjointness
 
 The additivity of `ProjMeasure` is required for ORTHOGONALITY (`Submodule.IsOrtho`),
-not merely for lattice disjointness (`Disjoint`). The latter would impose a
-different and substantially stronger condition: it is not equivalent to the
-hypothesis of Gleason's theorem and is not satisfied by general Born measures.
-The explicit examples in `Gleason/Nonvacuity.lean` separately establish that the
-structures used here are inhabited.
+not for lattice disjointness (`Disjoint`) alone, which expresses trivial
+intersection. Orthogonality implies trivial intersection, but the converse fails.
+Additivity on every lattice-disjoint pair would therefore be a different and
+strictly stronger valuation principle than Gleason's orthogonal additivity. This
+stronger principle is not inconsistent in positive finite dimension: the normalized
+dimension valuation `A ↦ dim(A) / dim(H)` is additive on direct sums. It does,
+however, generally exclude pure-state Born measures on nonorthogonal lines and is
+not the intended quantum hypothesis. The actual `ProjMeasure` structure correctly
+uses `Submodule.IsOrtho`. The dimension valuation is mentioned only as mathematical
+explanation and is not formalized in this repository.
 
 ## Conventions
 

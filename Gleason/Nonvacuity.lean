@@ -5,9 +5,12 @@ import Gleason.Busch.Effects
 **FR.** # Tests d'inhabitation (non-vacuité)
 
 **Discipline centrale du dépôt.** Chaque structure d'hypothèses doit posséder ici un
-habitant CONCRET sur `ℂ³` (un vrai état quantique). Ces témoins établissent
-directement la non-vacuité des structures utilisées par les théorèmes et protègent
-contre des hypothèses accidentellement impossibles.
+habitant CONCRET sur `ℂ³` (un vrai état quantique). Ces témoins aident à détecter la
+vacuité et les erreurs de spécification sémantique. Les affectations de Born d'états
+purs établissent que les structures voulues, additives sur les sous-espaces
+orthogonaux, sont habitées. L'ancienne formulation par disjonction du treillis
+encodait la mauvaise hypothèse quantique ; elle ne rendait pas le type vide dès la
+dimension deux.
 
 Règle : aucune structure nouvelle ne rentre dans `Defs.lean` sans son `example :
 Nonempty (...)` ici, dans le même commit. Les preuves correspondantes constituent
@@ -16,9 +19,11 @@ le bloc de non-vacuité achevé au jalon M1.
 **EN.** # Inhabitation tests (non-vacuity)
 
 **Central discipline of this repository.** Every hypothesis structure must have a
-CONCRETE inhabitant here on `ℂ³` (a real quantum state). These witnesses directly
-establish non-vacuity of the structures used by the theorems and guard against
-accidentally impossible hypotheses.
+CONCRETE inhabitant here on `ℂ³` (a real quantum state). Such witnesses help detect
+both vacuity and semantic misspecification. Pure-state Born assignments establish
+that the intended structures, additive on orthogonal subspaces, are inhabited. The
+earlier lattice-disjoint formulation encoded the wrong quantum hypothesis; it did
+not make the type empty from dimension two onward.
 
 Rule: no new structure enters `Defs.lean` without its `example : Nonempty (...)`
 here, in the same commit. The corresponding proofs form the non-vacuity block

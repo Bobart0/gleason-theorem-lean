@@ -3,9 +3,10 @@
 **Statut : PROJET COMPLET (2026-07-11).** Ce dépôt fournit une formalisation
 complète en Lean 4 et Mathlib de versions complexes de dimension finie de :
 1. **Théorème de Busch (2003)** : toute mesure d'effets (POVM) sur ℂⁿ est représentée
-   par un unique opérateur densité (vaut dès n = 2) ;
-2. **Théorème de Gleason** : idem pour les mesures de projections, n ≥ 3,
-   voie Cooke–Keane–Moran / Richman–Bridges ;
+   par un unique opérateur densité pour `n ≥ 1` ;
+2. **Théorème de Gleason** : toute mesure de projections sur l'espace concret
+   `EuclideanSpace ℂ (Fin n)` est représentée par un unique opérateur densité pour
+   `n ≥ 3`, par la voie Cooke–Keane–Moran / Richman–Bridges ;
 3. **Corollaire** : aucune mesure « dispersion-free » (à valeurs dans {0,1}) n'existe
    en dimension ≥ 3 — un test d'intégration de bout en bout de la représentation.
 
@@ -24,7 +25,7 @@ textuellement identique à toutes les formulations de la littérature.
 ## Démarrage
 ```bash
 ./setup.sh          # cache + build à partir de la version figée (~10 min avec cache)
-./scripts/guard.sh  # audit : aucun axiome propre au projet, compte des occurrences de sorry
+./scripts/verify.sh # build strict, sources actives et dépendances axiomatiques
 ```
 `setup.sh` construit exactement la version figée dans `lean-toolchain` et
 `lake-manifest.json` — il ne les modifie jamais, pour que tout commit/tag reste
@@ -32,14 +33,11 @@ reconstructible à l'identique (important si tu cites ce dépôt). Pour avancer
 délibérément vers une version plus récente de Mathlib, utiliser
 `./update-mathlib.sh` séparément (modifie ces fichiers).
 
-## Verifying the proofs
+## Vérification des preuves
 
 ```bash
-./setup.sh              # one-time: cache + build from the pinned version
-lake build              # rebuild everything; must finish green
-./scripts/guard.sh      # 0 axiom, 0 native_decide; sorry count from this script
-                         # also matches the word "sorry" inside comments/docstrings —
-                         # grep '\bsorry\b' Gleason for actual `sorry` tactics (there are none)
+./setup.sh              # une fois : cache + build depuis les versions figées
+./scripts/verify.sh     # vérification stricte utilisée par la CI
 ```
 
 `setup.sh` never modifies `lean-toolchain` or `lake-manifest.json` — it builds
@@ -47,18 +45,19 @@ exactly the pinned version, so that any given commit/tag remains reproducible
 long after Mathlib has moved on. To deliberately advance to a newer Mathlib,
 run `./update-mathlib.sh` instead (that one does rewrite those files).
 
-The four delivered theorems each carry a live `#print axioms` check at the bottom of
-[`Gleason/Main.lean`](Gleason/Main.lean), so `lake build Gleason.Main` prints, for
-`Gleason.gleason`, `Gleason.busch`, `Gleason.busch_born_rule`, and
-`Gleason.no_dispersion_free`:
+Le vérificateur analyse les sources Lean suivies après retrait des commentaires et
+des chaînes, rejette les preuves admises et les formes élargissant la base de
+confiance, construit le projet sans avertissement Lean, puis compare les quatre
+sorties `#print axioms` de [`Verification/Axioms.lean`](Verification/Axioms.lean) au
+bloc attendu versionné :
 
 ```
-'Gleason.<name>' depends on axioms: [propext, Classical.choice, Quot.sound]
+Gleason.<name>: [propext, Classical.choice, Quot.sound]
 ```
 
-These three are the standard axioms accepted by Lean/Mathlib itself (propositional
-extensionality, choice, quotient soundness) — no `sorryAx` and no project-specific
-`axiom` anywhere in `Gleason/`.
+Ces trois dépendances sont les principes logiques standards utilisés par Lean et
+Mathlib : extensionnalité propositionnelle, choix classique et compatibilité des
+quotients. Le projet ne contient aucune preuve admise ni axiome mathématique propre.
 
 ## Carte du dépôt
 ```
@@ -70,17 +69,19 @@ Gleason/Complex/             Sections réelles + recollement (Dvurečenskij) [ja
 Gleason/Operator.lean        Forme quadratique → opérateur densité         [phase O]
 Gleason/Main.lean            Théorème de Gleason + corollaire dispersion-free
 AGENTS.md                    Règles agnostiques pour les agents IA de codage
-SORRIES.md                   Historique des obligations désormais closes
+MILESTONES.md                Registre historique des jalons achevés
+Verification/Axioms.lean    Audit des dépendances des quatre résultats publics
+scripts/verify.sh            Vérification stricte locale et CI
 ```
 
 ## Jalons
 | Jalon| Contenu                 | Critère                                          | État |
-| M0   | Squelette compilable    | `lake build` vert (sorry autorisés)              | ✅ |
-| M1   | Fondations              | section M1 de SORRIES.md fermée                  | ✅ |
+| M0   | Squelette compilable    | `lake build` vert                                | ✅ |
+| M1   | Fondations              | section M1 de MILESTONES.md achevée              | ✅ |
 | M-B  | **Busch 2003 complet**  | `#print axioms busch` propre → annonce/preprint  | ✅ |
-| M2   | Régularité réelle ℝ³    | `frameFunction_regular` sans sorry               | ✅ |
-| M3   | Réduction complexe      | `cFrameFunction_regular` sans sorry              | ✅ |
-| O    | Opérateur (assemblage)  | `isDensityOperator_of_represents` sans sorry     | ✅ |
+| M2   | Régularité réelle ℝ³    | `frameFunction_regular` démontré                 | ✅ |
+| M3   | Réduction complexe      | `cFrameFunction_regular` démontré                | ✅ |
+| O    | Opérateur (assemblage)  | `isDensityOperator_of_represents` démontré       | ✅ |
 | M4   | **Gleason complet**     | `#print axioms gleason` propre                   | ✅ |
 
 ## Règles
@@ -89,24 +90,41 @@ bloquante). Toute structure d'hypothèses a un habitant concret dans
 `Nonvacuity.lean`. Les principes logiques signalés par `#print axioms` sont
 `propext`, `Classical.choice` et `Quot.sound`, standards dans Lean et Mathlib.
 
+## Formalisations connexes
+
+Deux artefacts publics de Mark J. Soares sont proches par leur sujet :
+
+- *Gleason's Theorem via Busch: A Lean 4 Formalization*, version 1.0.0,
+  [DOI 10.5281/zenodo.19739805](https://doi.org/10.5281/zenodo.19739805), publié le
+  24 avril 2026. Il traite un espace de Hilbert complexe abstrait de dimension finie
+  et de finrank au moins deux. Sa cible publique autonome énonce existence,
+  normalisation, représentation et positivité de l'appariement de trace, sans
+  énoncer l'unicité. Le présent dépôt utilise les espaces concrets `H n`, atteint
+  `n = 1` et énonce l'unicité.
+- *Gleason's Theorem: A Lean 4 Formalization*, version 1.0.0,
+  [DOI 10.5281/zenodo.21301925](https://doi.org/10.5281/zenodo.21301925), rendu
+  public initialement le 10 juillet 2026. Son théorème de projections est plus
+  général : espaces de Hilbert séparables réels et complexes, et additivité
+  orthogonale dénombrable. Le présent dépôt fournit une preuve alternative plus
+  étroite en dimension finie complexe, fondée sur Cooke–Keane–Moran et un recollement
+  réel-vers-complexe explicite.
+
+Les horodatages publics sont proches pour les artefacts Gleason de juillet 2026 ;
+ils ne permettent aucune conclusion sur une chronologie privée, une connaissance
+préalable ou une influence. L'apport distinctif documenté ici est l'artefact conjoint
+Busch–Gleason, son infrastructure partagée, son architecture alternative, ses
+corollaires et l'analyse d'ingénierie de preuve. Aucune revendication de priorité
+n'est faite.
+
 ## Licence
 [Apache License 2.0](LICENSE).
 
 ## Citer ce travail
 Le tag `v1.0.3-gleason`, commit
 `e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`, reste la version reproductible
-précédemment archivée. La version documentaire corrigée prévue est
-`v1.0.4-gleason`. Lorsqu'elle aura été fusionnée et taguée, citer le SHA exact du
-commit porté par ce nouveau tag ainsi que les métadonnées de [`CITATION.cff`](CITATION.cff).
-
-Identifiants propres à la future version `v1.0.4-gleason` :
-
-- SHA du commit tagué : `[EXACT TAG COMMIT SHA TO BE ADDED]`
-- DOI Zenodo : `[ZENODO VERSION DOI TO BE ADDED]`
-- SWHID : `[SWHID TO BE ADDED]`
-
-Ces espaces réservés indiquent explicitement que les identifiants de la nouvelle
-version ne sont pas encore disponibles ; aucun DOI ni SWHID n'est revendiqué ici.
+précédemment archivée. Les métadonnées générales du logiciel figurent dans
+[`CITATION.cff`](CITATION.cff). Pour une future version, ajouter le SHA du tag, le
+DOI Zenodo propre à la version et le SWHID uniquement après leur création effective.
 
 ---
 
@@ -117,9 +135,10 @@ version ne sont pas encore disponibles ; aucun DOI ni SWHID n'est revendiqué ic
 **Status: PROJECT COMPLETE (2026-07-11).** This repository provides a complete
 Lean 4 and Mathlib formalization of finite-dimensional complex versions of:
 1. **Busch's theorem (2003)**: every effect measure (POVM) on ℂⁿ is represented
-   by a unique density operator (holds already at n = 2);
-2. **Gleason's theorem**: likewise for projection measures, n ≥ 3, via the
-   Cooke–Keane–Moran / Richman–Bridges route;
+   by a unique density operator for `n ≥ 1`;
+2. **Gleason's theorem**: every projection measure on the concrete space
+   `EuclideanSpace ℂ (Fin n)` is represented by a unique density operator for
+   `n ≥ 3`, via the Cooke–Keane–Moran / Richman–Bridges route;
 3. **Corollary**: no "dispersion-free" measure (valued in {0,1}) exists in
    dimension ≥ 3 — an end-to-end integration test of the representation.
 
@@ -138,7 +157,7 @@ textually identical to every formulation in the literature.
 ## Getting started
 ```bash
 ./setup.sh          # cache + build from the pinned version (~10 min with cache)
-./scripts/guard.sh  # audit: no project-specific axioms; sorry occurrence count
+./scripts/verify.sh # strict build, active-source, and axiom-dependency audit
 ```
 `setup.sh` builds exactly the version pinned in `lean-toolchain` and
 `lake-manifest.json` — it never modifies them, so any commit/tag stays
@@ -149,11 +168,8 @@ these files).
 ## Verifying the proofs
 
 ```bash
-./setup.sh              # one-time: cache + build from the pinned version
-lake build              # rebuild everything; must finish green
-./scripts/guard.sh      # 0 axiom, 0 native_decide; sorry count from this script
-                         # also matches the word "sorry" inside comments/docstrings —
-                         # grep '\bsorry\b' Gleason for actual `sorry` tactics (there are none)
+./setup.sh              # one-time: cache + build from the pinned versions
+./scripts/verify.sh     # strict verification used by CI
 ```
 
 `setup.sh` never touches `lean-toolchain` or `lake-manifest.json` — it builds
@@ -161,18 +177,19 @@ exactly the pinned version, so any given commit/tag remains reproducible long
 after Mathlib has moved on. To deliberately advance to a newer Mathlib, run
 `./update-mathlib.sh` instead (that one does rewrite those files).
 
-The four delivered theorems each carry a live `#print axioms` check at the bottom of
-[`Gleason/Main.lean`](Gleason/Main.lean), so `lake build Gleason.Main` prints, for
-`Gleason.gleason`, `Gleason.busch`, `Gleason.busch_born_rule`, and
-`Gleason.no_dispersion_free`:
+The verifier scans tracked Lean source after removing comments and strings, rejects
+admitted proofs and trust-expanding forms, builds without Lean warnings, and
+compares the four `#print axioms` results from
+[`Verification/Axioms.lean`](Verification/Axioms.lean) with the committed expected
+block:
 
 ```
-'Gleason.<name>' depends on axioms: [propext, Classical.choice, Quot.sound]
+Gleason.<name>: [propext, Classical.choice, Quot.sound]
 ```
 
-These three are the standard axioms accepted by Lean/Mathlib itself (propositional
-extensionality, choice, quotient soundness) — no `sorryAx` and no project-specific
-`axiom` anywhere in `Gleason/`.
+These are standard logical principles used by Lean and Mathlib: propositional
+extensionality, classical choice, and quotient soundness. The project contains no
+admitted proofs or project-specific mathematical axioms.
 
 ## Repository map
 ```
@@ -184,17 +201,19 @@ Gleason/Complex/              Real sections + patching (Dvurečenskij)          
 Gleason/Operator.lean          Quadratic form → density operator                     [phase O]
 Gleason/Main.lean               Gleason's theorem + dispersion-free corollary
 AGENTS.md                      Agent-agnostic rules for AI coding agents
-SORRIES.md                     Historical record of completed obligations
+MILESTONES.md                  Historical ledger of completed milestones
+Verification/Axioms.lean      Dependency audit for the four public results
+scripts/verify.sh              Strict local and CI verification
 ```
 
 ## Milestones
 | Milestone | Content                | Criterion                                          | Status |
-| M0   | Compilable skeleton    | `lake build` green (sorry allowed)               | ✅ |
-| M1   | Foundations            | M1 section of SORRIES.md closed                  | ✅ |
+| M0   | Compilable skeleton    | `lake build` green                               | ✅ |
+| M1   | Foundations            | M1 section of MILESTONES.md completed            | ✅ |
 | M-B  | **Busch 2003 complete**| clean `#print axioms busch` → announcement/preprint | ✅ |
-| M2   | Real regularity ℝ³     | `frameFunction_regular` sorry-free               | ✅ |
-| M3   | Complex reduction      | `cFrameFunction_regular` sorry-free              | ✅ |
-| O    | Operator (assembly)    | `isDensityOperator_of_represents` sorry-free     | ✅ |
+| M2   | Real regularity ℝ³     | `frameFunction_regular` proved                   | ✅ |
+| M3   | Complex reduction      | `cFrameFunction_regular` proved                  | ✅ |
+| O    | Operator (assembly)    | `isDensityOperator_of_represents` proved         | ✅ |
 | M4   | **Gleason complete**   | clean `#print axioms gleason`                    | ✅ |
 
 ## Rules
@@ -203,21 +222,35 @@ Every hypothesis structure has a concrete inhabitant in `Nonvacuity.lean`. The
 logical principles reported by `#print axioms` are `propext`, `Classical.choice`,
 and `Quot.sound`, all standard in Lean and Mathlib.
 
+## Related formalizations
+
+Two public artifacts by Mark J. Soares are closely related in subject:
+
+- *Gleason's Theorem via Busch: A Lean 4 Formalization*, version 1.0.0,
+  [DOI 10.5281/zenodo.19739805](https://doi.org/10.5281/zenodo.19739805), released
+  24 April 2026. It uses an abstract finite-dimensional complex Hilbert space of
+  finrank at least two. Its standalone public target states existence,
+  normalization, representation, and nonnegative trace pairing, but not uniqueness.
+  The present repository uses concrete `H n`, reaches `n = 1`, and states uniqueness.
+- *Gleason's Theorem: A Lean 4 Formalization*, version 1.0.0,
+  [DOI 10.5281/zenodo.21301925](https://doi.org/10.5281/zenodo.21301925), initially
+  released publicly 10 July 2026. Its projection theorem is more general: separable
+  real and complex Hilbert spaces with countable orthogonal additivity. The present
+  repository supplies a narrower alternative finite-dimensional complex proof based
+  on Cooke–Keane–Moran and explicit real-to-complex patching.
+
+The public timestamps of the July 2026 Gleason artifacts are nearly contemporaneous;
+they do not establish private chronology, prior knowledge, or influence. The
+distinctive contribution documented here is the joint Busch–Gleason artifact,
+shared infrastructure, alternative architecture, corollaries, and proof-engineering
+analysis. No priority claim is made.
+
 ## License
 [Apache License 2.0](LICENSE).
 
 ## Citing this work
 Tag `v1.0.3-gleason`, commit
 `e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`, remains the previously archived
-reproducible release. The planned corrected documentation release is
-`v1.0.4-gleason`. Once it has been merged and tagged, cite the exact commit SHA
-carried by that new tag together with the metadata in [`CITATION.cff`](CITATION.cff).
-
-Version-specific identifiers for the future `v1.0.4-gleason` release:
-
-- Tagged commit SHA: `[EXACT TAG COMMIT SHA TO BE ADDED]`
-- Zenodo DOI: `[ZENODO VERSION DOI TO BE ADDED]`
-- SWHID: `[SWHID TO BE ADDED]`
-
-These explicit placeholders mean that identifiers for the new release are not yet
-available; no DOI or SWHID is claimed here.
+reproducible release. General software metadata is provided in
+[`CITATION.cff`](CITATION.cff). For a future version, add the tagged commit SHA,
+version-specific Zenodo DOI, and SWHID only after they have actually been created.

@@ -6,8 +6,8 @@ import Gleason.Defs
 Un **effet** est un opérateur `T` avec `0 ≤ T ≤ 1` (ordre de Loewner). Le théorème de
 Busch (2003) remplace les projections de Gleason par les effets : l'hypothèse
 d'additivité est PLUS FORTE (elle porte sur beaucoup plus d'objets), la conclusion est
-la même (représentation par un opérateur densité), et le résultat vaut dès la
-dimension 2 — là où Gleason échoue.
+la même (représentation par un opérateur densité). Le théorème public de ce dépôt
+vaut pour les espaces concrets `H n` dès `n = 1`.
 
 Référence : P. Busch, « Quantum states and generalized observables: a simple proof of
 Gleason's theorem », Phys. Rev. Lett. 91 (2003) 120403.
@@ -17,8 +17,8 @@ Gleason's theorem », Phys. Rev. Lett. 91 (2003) 120403.
 An **effect** is an operator `T` with `0 ≤ T ≤ 1` (Loewner order). Busch's theorem
 (2003) replaces Gleason's projections with effects: the additivity hypothesis is
 STRONGER (it applies to many more objects), the conclusion is the same (representation
-by a density operator), and the result holds already in dimension 2 — where Gleason
-fails.
+by a density operator). The public theorem in this repository applies to the
+concrete spaces `H n` from `n = 1`.
 
 Reference: P. Busch, "Quantum states and generalized observables: a simple proof of
 Gleason's theorem", Phys. Rev. Lett. 91 (2003) 120403.

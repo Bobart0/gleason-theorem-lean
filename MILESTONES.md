@@ -1,4 +1,4 @@
-# Historique des obligations de preuve closes
+# Registre historique des jalons achevés
 
 **PROJET COMPLET — 2026-07-11.** `lake build` vert, `./scripts/guard.sh` confirme
 l'absence d'axiome propre au projet, de preuve admise et de `native_decide` (son
@@ -7,7 +7,7 @@ compteur lexical inclut aussi les occurrences dans les commentaires/docstrings).
 `Gleason.gleason`, `Gleason.busch`, `Gleason.busch_born_rule`, `Gleason.no_dispersion_free`
 → `propext, Classical.choice, Quot.sound` uniquement, dans les quatre cas.
 
-## M1 — fondations (faciles, à faire en premier, dans l'ordre)
+## M1 — fondations (achevées)
 - [x] Nonvacuity.pureState.top_eq_one
 - [x] Nonvacuity.pureState.add_isOrtho   ← premier vrai lemme (P_{A⊔B} = P_A + P_B si A ⟂ B)
 - [x] Nonvacuity.pureEffectMeasure.map_one
@@ -204,7 +204,7 @@ compteur lexical inclut aussi les occurrences dans les commentaires/docstrings).
 
 ## English translation
 
-# Historical record of completed proof obligations
+# Historical ledger of completed milestones
 
 **PROJECT COMPLETE — 2026-07-11.** `lake build` is green; `./scripts/guard.sh`
 confirms that there are no project-specific axioms, admitted proofs, or
@@ -215,7 +215,7 @@ and docstrings). `#print axioms` on the four delivered theorems (active in
 `Gleason.no_dispersion_free` → `propext, Classical.choice, Quot.sound` only, in all
 four cases.
 
-## M1 — foundations (easy, do first, in order)
+## M1 — foundations (completed)
 - [x] Nonvacuity.pureState.top_eq_one
 - [x] Nonvacuity.pureState.add_isOrtho   ← first real lemma (P_{A⊔B} = P_A + P_B if A ⟂ B)
 - [x] Nonvacuity.pureEffectMeasure.map_one

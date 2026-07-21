@@ -12,7 +12,7 @@ n'étant pas métrisable, pas de sous-suites ni de continuité globale
 nécessaire) — voir `Gleason.Real3.Attainment` (`frameFunction_attains_sup`,
 `frameFunction_attains_inf`), qui remplace entièrement ce fichier. Conservé
 comme point d'import intermédiaire (`Regular.lean` l'importe encore) ; acté
-dans `SORRIES.md`, bloc G.
+dans `MILESTONES.md`, bloc G.
 
 **EN.** # (Historical) From pointwise continuity to continuity everywhere
 
@@ -24,7 +24,7 @@ an ULTRAFILTER argument (the product space `[2m,2M]^S` is not metrizable, so no
 subsequences and no global continuity are needed) — see `Gleason.Real3.Attainment`
 (`frameFunction_attains_sup`, `frameFunction_attains_inf`), which entirely replaces
 this file. Kept as an intermediate import point (`Regular.lean` still imports it);
-recorded in `SORRIES.md`, block G.
+recorded in `MILESTONES.md`, block G.
 -/
 
 namespace Gleason

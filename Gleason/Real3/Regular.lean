@@ -13,7 +13,7 @@ argument à h:=g−f (poids nul, H6-H8) conclu par un argument de dénombrement
 
 `heven` (parité) n'est PAS une hypothèse de ce théorème : elle est dérivable de
 `hf` seule via `frameFunction_even` (P2, bloc A) — retirée de l'énoncé
-d'origine (acté dans SORRIES.md, cf. règle 3 de AGENTS.md).
+d'origine (acté dans MILESTONES.md, cf. règle 3 de AGENTS.md).
 
 **EN.** # Regularity of positive frame functions on ℝ³ (CKM 1985 §7)
 
@@ -27,7 +27,7 @@ pairs of zeros / pigeonhole) that rules out `h≠0`.
 
 `heven` (parity) is NOT a hypothesis of this theorem: it is derivable from `hf`
 alone via `frameFunction_even` (P2, block A) — removed from the original
-statement (recorded in SORRIES.md, cf. rule 3 of AGENTS.md).
+statement (recorded in MILESTONES.md, cf. rule 3 of AGENTS.md).
 -/
 
 namespace Gleason
