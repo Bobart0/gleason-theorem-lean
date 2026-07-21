@@ -4,18 +4,15 @@ on:
   pull_request:
 
 jobs:
-  guard:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Garde anti-axiome
-        run: bash scripts/guard.sh
-
-  build:
-    runs-on: ubuntu-latest
-    needs: guard
-    steps:
-      - uses: actions/checkout@v4
-      # leanprover/lean-action installe elan, récupère le cache Mathlib et lance `lake build`.
-      # TODO(M0) : vérifier les options exactes de l'action à la première exécution.
-      - uses: leanprover/lean-action@v1
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1
+        with:
+          build: false
+          use-mathlib-cache: true
+      - name: Strict reviewer-facing verification
+        run: ./scripts/verify.sh
+      - name: Verification leaves the checkout clean
+        run: test -z "$(git status --short)"

@@ -1,0 +1,4 @@
+Gleason.busch: [propext, Classical.choice, Quot.sound]
+Gleason.busch_born_rule: [propext, Classical.choice, Quot.sound]
+Gleason.gleason: [propext, Classical.choice, Quot.sound]
+Gleason.no_dispersion_free: [propext, Classical.choice, Quot.sound]
