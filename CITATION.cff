@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use this formalization, please cite the archived software release and the associated article."
+type: software
+
+title: "Lean 4 Formalization of Busch's and Gleason's Theorems"
+
+authors:
+  - family-names: "Dalimier"
+    given-names: "Bertrand"
+    affiliation: "Independent Researcher"
+    orcid: "https://orcid.org/0009-0000-2457-375X"
+
+version: "1.0.4-gleason"
+date-released: "2026-07-21"
+
+repository-code: "https://github.com/Bobart0/gleason-theorem-lean"
+url: "https://github.com/Bobart0/gleason-theorem-lean"
+
+license: "Apache-2.0"
+
+abstract: >
+  A Lean 4 and Mathlib formalization of finite-dimensional complex versions
+  of Busch's representation theorem for generalized probability measures on
+  quantum effects and Gleason's representation theorem for finitely additive
+  probability measures on orthogonal projections. The development also
+  includes the induced Born-rule representation on projections and the
+  exclusion of normalized finitely additive projection measures taking only
+  the values zero and one in dimensions at least three.
+
+keywords:
+  - Lean 4
+  - Mathlib
+  - formalized mathematics
+  - Gleason theorem
+  - Busch theorem
+  - quantum effects
+  - density operators
+  - quantum foundations

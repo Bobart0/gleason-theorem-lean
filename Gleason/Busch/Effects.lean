@@ -46,11 +46,18 @@ def IsEffect (T : H n →ₗ[ℂ] H n) : Prop :=
 
 /--
 **FR.** **Mesure d'effets** (frame function généralisée de Busch) : positive sur les
-effets, normalisée en `1`, finiment additive sur les sommes d'effets qui restent
-des effets.
+effets, normalisée en `1`, et additivité binaire pour les paires d'effets dont la
+somme reste un effet. L'additivité finie s'obtient par itération, et cette hypothèse
+suffit au théorème de dimension finie formalisé ici. La présentation originale de
+Busch est couramment formulée avec des mesures de probabilité généralisées additives
+sur des familles finies ou dénombrables dont la somme est bornée par l'identité.
 
 **EN.** **Effect measure** (Busch's generalized frame function): positive on effects,
-normalized to `1`, finitely additive on sums of effects that remain effects.
+normalized to `1`, with binary additivity for pairs of effects whose sum remains an
+effect. Finite additivity follows by iteration, and this hypothesis is sufficient
+for the finite-dimensional theorem formalized here. Busch's original presentation
+is commonly stated using generalized probability measures additive over finite or
+countable families whose sum is bounded by the identity.
 -/
 structure EffectMeasure (n : ℕ) where
   /--

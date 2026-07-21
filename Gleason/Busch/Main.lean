@@ -3,35 +3,39 @@ import Gleason.Busch.Effects
 /-!
 **FR.** # Théorème de Busch (2003) — énoncé principal
 
-**Cible du jalon M-B** (avant Gleason). Le chemin de preuve, entièrement algébrique
+**Jalon M-B** (avant Gleason). Le chemin de preuve, entièrement algébrique
 (aucune analyse fine sur la sphère, contrairement à Gleason) :
 
 1. `f 0 = 0`, additivité finie itérée ;
-2. homogénéité rationnelle : `f (q • T) = q * f T` pour `q ∈ ℚ≥0` (bissection dyadique) ;
-3. monotonie (déjà dans `Effects.lean`) ⇒ homogénéité RÉELLE par encadrement rationnel ;
+2. homogénéité dyadique : `f ((m/2^k) • T) = (m/2^k) * f T` ;
+3. monotonie (déjà dans `Effects.lean`) ⇒ homogénéité RÉELLE par encadrement
+   entre deux approximations dyadiques consécutives ; l'homogénéité rationnelle
+   en découle comme cas particulier ;
 4. extension de `f` en fonctionnelle réelle-linéaire sur les opérateurs auto-adjoints
    (tout auto-adjoint est différence d'effets à un facteur positif près) ;
 5. représentation de Riesz en dimension finie : la fonctionnelle est `T ↦ Re tr (ρ T)`
    pour un unique `ρ` auto-adjoint ;
 6. positivité de `ρ` (tester sur les effets de rang 1) et trace 1 (tester sur `1`).
 
-Chaque étape est un lemme séparé à ajouter ici en M-B ; seul l'énoncé final est figé.
+La preuve formelle est organisée en lemmes séparés qui implémentent ces étapes.
 
 **EN.** # Busch's theorem (2003) — main statement
 
-**Target of milestone M-B** (before Gleason). The proof path is entirely algebraic
+**Milestone M-B** (before Gleason). The proof path is entirely algebraic
 (no fine analysis on the sphere, unlike Gleason):
 
 1. `f 0 = 0`, iterated finite additivity;
-2. rational homogeneity: `f (q • T) = q * f T` for `q ∈ ℚ≥0` (dyadic bisection);
-3. monotonicity (already in `Effects.lean`) ⇒ REAL homogeneity by rational sandwiching;
+2. dyadic homogeneity: `f ((m/2^k) • T) = (m/2^k) * f T`;
+3. monotonicity (already in `Effects.lean`) ⇒ REAL homogeneity by squeezing
+   between adjacent dyadic approximations; rational homogeneity follows as a
+   special case;
 4. extension of `f` to a real-linear functional on self-adjoint operators
    (every self-adjoint operator is a difference of effects up to a positive factor);
 5. Riesz representation in finite dimension: the functional is `T ↦ Re tr (ρ T)`
    for a unique self-adjoint `ρ`;
 6. positivity of `ρ` (tested on rank-1 effects) and trace 1 (tested on `1`).
 
-Each step is a separate lemma to be added here at M-B; only the final statement is fixed.
+The formal proof is organized into separate lemmas implementing these steps.
 -/
 
 namespace Gleason
@@ -43,7 +47,7 @@ noncomputable section
 variable {n : ℕ}
 
 -- ═══════════════════════════════════════════════════════════════════
--- PLAN DE PREUVE — LEMMES INTERMÉDIAIRES (tous sorry, à valider)
+-- ARCHITECTURE DE LA PREUVE — LEMMES DU JALON M-B
 -- ═══════════════════════════════════════════════════════════════════
 --
 -- CONVENTION SCALAIRE (utilisée uniformément dans tout ce fichier) :
@@ -151,13 +155,9 @@ theorem EffectMeasure.map_dyadic_smul (F : EffectMeasure n)
         ih hm', map_inv_pow2_smul F hT k]
     push_cast; ring
 
--- ── (B4) Homogénéité rationnelle ─────────────────────────────────
--- Tout rationnel q ∈ [0,1] s'écrit m/2^k après réduction au même
--- dénominateur (q = a/b, b | 2^k pour k assez grand — ou, plus
--- directement, combiner additivité itérée pour le numérateur et B2
--- pour la division). On peut aussi passer par :
---   f(n · T) = n · f(T)  (additivité itérée, n : ℕ, n·T effet)
--- puis diviser.
+-- ── (B4) Homogénéité naturelle auxiliaire ─────────────────────────
+-- Ce lemme d'additivité itérée prépare l'extension linéaire. Il ne prétend
+-- pas que tout rationnel est dyadique.
 
 -- Lemme auxiliaire : si A et B sont positifs et A+B est un effet, alors A l'est.
 -- (car 1 − A = (1 − (A+B)) + B, somme de deux positifs)
@@ -192,11 +192,10 @@ theorem EffectMeasure.map_nat_smul (F : EffectMeasure n)
     push_cast; ring
 
 -- ── (B5) Homogénéité réelle (le cœur de Busch 2003) ─────────────
--- Pour r ∈ [0,1] et T effet, on encadre r par des rationnels :
--- q₁ ≤ r ≤ q₂. Alors q₁·T ≤ r·T ≤ q₂·T (opérateurs positifs),
--- tous trois effets, et par monotonie (EffectMeasure.mono) :
---   q₁ · f(T) = f(q₁·T) ≤ f(r·T) ≤ f(q₂·T) = q₂ · f(T).
--- En faisant tendre q₁, q₂ → r on obtient f(r·T) = r · f(T).
+-- L'homogénéité dyadique est démontrée en premier. Pour r ∈ [0,1] et T
+-- effet, deux approximations dyadiques consécutives encadrent F(rT) et
+-- imposent F(rT) = r F(T) par monotonie. L'homogénéité rationnelle devient
+-- ensuite un corollaire immédiat de l'homogénéité réelle.
 -- Note : la borne 0 ≤ f(T) ≤ 1 (de nonneg + map_one) assure que
 -- les inégalités ne dégénèrent pas.
 
@@ -262,7 +261,7 @@ theorem EffectMeasure.map_realSmul (F : EffectMeasure n)
       mul_le_mul_of_nonneg_right h_gap (F.nonneg T hT),
       mul_le_of_le_one_right (div_nonneg one_pos.le h2k.le) hfT_le]
 
--- ── (B4b) Corollaire : homogénéité rationnelle ─────────────────
+-- ── (B5b) Corollaire : homogénéité rationnelle ─────────────────
 theorem EffectMeasure.map_rat_smul (F : EffectMeasure n)
     {T : H n →ₗ[ℂ] H n} (hT : IsEffect T)
     (q : ℚ) (hq₀ : 0 ≤ q) (hq₁ : (q : ℝ) ≤ 1) :

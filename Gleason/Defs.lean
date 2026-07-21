@@ -6,13 +6,14 @@ import Mathlib
 Objets de base pour la formalisation du théorème de Gleason (variante « projection
 only », dimension finie) et du théorème de Busch (2003).
 
-## Correction du défaut fatal de l'ancien développement
+## Orthogonalité et disjonction du treillis
 
 L'additivité de `ProjMeasure` est exigée pour l'ORTHOGONALITÉ (`Submodule.IsOrtho`),
-et non pour la disjonction de treillis (`Disjoint`). Avec la disjonction de treillis,
-le type des mesures est VIDE dès la dimension 2 (trois droites distinctes d'un plan
-forcent 3/2 = 1). Chaque structure introduite ici doit être accompagnée, dans le même
-commit, d'un test d'inhabitation dans `Gleason/Nonvacuity.lean`.
+et non simplement pour la disjonction du treillis (`Disjoint`). Cette dernière
+imposerait une condition différente et nettement plus forte : elle n'est pas
+équivalente à l'hypothèse du théorème de Gleason et n'est pas satisfaite par les
+mesures de Born générales. Les témoins explicites de `Gleason/Nonvacuity.lean`
+établissent séparément que les structures utilisées ici sont habitées.
 
 ## Conventions
 
@@ -25,13 +26,14 @@ commit, d'un test d'inhabitation dans `Gleason/Nonvacuity.lean`.
 Basic objects for the formalization of Gleason's theorem ("projections only"
 variant, finite dimension) and of Busch's theorem (2003).
 
-## Fixing the fatal flaw of the old development
+## Orthogonality and lattice disjointness
 
 The additivity of `ProjMeasure` is required for ORTHOGONALITY (`Submodule.IsOrtho`),
-not for lattice disjointness (`Disjoint`). With lattice disjointness, the type of
-measures is EMPTY as soon as dimension 2 (three distinct lines of a plane force
-3/2 = 1). Every structure introduced here must be accompanied, in the same commit,
-by an inhabitation test in `Gleason/Nonvacuity.lean`.
+not merely for lattice disjointness (`Disjoint`). The latter would impose a
+different and substantially stronger condition: it is not equivalent to the
+hypothesis of Gleason's theorem and is not satisfied by general Born measures.
+The explicit examples in `Gleason/Nonvacuity.lean` separately establish that the
+structures used here are inhabited.
 
 ## Conventions
 

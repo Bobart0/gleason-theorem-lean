@@ -21,7 +21,7 @@ Born formula (`Operator`). Uniqueness comes from `symmetric_ext_of_quadratic`.
 
 Quality guard: at the end of the project, `#print axioms Gleason.gleason` must show
 ONLY `propext`, `Classical.choice`, `Quot.sound` (and nothing else — in particular
-no `sorryAx`).
+no `sorryAx`). No `sorry` tactic or admitted proof is used in the development.
 -/
 
 namespace Gleason
@@ -58,14 +58,19 @@ theorem gleason {n : ℕ} (hn : 3 ≤ n) (m : ProjMeasure n) :
     bornValue_span_singleton ρ x hx]
 
 /--
-**FR.** **Test d'intégration** (corollaire classique) : pas de mesure dispersion-free
-(à valeurs dans {0,1}) en dimension ≥ 3. Si `gleason` était vacuement vrai ou mal
-énoncé, ce corollaire ne sortirait pas — c'est le détecteur anti-vacuité final.
+**FR.** **Test d'intégration de bout en bout** (corollaire classique) : pas de
+mesure dispersion-free (à valeurs dans {0,1}) en dimension ≥ 3. Ce résultat montre
+que le théorème de représentation formalisé entraîne l'exclusion attendue des
+mesures projectives normalisées, finiment additives et à valeurs dans `{0,1}`.
+La non-vacuité des structures sous-jacentes est établie séparément par les témoins
+explicites de `Gleason/Nonvacuity.lean`.
 
-**EN.** **Integration test** (classical corollary): no dispersion-free measure
-(valued in {0,1}) exists in dimension ≥ 3. If `gleason` were vacuously true or
-misstated, this corollary would not follow — it is the final anti-vacuity
-detector.
+**EN.** **End-to-end integration test** (classical corollary): no dispersion-free
+measure (valued in {0,1}) exists in dimension ≥ 3. This result shows that the
+formalized representation theorem yields the expected exclusion of normalized,
+finitely additive `{0,1}`-valued projection measures. Non-vacuity of the underlying
+structures is established separately by the explicit examples in
+`Gleason/Nonvacuity.lean`.
 -/
 theorem no_dispersion_free {n : ℕ} (hn : 3 ≤ n) (m : ProjMeasure n) :
     ¬ (∀ A : Submodule ℂ (H n), m.μ A = 0 ∨ m.μ A = 1) := by

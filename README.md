@@ -1,18 +1,30 @@
 # gleason — Formalisation Lean 4 des théorèmes de Busch (2003) et Gleason
 
-**Statut : PROJET COMPLET (2026-07-11).** Première formalisation mécanisée, **sans
-axiome**, de :
+**Statut : PROJET COMPLET (2026-07-11).** Ce dépôt fournit une formalisation
+complète en Lean 4 et Mathlib de versions complexes de dimension finie de :
 1. **Théorème de Busch (2003)** : toute mesure d'effets (POVM) sur ℂⁿ est représentée
    par un unique opérateur densité (vaut dès n = 2) ;
 2. **Théorème de Gleason** : idem pour les mesures de projections, n ≥ 3,
    voie Cooke–Keane–Moran / Richman–Bridges ;
 3. **Corollaire** : aucune mesure « dispersion-free » (à valeurs dans {0,1}) n'existe
-   en dimension ≥ 3 — le détecteur anti-vacuité final du projet.
+   en dimension ≥ 3 — un test d'intégration de bout en bout de la représentation.
+
+L'additivité des mesures projectives porte sur les sous-espaces orthogonaux, et non
+simplement sur les sous-espaces d'intersection nulle. La disjonction du treillis
+imposerait une condition différente et nettement plus forte, non équivalente à
+l'hypothèse de Gleason et non satisfaite par les mesures de Born générales.
+
+Pour Busch, la structure Lean `EffectMeasure` utilise l'additivité binaire sur les
+sommes admissibles d'effets. L'additivité finie en découle par itération, et cette
+hypothèse suffit au résultat de dimension finie formalisé ici. La présentation
+originale est couramment énoncée pour des familles finies ou dénombrables dont la
+somme est bornée par l'identité ; le présent énoncé n'est donc pas présenté comme
+textuellement identique à toutes les formulations de la littérature.
 
 ## Démarrage
 ```bash
 ./setup.sh          # cache + build à partir de la version figée (~10 min avec cache)
-./scripts/guard.sh  # audit : 0 axiome, compte des sorry
+./scripts/guard.sh  # audit : aucun axiome propre au projet, compte des occurrences de sorry
 ```
 `setup.sh` construit exactement la version figée dans `lean-toolchain` et
 `lake-manifest.json` — il ne les modifie jamais, pour que tout commit/tag reste
@@ -58,7 +70,7 @@ Gleason/Complex/             Sections réelles + recollement (Dvurečenskij) [ja
 Gleason/Operator.lean        Forme quadratique → opérateur densité         [phase O]
 Gleason/Main.lean            Théorème de Gleason + corollaire dispersion-free
 CLAUDE.md                    Règles pour l'agent (à lire par Claude Code au démarrage)
-SORRIES.md                   Suivi des obligations restantes
+SORRIES.md                   Historique des obligations désormais closes
 ```
 
 ## Jalons
@@ -72,30 +84,29 @@ SORRIES.md                   Suivi des obligations restantes
 | M4   | **Gleason complet**     | `#print axioms gleason` propre                   | ✅ |
 
 ## Règles
-Aucun `axiom`, aucun `native_decide` (CI bloquante). Toute structure d'hypothèses a un
-habitant concret dans `Nonvacuity.lean`, même commit. Un `sorry` honnête plutôt qu'un
-énoncé affaibli en silence.
+Aucun axiome propre au projet, aucune preuve admise et aucun `native_decide` (CI
+bloquante). Toute structure d'hypothèses a un habitant concret dans
+`Nonvacuity.lean`. Les principes logiques signalés par `#print axioms` sont
+`propext`, `Classical.choice` et `Quot.sound`, standards dans Lean et Mathlib.
 
 ## Licence
 [Apache License 2.0](LICENSE).
 
 ## Citer ce travail
-Version citable recommandée : tag `v1.0.3-gleason`, commit
-`e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`
-(https://github.com/Bobart0/gleason-theorem-lean/tree/v1.0.3-gleason). `setup.sh`
-reconstruit cette version à l'identique (voir « Démarrage » ci-dessus) ; c'est
-le premier tag où c'est garanti (correction de reproductibilité de `setup.sh`,
-voir historique).
+Le tag `v1.0.3-gleason`, commit
+`e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`, reste la version reproductible
+précédemment archivée. La version documentaire corrigée prévue est
+`v1.0.4-gleason`. Lorsqu'elle aura été fusionnée et taguée, citer le SHA exact du
+commit porté par ce nouveau tag ainsi que les métadonnées de [`CITATION.cff`](CITATION.cff).
 
-Archive pérenne (indépendante de la disponibilité future de GitHub), archivée
-sur [Software Heritage](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/Bobart0/gleason-theorem-lean) :
-- Identifiant permanent (commit) : `swh:1:rev:e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`
-- Identifiant permanent (contenu) : `swh:1:dir:560c655af0075a721067a726597af09750949bbe`
-- Lien direct : https://archive.softwareheritage.org/swh:1:rev:e21729e0ba5cddcc40dff14a5ae9d2bb0718e878
+Identifiants propres à la future version `v1.0.4-gleason` :
 
-Pour un DOI (ex. Zenodo), relier le dépôt GitHub à un compte Zenodo
-(https://zenodo.org/account/settings/github/) puis créer une *release* GitHub
-sur ce tag.
+- SHA du commit tagué : `[EXACT TAG COMMIT SHA TO BE ADDED]`
+- DOI Zenodo : `[ZENODO VERSION DOI TO BE ADDED]`
+- SWHID : `[SWHID TO BE ADDED]`
+
+Ces espaces réservés indiquent explicitement que les identifiants de la nouvelle
+version ne sont pas encore disponibles ; aucun DOI ni SWHID n'est revendiqué ici.
 
 ---
 
@@ -103,19 +114,31 @@ sur ce tag.
 
 # gleason — Lean 4 formalization of Busch's (2003) and Gleason's theorems
 
-**Status: PROJECT COMPLETE (2026-07-11).** First mechanized, **axiom-free**
-formalization of:
+**Status: PROJECT COMPLETE (2026-07-11).** This repository provides a complete
+Lean 4 and Mathlib formalization of finite-dimensional complex versions of:
 1. **Busch's theorem (2003)**: every effect measure (POVM) on ℂⁿ is represented
    by a unique density operator (holds already at n = 2);
 2. **Gleason's theorem**: likewise for projection measures, n ≥ 3, via the
    Cooke–Keane–Moran / Richman–Bridges route;
 3. **Corollary**: no "dispersion-free" measure (valued in {0,1}) exists in
-   dimension ≥ 3 — the project's final anti-vacuity detector.
+   dimension ≥ 3 — an end-to-end integration test of the representation.
+
+Projection measures must be additive on orthogonal subspaces, not merely on
+subspaces with trivial intersection. Lattice disjointness would impose a different
+and substantially stronger condition. It is not equivalent to the hypothesis of
+Gleason's theorem and is not satisfied by general Born measures.
+
+For Busch, the Lean structure `EffectMeasure` uses binary additivity on admissible
+sums of effects. Finite additivity follows by iteration, and this hypothesis is
+sufficient for the finite-dimensional result formalized here. The original
+presentation is commonly stated for finite or countable families whose sum is
+bounded by the identity; the Lean statement is therefore not presented as
+textually identical to every formulation in the literature.
 
 ## Getting started
 ```bash
 ./setup.sh          # cache + build from the pinned version (~10 min with cache)
-./scripts/guard.sh  # audit: 0 axiom, sorry count
+./scripts/guard.sh  # audit: no project-specific axioms; sorry occurrence count
 ```
 `setup.sh` builds exactly the version pinned in `lean-toolchain` and
 `lake-manifest.json` — it never modifies them, so any commit/tag stays
@@ -161,7 +184,7 @@ Gleason/Complex/              Real sections + patching (Dvurečenskij)          
 Gleason/Operator.lean          Quadratic form → density operator                     [phase O]
 Gleason/Main.lean               Gleason's theorem + dispersion-free corollary
 CLAUDE.md                      Agent rules (read by Claude Code at startup)
-SORRIES.md                     Tracking of remaining obligations
+SORRIES.md                     Historical record of completed obligations
 ```
 
 ## Milestones
@@ -175,27 +198,26 @@ SORRIES.md                     Tracking of remaining obligations
 | M4   | **Gleason complete**   | clean `#print axioms gleason`                    | ✅ |
 
 ## Rules
-No `axiom`, no `native_decide` (CI-blocking). Every hypothesis structure has a
-concrete inhabitant in `Nonvacuity.lean`, same commit. An honest `sorry` rather
-than a silently weakened statement.
+No project-specific axioms, admitted proofs, or `native_decide` (CI-blocking).
+Every hypothesis structure has a concrete inhabitant in `Nonvacuity.lean`. The
+logical principles reported by `#print axioms` are `propext`, `Classical.choice`,
+and `Quot.sound`, all standard in Lean and Mathlib.
 
 ## License
 [Apache License 2.0](LICENSE).
 
 ## Citing this work
-Recommended citable version: tag `v1.0.3-gleason`, commit
-`e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`
-(https://github.com/Bobart0/gleason-theorem-lean/tree/v1.0.3-gleason). `setup.sh`
-rebuilds this version identically (see "Getting started" above); this is the
-first tag where that's guaranteed (`setup.sh` reproducibility fix, see
-history).
+Tag `v1.0.3-gleason`, commit
+`e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`, remains the previously archived
+reproducible release. The planned corrected documentation release is
+`v1.0.4-gleason`. Once it has been merged and tagged, cite the exact commit SHA
+carried by that new tag together with the metadata in [`CITATION.cff`](CITATION.cff).
 
-Long-term archive (independent of GitHub's future availability), archived on
-[Software Heritage](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/Bobart0/gleason-theorem-lean):
-- Permanent identifier (commit): `swh:1:rev:e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`
-- Permanent identifier (content): `swh:1:dir:560c655af0075a721067a726597af09750949bbe`
-- Direct link: https://archive.softwareheritage.org/swh:1:rev:e21729e0ba5cddcc40dff14a5ae9d2bb0718e878
+Version-specific identifiers for the future `v1.0.4-gleason` release:
 
-For a DOI (e.g. Zenodo), link the GitHub repo to a Zenodo account
-(https://zenodo.org/account/settings/github/) and then create a GitHub
-*release* on this tag.
+- Tagged commit SHA: `[EXACT TAG COMMIT SHA TO BE ADDED]`
+- Zenodo DOI: `[ZENODO VERSION DOI TO BE ADDED]`
+- SWHID: `[SWHID TO BE ADDED]`
+
+These explicit placeholders mean that identifiers for the new release are not yet
+available; no DOI or SWHID is claimed here.

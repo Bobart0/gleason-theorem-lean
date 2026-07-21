@@ -5,24 +5,24 @@ import Gleason.Busch.Effects
 **FR.** # Tests d'inhabitation (non-vacuité)
 
 **Discipline centrale du dépôt.** Chaque structure d'hypothèses doit posséder ici un
-habitant CONCRET sur `ℂ³` (un vrai état quantique). C'est le test qui aurait détecté
-dès le début les deux défauts fatals de l'ancien développement (types d'hypothèses
-vides dès la dimension 2, axiome réfutable).
+habitant CONCRET sur `ℂ³` (un vrai état quantique). Ces témoins établissent
+directement la non-vacuité des structures utilisées par les théorèmes et protègent
+contre des hypothèses accidentellement impossibles.
 
 Règle : aucune structure nouvelle ne rentre dans `Defs.lean` sans son `example :
-Nonempty (...)` ici, dans le même commit. Les `sorry` de ce fichier sont la
-**première cible de preuve** du jalon M1.
+Nonempty (...)` ici, dans le même commit. Les preuves correspondantes constituent
+le bloc de non-vacuité achevé au jalon M1.
 
 **EN.** # Inhabitation tests (non-vacuity)
 
 **Central discipline of this repository.** Every hypothesis structure must have a
-CONCRETE inhabitant here on `ℂ³` (a real quantum state). This is the test that
-would have caught, from the start, the two fatal flaws of the old development
-(hypothesis types empty as soon as dimension 2, refutable axiom).
+CONCRETE inhabitant here on `ℂ³` (a real quantum state). These witnesses directly
+establish non-vacuity of the structures used by the theorems and guard against
+accidentally impossible hypotheses.
 
 Rule: no new structure enters `Defs.lean` without its `example : Nonempty (...)`
-here, in the same commit. The `sorry`s in this file are the **first proof target**
-of milestone M1.
+here, in the same commit. The corresponding proofs form the non-vacuity block
+completed at milestone M1.
 -/
 
 namespace Gleason

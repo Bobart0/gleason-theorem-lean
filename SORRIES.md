@@ -1,9 +1,9 @@
-# Suivi des sorry (mettre à jour à chaque commit qui en ferme un)
+# Historique des obligations de preuve closes
 
-**PROJET COMPLET — 2026-07-11.** `lake build` vert, `./scripts/guard.sh` : 0 axiome,
-0 `native_decide` (le compteur de "sorry" du script matche aussi le mot dans les
-commentaires/docstrings — grep `\bsorry\b` sur le code montre qu'aucun ne reste comme
-tactique). `#print axioms` sur les quatre théorèmes livrés (actif dans `Main.lean`) :
+**PROJET COMPLET — 2026-07-11.** `lake build` vert, `./scripts/guard.sh` confirme
+l'absence d'axiome propre au projet, de preuve admise et de `native_decide` (son
+compteur lexical inclut aussi les occurrences dans les commentaires/docstrings).
+`#print axioms` sur les quatre théorèmes livrés (actif dans `Main.lean`) :
 `Gleason.gleason`, `Gleason.busch`, `Gleason.busch_born_rule`, `Gleason.no_dispersion_free`
 → `propext, Classical.choice, Quot.sound` uniquement, dans les quatre cas.
 
@@ -21,7 +21,7 @@ tactique). `#print axioms` sur les quatre théorèmes livrés (actif dans `Main.
 - [x] EffectMeasure.map_zero
 - [x] EffectMeasure.mono
 - [x] EffectMeasure.isEffect_projL
-- [x] EffectMeasure.toProjMeasure (2 sorry)
+- [x] EffectMeasure.toProjMeasure (2 obligations de preuve, closes)
 - [x] busch (positivité + trace 1 + représentation + unicité)
 - [x] busch_born_rule (corollaire direct de `busch`, appliqué aux `projL A`)
 
@@ -204,12 +204,13 @@ tactique). `#print axioms` sur les quatre théorèmes livrés (actif dans `Main.
 
 ## English translation
 
-# Sorry tracking (update on every commit that closes one)
+# Historical record of completed proof obligations
 
-**PROJECT COMPLETE — 2026-07-11.** `lake build` green, `./scripts/guard.sh`: 0
-axiom, 0 `native_decide` (the script's "sorry" counter also matches the word inside
-comments/docstrings — grep `\bsorry\b` on the code shows none remain as a
-tactic). `#print axioms` on the four delivered theorems (active in `Main.lean`):
+**PROJECT COMPLETE — 2026-07-11.** `lake build` is green; `./scripts/guard.sh`
+confirms that there are no project-specific axioms, admitted proofs, or
+`native_decide` uses (its lexical counter also includes occurrences in comments
+and docstrings). `#print axioms` on the four delivered theorems (active in
+`Main.lean`):
 `Gleason.gleason`, `Gleason.busch`, `Gleason.busch_born_rule`,
 `Gleason.no_dispersion_free` → `propext, Classical.choice, Quot.sound` only, in all
 four cases.
@@ -228,7 +229,7 @@ four cases.
 - [x] EffectMeasure.map_zero
 - [x] EffectMeasure.mono
 - [x] EffectMeasure.isEffect_projL
-- [x] EffectMeasure.toProjMeasure (2 sorry)
+- [x] EffectMeasure.toProjMeasure (2 proof obligations, closed)
 - [x] busch (positivity + trace 1 + representation + uniqueness)
 - [x] busch_born_rule (direct corollary of `busch`, applied to `projL A`)
 

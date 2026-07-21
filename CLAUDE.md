@@ -1,11 +1,11 @@
 # CLAUDE.md — Formalisation de Busch (2003) et Gleason en Lean 4 / Mathlib
 
 ## Mission
-Produire la première formalisation mécanisée, SANS AXIOME, du théorème de Busch
-(2003, effets/POVM, dès la dimension 2) puis du théorème de Gleason (projections,
-dimension ≥ 3), en dimension finie sur `EuclideanSpace ℂ (Fin n)`.
-Ordre : d'abord Busch (jalon M-B, purement algébrique), ensuite Gleason
-(cœur analytique CKM/Richman–Bridges dans `Gleason/Real3/`).
+Maintenir une formalisation complète en Lean 4 et Mathlib de versions complexes de
+dimension finie du théorème de Busch (2003, effets/POVM, dès la dimension 2) et du
+théorème de Gleason (projections, dimension ≥ 3), sur
+`EuclideanSpace ℂ (Fin n)`. L'architecture achevée traite Busch au jalon M-B, puis
+Gleason avec le cœur analytique CKM/Richman–Bridges dans `Gleason/Real3/`.
 
 L'utilisateur est débutant en Lean et non spécialiste du domaine : c'est TOI qui
 portes les mathématiques et le Lean. Explique tes choix en français, brièvement.
@@ -31,23 +31,20 @@ portes les mathématiques et le Lean. Explique tes choix en français, brièveme
 7. Les linters restent ACTIVÉS (pas de `set_option ... false` global).
 
 ## Workflow standard
-1. Lire l'état : `./scripts/guard.sh` (compte des sorry), `lake build`.
-2. Choisir le sorry cible (ordre : Nonvacuity → Defs lemmes → Busch → Real3/Simplex →
-   Real3/SphereGeometry → phase O (Operator) → Real3/Descent+Continuity+Regular →
-   Complex → Main).
-3. Boucle : proposer une preuve → `lake build` → lire les erreurs → corriger.
+1. Lire l'état : `./scripts/guard.sh` et `lake build`.
+2. Localiser précisément le changement demandé dans l'architecture achevée.
+3. Boucle : proposer une modification → `lake build` → lire les erreurs → corriger.
    Tactiques de recherche : insérer `exact?`, `apply?`, `rw?` et lire la suggestion
    dans la sortie du build ; `simp?` pour minimiser les appels simp.
 4. Recherche de noms Mathlib : https://leansearch.net (langage naturel),
    https://loogle.lean-lang.org (par signature), et grep dans
    `.lake/packages/mathlib/Mathlib/`.
-5. Quand un sorry tombe : `./scripts/guard.sh`, mettre à jour SORRIES.md, commit
-   atomique avec message `feat(fichier): nom_du_lemme`.
+5. Après toute modification : `./scripts/guard.sh`, mettre à jour la documentation
+   d'audit si nécessaire, puis créer un commit atomique.
 
-## Première tâche (jalon M0→M1) — passe de compilation
-Ce squelette a été écrit SANS compilateur : des noms d'API Mathlib ont pu dériver.
-Réparer dans l'ordre, fichier par fichier, en gardant les énoncés mathématiquement
-identiques :
+## Historique du jalon M0→M1 — passe de compilation
+La passe initiale a stabilisé les noms d'API Mathlib suivants tout en conservant
+les énoncés mathématiquement identiques :
 - `Submodule.IsOrtho` et sa notation `⟂` (sinon écrire `Submodule.IsOrtho A B`) ;
 - `Submodule.starProjection` (peut s'appeler `orthogonalProjection'` ou avoir changé) ;
 - notation `⟪·,·⟫_ℂ` / `⟪·,·⟫` (`open scoped InnerProductSpace` /
@@ -92,11 +89,11 @@ exemple résolu.
 # CLAUDE.md — Formalization of Busch (2003) and Gleason in Lean 4 / Mathlib
 
 ## Mission
-Produce the first mechanized, AXIOM-FREE formalization of Busch's theorem
-(2003, effects/POVMs, from dimension 2) and then of Gleason's theorem
-(projections, dimension ≥ 3), in finite dimension on `EuclideanSpace ℂ (Fin n)`.
-Order: Busch first (milestone M-B, purely algebraic), then Gleason
-(CKM/Richman–Bridges analytic core in `Gleason/Real3/`).
+Maintain a complete Lean 4 and Mathlib formalization of finite-dimensional complex
+versions of Busch's theorem (2003, effects/POVMs, from dimension 2) and Gleason's
+theorem (projections, dimension ≥ 3), on `EuclideanSpace ℂ (Fin n)`. The completed
+architecture treats Busch at milestone M-B, then Gleason with the
+CKM/Richman–Bridges analytic core in `Gleason/Real3/`.
 
 The user is a Lean beginner and not a domain specialist: YOU carry the
 mathematics and the Lean. Explain your choices in French, briefly.
@@ -122,23 +119,20 @@ mathematics and the Lean. Explain your choices in French, briefly.
 7. Linters stay ENABLED (no global `set_option ... false`).
 
 ## Standard workflow
-1. Read the state: `./scripts/guard.sh` (sorry count), `lake build`.
-2. Choose the target sorry (order: Nonvacuity → Defs lemmas → Busch →
-   Real3/Simplex → Real3/SphereGeometry → phase O (Operator) →
-   Real3/Descent+Continuity+Regular → Complex → Main).
-3. Loop: propose a proof → `lake build` → read the errors → fix.
+1. Read the state: `./scripts/guard.sh` and `lake build`.
+2. Locate the requested change precisely in the completed architecture.
+3. Loop: propose a change → `lake build` → read the errors → fix.
    Search tactics: insert `exact?`, `apply?`, `rw?` and read the suggestion in
    the build output; `simp?` to minimize `simp` calls.
 4. Mathlib name search: https://leansearch.net (natural language),
    https://loogle.lean-lang.org (by signature), and grep in
    `.lake/packages/mathlib/Mathlib/`.
-5. When a sorry falls: `./scripts/guard.sh`, update SORRIES.md, atomic commit
-   with message `feat(file): lemma_name`.
+5. After any change: `./scripts/guard.sh`, update audit documentation if needed,
+   then create an atomic commit.
 
-## First task (milestone M0→M1) — compilation pass
-This skeleton was written WITHOUT a compiler: Mathlib API names may have
-drifted. Fix in order, file by file, keeping the statements mathematically
-identical:
+## Milestone M0→M1 history — compilation pass
+The initial pass stabilized the following Mathlib API names while keeping the
+statements mathematically identical:
 - `Submodule.IsOrtho` and its `⟂` notation (otherwise write
   `Submodule.IsOrtho A B`);
 - `Submodule.starProjection` (may be called `orthogonalProjection'` or have

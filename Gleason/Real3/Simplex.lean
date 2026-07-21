@@ -8,8 +8,8 @@ Richman–Bridges : une fonction bornée sur `[0,1]` dont la somme sur les paire
 dépend que de la somme des arguments est affine. Preuve par récurrence dyadique +
 bornitude (aucun choix, aucune continuité supposée).
 
-C'est le PREMIER lemme analytique à prouver : il valide le style de preuve
-(récurrences dyadiques, encadrements) avant d'attaquer la sphère.
+Premier bloc analytique de l'architecture achevée, il établit le style de preuve
+par récurrences dyadiques et encadrements utilisé ensuite sur la sphère.
 
 **EN.** # Simplex lemma (warm-up, week 1)
 
@@ -18,8 +18,8 @@ quantitative lemma: a bounded function on `[0,1]` whose sum over pairs depends
 only on the sum of the arguments is affine. Proof by dyadic induction +
 boundedness (no choice, no continuity assumed).
 
-This is the FIRST analytic lemma to prove: it validates the proof style (dyadic
-inductions, sandwich bounds) before tackling the sphere.
+As the first analytic block of the completed architecture, it establishes the
+dyadic-induction and sandwich-bound proof style later used on the sphere.
 -/
 
 namespace Gleason
@@ -33,7 +33,7 @@ namespace Gleason
    GLOBAL), ne s'applique pas ici car `g` n'est défini que sur `[0,1]` avec
    une additivité restreinte (pas un morphisme sur `ℝ` tout entier) : l'argument
    classique « f(nx) mod 1 » suppose un domaine global. Il faut donc l'argument
-   dyadique à la main (étapes ci-dessous, toutes prouvées : 0 `sorry`).
+   dyadique à la main, mis en œuvre par les étapes toutes démontrées ci-dessous.
    ═══════════════════════════════════════════════════════════════════ -/
 
 /--
