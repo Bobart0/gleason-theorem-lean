@@ -32,7 +32,8 @@ if grep -E '(^|[[:space:]])warning:' "$tmp_dir/axioms.log" >/dev/null; then
   exit 1
 fi
 "$PYTHON" scripts/normalize_axioms.py "$tmp_dir/axioms.log" | tr -d '\r' > "$tmp_dir/axioms.normalized"
-diff -u Verification/axioms.expected "$tmp_dir/axioms.normalized"
+tr -d '\r' < Verification/axioms.expected > "$tmp_dir/axioms.expected.normalized"
+diff -u "$tmp_dir/axioms.expected.normalized" "$tmp_dir/axioms.normalized"
 
 echo
 echo "Verification succeeded:"

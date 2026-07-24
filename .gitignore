@@ -1,1 +1,23 @@
 .lake/
+
+# LaTeX auxiliary files (manuscript build byproducts)
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
+
+# Editor / tool artifacts (not part of the scientific deliverable)
+.claude/
+request.json
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,772 @@
+% Version prepared from busch_gleason_JAR_repositioned_v7(2).md
+% Springer Nature LaTeX template (sn-jnl), math/physical sciences numbered style.
+% FINALIZATION: replace v1.0.5-journal-submission, FINAL-COMMIT-SHA, and the software DOI
+% after the repository audit. This comment is intentionally non-printing.
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage[title]{appendix}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{listings}
+\usepackage{url}
+\providecommand{\passthrough}[1]{#1}
+\providecommand{\real}[1]{#1}
+
+\lstdefinelanguage{Lean}{
+  morekeywords={abbrev,structure,where,def,theorem,forall,exists,not,Prop,Type},
+  sensitive=true,
+  morecomment=[l]{--},
+  morecomment=[s]{/-}{-/},
+  morestring=[b]"
+}
+\lstset{
+  language=Lean,
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  showstringspaces=false
+}
+
+\theoremstyle{thmstyleone}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{thmstylethree}
+\newtheorem{definition}[theorem]{Definition}
+
+\setcounter{secnumdepth}{3}
+\raggedbottom
+
+\begin{document}
+
+\title[Formalizing Busch and Gleason in Lean 4]{Formalizing Busch and Gleason in Lean 4: Two Representation Theorems, Two Proof Architectures}
+
+\author*[1]{\fnm{Bertrand} \sur{Dalimier}}\email{bdalimier@hotmail.com}
+\affil*[1]{\orgname{Independent Researcher}, \orgaddress{\city{Nogent-sur-Marne}, \country{France}}}
+
+% ORCID: 0009-0000-2457-375X
+
+\abstract{Busch's and Gleason's theorems characterize quantum probability assignments on effects and orthogonal projections. We formalize finite-dimensional complex versions of both representation theorems in Lean 4 using Mathlib. In every positive dimension, any normalized nonnegative effect assignment that is additive whenever a binary sum remains an effect is represented uniquely on all effects by a density operator. In dimensions at least three, any normalized nonnegative measure on complex subspaces that is additive on orthogonal pairs has a unique Born representation. The development also proves that the Busch representation restricts to projections and that no globally two-valued projection measure exists in dimension at least three. The formal proofs exhibit contrasting mechanization requirements. The Busch proof derives real homogeneity, extends the assignment to a real-linear functional on self-adjoint operators, and constructs a finite-dimensional trace representation. The Gleason proof formalizes a real three-dimensional frame-function argument, including compactness and extremal reasoning, and then patches real sections into a complex representation. Relative to earlier Lean artifacts, the contribution is not priority or greater generality, but a shared finite-dimensional artifact, an alternative proof architecture, a direct comparison of the two mechanizations, and a reproducible kernel-checked development with no admitted proofs or project-specific axioms.}
+
+\keywords{Lean 4, formalized mathematics, Gleason's theorem, Busch's theorem, quantum probability, density operators}
+
+\maketitle
+
+\section{Introduction}\label{sec:introduction}
+
+Busch's and Gleason's theorems characterize when probability assignments in Hilbert-space quantum theory must have trace form. For a density operator \(\rho\) on a complex Hilbert space, the probability assigned to a closed subspace \(A\) is \(\operatorname{tr}(\rho P_A)\), where \(P_A\) is the orthogonal projection onto \(A\). Gleason proved that, on real or complex Hilbert spaces of dimension greater than two, every normalized nonnegative measure that is countably additive on mutually orthogonal families is induced by a positive trace-one operator \cite{gleason1957}. In finite dimension, every subspace is closed and only finitely many members of an orthogonal family can be nonzero. The present article formalizes the finite-dimensional complex specialization, for which finite orthogonal additivity suffices and the representing operator is a density matrix.
+
+Busch enlarges the domain from projections to quantum effects, namely operators \(T\) satisfying \(0\leq T\leq I\) \cite{busch2003}. The order and convex structure of this larger domain allow scalar homogeneity to be derived from additivity rather than assumed. The theorem formalized here requires binary additivity only when the sum of two effects remains an effect; admissible finite additivity then follows by iteration. Its representation conclusion holds in every positive dimension. Closely related formulations based on generalized measurements were developed by Caves, Fuchs, Manne, and Renes \cite{caves2004}. The present development does not formalize Busch's original infinite-dimensional sequence formulation.
+
+Although the two theorems have similar conclusions, their formal proofs have markedly different architectures. The Busch route is predominantly algebraic: it derives monotonicity and real homogeneity, extends the assignment to a real-linear functional on self-adjoint operators, and constructs a finite-dimensional trace representation. The principal difficulty in the Gleason route is instead the regularity of frame functions: a function constrained by its sums on orthonormal bases must be proved quadratic. The development follows the three-dimensional organization of Cooke, Keane, and Moran \cite{cooke1985}, uses Richman and Bridges as an independent guide to regularity issues \cite{richman1999}, and implements a separate real-to-complex patching layer informed by Dvure\v{c}enskij \cite{dvurecenskij1993}.
+
+For automated reasoning, this contrast is methodologically significant. Mechanization exposes obligations that paper proofs often compress into phrases such as ``extend linearly'', ``attains its maximum'', or ``by polarization''. It also exposes specification risks. In particular, lattice disjointness of subspaces is weaker than Hilbert-space orthogonality; replacing the latter by the former encodes a different and substantially stronger valuation principle. Kernel checking certifies consequences of the encoded hypotheses, but it does not establish that those hypotheses faithfully express the intended theorem.
+
+The closest prior Lean work is due to Mark J. Soares. One artifact proves a Busch-type representation on arbitrary finite-dimensional complex Hilbert spaces of finrank at least two; another proves a more general Gleason theorem for separable real and complex Hilbert spaces \cite{soaresbusch2026,soaresgleason2026}. The present article therefore makes no first-formalization claim. Instead, it integrates and compares two independent proof routes within one finite-dimensional complex development.
+
+The article makes five specific contributions:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  It formalizes both representation theorems over shared definitions of effects, projection measures, density operators, orthogonal projections, trace, and Born value.
+\item
+  Its Busch interface covers dimension one and states unique existence of the representing density operator. This complements, but does not subsume, Soares's more abstract finite-dimensional interface.
+\item
+  Its projection interface provides an alternative concrete finite-dimensional complex implementation based on the Cooke--Keane--Moran route and an explicit real-to-complex patching layer. This result is narrower than Soares's separable theorem.
+\item
+  The artifact includes the projection restriction of the effect theorem, a no-dispersion-free corollary, concrete inhabitants of the principal hypothesis structures, and reusable operator and geometry lemmas.
+\item
+  The paper identifies proof obligations, specification pitfalls, semantic validation checks, trust-boundary decisions, and reproducibility practices that apply beyond these two representation theorems.
+\end{enumerate}
+
+The exposition emphasizes theorem interfaces, proof architecture, provenance, and verification evidence rather than reproducing the full Lean source. Section~\ref{sec:setting} introduces the mathematical and formal objects, and Section~\ref{sec:provenance} records proof provenance. Sections~\ref{sec:busch} and~\ref{sec:gleason} present the two proof developments. Section~\ref{sec:comparison} compares their proof-engineering requirements and extracts shared lessons. Section~\ref{sec:verification} documents the trust boundary and reproduction procedure. Sections~\ref{sec:related} and~\ref{sec:limitations} position the artifact relative to prior work and state its limitations, and Section~\ref{sec:conclusion} concludes.
+
+\section{Mathematical setting and public interfaces}\label{sec:setting}
+
+This section fixes the concrete Hilbert spaces, input structures, operator notions, and public theorem interfaces used by both formalizations. The definitions are presented at the level needed to compare the two proof routes and to audit their Lean statements.
+
+\subsection{Concrete finite-dimensional Hilbert spaces}\label{concrete-finite-dimensional-hilbert-spaces}
+
+The development works with the concrete complex Hilbert space \[H_n := \mathbb{C}^{\operatorname{Fin}(n)},\] represented in Mathlib by \passthrough{\lstinline!EuclideanSpace C (Fin n)!}. Thus \(H_n\) has complex dimension \(n\). This concrete model covers every finite complex dimension while avoiding an additional layer of type-class quantification; the public theorems are not stated for arbitrary finite-dimensional Hilbert-space types. Mathlib's complex inner product is linear in its second argument, and the proofs consistently use that convention in symmetry, orthogonality, and polarization arguments.
+
+The main-text code displays are paper-facing ASCII transcriptions of declarations at release \passthrough{\lstinline!v1.0.5-journal-submission!}, commit \passthrough{\lstinline!FINAL-COMMIT-SHA!}. They preserve the mathematical binder structure and propositions while replacing selected Unicode symbols by ASCII notation. The tagged Lean source is authoritative.
+
+The underlying abbreviation is:
+
+\begin{lstlisting}
+abbrev H (n : Nat) := EuclideanSpace C (Fin n)
+\end{lstlisting}
+
+Here and below, \passthrough{\lstinline!C!} and \passthrough{\lstinline!R!} denote Lean's scalar types \(\mathbb C\) and \(\mathbb R\), respectively. Although \passthrough{\lstinline!H 0!} is a well-formed zero-dimensional space, the public Busch theorem assumes \(n\geq1\), and the public Gleason theorem assumes \(n\geq3\).
+
+\subsection{Projection measures}\label{projection-measures}
+
+A projection measure assigns a real value to every complex subspace of \(H_n\). The structure records nonnegativity, normalization at the whole space, and binary additivity on orthogonal pairs:
+
+\begin{lstlisting}
+structure ProjMeasure (n : Nat) where
+  mu          : Submodule C (H n) -> R
+  nonneg      : forall A, 0 <= mu A
+  top_eq_one  : mu top = 1
+  add_isOrtho : forall A B, A IsOrtho B ->
+                  mu (A sup B) = mu A + mu B
+\end{lstlisting}
+
+The use of Hilbert-space orthogonality is essential. Trivial intersection is a strictly weaker relation: two distinct nonorthogonal lines intersect only at zero. Replacing orthogonality by trivial intersection would therefore impose additivity on more pairs and would formalize a different valuation problem. That stronger condition is not inconsistent in finite dimension; for example, \(A\mapsto \dim(A)/n\) is additive when \(A\cap B=\{0\}\). It nevertheless excludes the usual pure-state Born assignments and is not Gleason's hypothesis. The formal structure itself uses \passthrough{\lstinline!Submodule.IsOrtho!}, and \passthrough{\lstinline!Gleason/Nonvacuity.lean!} constructs a pure-state inhabitant of \passthrough{\lstinline!ProjMeasure 3!}.
+
+\subsection{Positive operators, effects, and effect measures}\label{positive-operators-effects-and-effect-measures}
+
+The second input structure is defined on effects rather than subspaces. This larger domain supplies the order and scalar structure exploited by the Busch proof.
+
+The Busch development represents operators by complex-linear endomorphisms of \(H_n\). Positivity is encoded as symmetry together with nonnegativity of the real part of the quadratic form. An effect is an operator \(T\) for which both \(T\) and \(1-T\) are positive, corresponding to \(0\leq T\leq I\) in the Loewner order:
+
+\begin{lstlisting}
+def IsPositiveOp (T : H n ->l[C] H n) : Prop :=
+  LinearMap.IsSymmetric T /\
+  forall x, 0 <= re (inner (T x) x)
+
+def IsEffect (T : H n ->l[C] H n) : Prop :=
+  IsPositiveOp T /\ IsPositiveOp (1 - T)
+\end{lstlisting}
+
+In this finite-dimensional complex setting, \passthrough{\lstinline!LinearMap.IsSymmetric!} is the self-adjointness condition. The explicit real part is required because the inequality is real-valued; symmetry later supplies the corresponding reality properties of the quadratic form.
+
+An effect measure is then specified by nonnegativity on effects, normalization at the identity, and binary additivity whenever the sum remains an effect:
+
+\begin{lstlisting}
+structure EffectMeasure (n : Nat) where
+  f        : (H n ->l[C] H n) -> R
+  nonneg   : forall T, IsEffect T -> 0 <= f T
+  map_one  : f 1 = 1
+  additive : forall S T, IsEffect S -> IsEffect T ->
+               IsEffect (S + T) -> f (S + T) = f S + f T
+\end{lstlisting}
+
+The field \passthrough{\lstinline!f!} is a total function on all complex-linear endomorphisms, but the axioms constrain it only on effects, and the representation theorem asserts equality only on effects. Its values elsewhere have no mathematical role. The development derives \passthrough{\lstinline!f 0 = 0!} and monotonicity on effects from the recorded axioms. Consequently, every effect \(T\) satisfies \(0\leq f(T)\leq1\): the lower bound is a structure field, and the upper bound follows by comparing \(T\) with the identity through the positivity of \(1-T\). Keeping the codomain equal to \(\mathbb R\), rather than using a subtype such as \([0,1]\), simplifies the later real-linear extension.
+
+\subsection{Density operators, projections, and Born values}\label{density-operators-projections-and-born-values}
+
+A density operator is a complex-linear endomorphism equipped with three properties: symmetry, nonnegativity of its quadratic form, and complex trace exactly equal to one.
+
+\begin{lstlisting}
+structure IsDensityOperator (rho : H n ->l[C] H n) : Prop where
+  symmetric : LinearMap.IsSymmetric rho
+  nonneg    : forall x, 0 <= re (inner (rho x) x)
+  trace_one : LinearMap.trace C (H n) rho = 1
+\end{lstlisting}
+
+For a subspace \(A\), \passthrough{\lstinline!projL A!} is Mathlib's orthogonal projection \passthrough{\lstinline!Submodule.starProjection!}, coerced from a continuous linear map to a linear map. The development defines \[\operatorname{bornValue}(\rho,A)
+  := \operatorname{Re}\operatorname{tr}(\rho\circ P_A).\] In Lean, this is the real part of the trace of \passthrough{\lstinline!rho comp projL A!}. The codomain is explicitly real. For the symmetric operators used in the representation theorems, subsequent lemmas establish the expected reality and identify this trace expression with the usual sums of quadratic-form values over orthonormal bases.
+
+\subsection{Public theorem interfaces}\label{public-theorem-interfaces}
+
+The preceding definitions support four principal declarations exported by the submission artifact.
+
+Table~\ref{tab:interfaces} summarizes these declarations. Appendix~\ref{app:interfaces} gives fuller paper-facing transcriptions of their types.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3000}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.4000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3000}}@{}}
+\caption{Principal public theorem interfaces in the submission artifact.}\label{tab:interfaces}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Declaration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Dimension
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Formal conclusion
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Declaration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Dimension
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Formal conclusion
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\passthrough{\lstinline!Gleason.busch!} & \(n\geq 1\) & Every effect measure is represented on all effects by a unique density operator. \\
+\passthrough{\lstinline!Gleason.busch_born_rule!} & \(n\geq 1\) & The projection restriction of an effect measure has the Born form for every subspace. \\
+\passthrough{\lstinline!Gleason.gleason!} & \(n\geq 3\) & Every projection measure has a unique Born representation on every subspace. \\
+\passthrough{\lstinline!Gleason.no_dispersion_free!} & \(n\geq 3\) & No projection measure takes only the values \(0\) and \(1\) on all subspaces. \\
+\end{longtable}
+
+The conclusions of \passthrough{\lstinline!busch!} and \passthrough{\lstinline!gleason!} are similar, but their input structures are not interchangeable. An effect measure is defined on the larger effect domain and is additive for every admissible effect sum. A projection measure is defined only on subspaces and assumes additivity on orthogonal pairs. The public proof of \passthrough{\lstinline!gleason!} does not invoke \passthrough{\lstinline!busch!}; conversely, \passthrough{\lstinline!busch!} does not derive the projection theorem under Gleason's weaker domain-specific assumptions. The declaration \passthrough{\lstinline!EffectMeasure.toProjMeasure!} and the corollary \passthrough{\lstinline!busch_born_rule!} provide the explicit one-way restriction from an effect measure to its values on orthogonal projections.
+
+\section{Proof provenance and source correspondence}\label{sec:provenance}
+
+The development is not a line-by-line transcription of a single published proof. A precise provenance statement is therefore necessary.
+
+The Busch formalization follows the algebraic skeleton of Busch's argument: additivity gives monotonicity and scalar homogeneity; the assignment is extended to positive and then self-adjoint operators; a trace representation yields the density operator \cite{busch2003}. The Lean development specializes to finite dimension, weakens sequence additivity to finite pairwise additivity, makes the self-adjoint extension explicit, and constructs the finite-dimensional Riesz representation in coordinates rather than importing an exact ready-made operator-space theorem.
+
+The Gleason formalization is a composite reconstruction. The real three-dimensional core follows the organization of CKM through frame-function geometry, descent, extremal values, and quadraticity \cite{cooke1985}. The formal attainment proof uses an ultrafilter-based compactness argument developed for this repository; it is not claimed to be a literal transcription of CKM. The formalization also states and proves an extremal-frame lemma that is used implicitly in the source-level argument. This should be understood as filling an exposition gap in the mechanized dependency chain, not as a claim that the published theorem is false. Richman and Bridges provide an independent constructive reference for regularity arguments \cite{richman1999}. The complex section-and-patching layer is based on the strategy presented by Dvure\v{c}enskij, supplemented by repository-specific finite-dimensional operator lemmas \cite{dvurecenskij1993}.
+
+Table~\ref{tab:provenance} separates source inspiration from formal implementation.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\caption{Proof provenance and principal formal modules.}\label{tab:provenance}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Component
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Main source
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Formal implementation
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Component
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Main source
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Formal implementation
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Effects and scalar extension & Busch (2003) & \passthrough{\lstinline!Gleason/Busch/Effects.lean!} and \passthrough{\lstinline!Gleason/Busch/Main.lean!}; finite pairwise additivity and explicit real homogeneity. \\
+Real frame functions on \(\mathbb R^3\) & Cooke--Keane--Moran (1985), cross-checked against Richman--Bridges (1999) & \passthrough{\lstinline!Gleason/Real3/*!}; repository-specific auxiliary geometry and ultrafilter attainment. \\
+Complex patching & Dvure\v{c}enskij (1993) & \passthrough{\lstinline!Gleason/Complex/*!}; real sections, phase adjustment, peeling, and induction on finite rank. \\
+Operator assembly & Standard finite-dimensional Hilbert-space arguments & \passthrough{\lstinline!Gleason/Operator.lean!} and \passthrough{\lstinline!Gleason/Main.lean!}; positivity, trace one, Born values, and uniqueness. \\
+\end{longtable}
+
+The Soares repositories are related work rather than proof sources for this artifact. The present source tree contains no import from, or code dependency on, either repository. The comparison in Section~\ref{sec:related} is based on public theorem interfaces, verification scripts, release metadata, and commit histories. This establishes the observable relationship between the artifacts without making claims about unobservable private development history.
+
+\section{Formalization of Busch's theorem}\label{sec:busch}
+
+\subsection{Formal statement and scope}\label{formal-statement-and-scope}
+
+The exact theorem proved in Lean is a finite-dimensional form of Busch's representation result. Busch's published condition permits additive sequences of effects with sum bounded by the identity; the formal theorem assumes only pairwise additivity when the binary sum remains an effect. This weaker finite condition is sufficient for the mechanized finite-dimensional proof.
+
+\begin{theorem}[Busch representation theorem]\label{thm:busch}
+Let \(n\geq 1\), and let \(F\) be a normalized nonnegative finitely additive measure on the effects of \(H_n\). Then there exists a unique density operator \(\rho\) such that
+\[
+F(T)=\operatorname{Re}\operatorname{tr}(\rho T)
+\]
+for every effect \(T\).
+\end{theorem}
+
+The corresponding Lean declaration is \passthrough{\lstinline!Gleason.busch!}. The formal statement uses composition \(\rho\circ T\) because operators are represented as linear maps; this is the same matrix product that appears in the trace formula. The theorem is proved for \(n\geq1\). Dimension two is the significant case for comparison with the projection-only theorem, because projective frame functions in dimension two need not have a density-operator representation.
+
+Every orthogonal projection is an effect. Restricting an effect measure to projections therefore yields a projection measure and gives the following consequence.
+
+\begin{corollary}[Projection consequence of Busch's theorem]\label{cor:busch-projection}
+Under the assumptions of Theorem~\ref{thm:busch}, there exists a density operator \(\rho\) such that
+\[
+F(P_A)=\operatorname{Re}\operatorname{tr}(\rho P_A)
+\]
+for every subspace \(A\subseteq H_n\).
+\end{corollary}
+
+This is \passthrough{\lstinline!Gleason.busch_born_rule!}. Its assumption is stronger than Gleason's, because it presupposes an additive assignment on all effects rather than only on projections.
+
+\subsection{From finite additivity to real homogeneity}\label{from-finite-additivity-to-real-homogeneity}
+
+The first formal challenge is to extract scalar structure from the weak additivity axiom. The proof begins with \(F(0)=0\) and monotonicity on effects. It then proves homogeneity in progressively stronger forms:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  halving: \(F(T/2)=F(T)/2\);
+\item
+  dyadic homogeneity;
+\item
+  natural and rational homogeneity when the scaled operator remains an effect;
+\item
+  real homogeneity on the interval \([0,1]\) by rational approximation and monotonicity.
+\end{enumerate}
+
+The real-scalar step is where a paper proof can hide a continuity assumption. The formal development does not assume continuity. For \(r\in[0,1]\) and every \(k\), it brackets \(r\) by the adjacent dyadic numbers \(\lfloor r2^k\rfloor/2^k\) and \((\lfloor r2^k\rfloor+1)/2^k\). Monotonicity and dyadic homogeneity bound the error by \(2^{-k}\), which forces \(F(rT)=rF(T)\). Thus regularity is derived from the stated order and additivity axioms.
+
+Scalar actions require particular care in Lean. The operator space is naturally a complex module, whereas the extension sought is real-linear on the real vector space of self-adjoint operators. The implementation makes the cast \(\mathbb R\to\mathbb C\) explicit in intermediate lemmas. This avoids ambiguous scalar-action instances and makes algebraic rewrites predictable.
+
+\subsection{Extending from effects to self-adjoint operators}\label{extending-from-effects-to-self-adjoint-operators}
+
+The measure is initially meaningful only on effects. The next stage extends it to all self-adjoint operators. Every self-adjoint operator \(S\) can be written in the form \[S=c(E_+-E_-),\] where \(c>0\) and \(E_+,E_-\) are effects. The development defines the extended functional from such a decomposition and proves that it is independent of the chosen decomposition.
+
+This independence proof is more substantial than the informal notation suggests. Two decompositions must be brought to a common effect equation; real homogeneity and finite additivity then identify the resulting values. Once well-definedness is established, the extension is proved additive and real-homogeneous on the self-adjoint subspace.
+
+The decomposition also exposes an important proof-engineering choice. Rather than building a new quotient type of formal differences of effects, the formalization stays in the ambient operator space and carries symmetry and effect hypotheses explicitly. This reduces coercion overhead and permits direct reuse of Mathlib's trace and rank-one operator lemmas.
+
+\subsection{Finite-dimensional representation}\label{finite-dimensional-representation}
+
+The extended functional is represented by a self-adjoint operator. Instead of relying on a prepackaged Hilbert--Schmidt Riesz theorem specialized to the exact operator type, the development constructs the finite-dimensional representation explicitly. Relative to an orthonormal basis, diagonal rank-one operators and the symmetric and antisymmetric combinations of off-diagonal rank-one operators span the real vector space of self-adjoint operators. The values of the functional on this spanning family determine the matrix entries of \(\rho\).
+
+The proof then verifies \[g(S)=\operatorname{Re}\operatorname{tr}(\rho S)\] for every self-adjoint \(S\) and proves uniqueness. This explicit construction has two advantages. It exposes all conjugation conventions, and it avoids assuming an operator-space inner-product API stronger than what the tagged Mathlib version provides.
+
+\subsection{Positivity, trace normalization, and uniqueness}\label{positivity-trace-normalization-and-uniqueness}
+
+The representing self-adjoint operator must still be shown to be a density operator. Positivity is tested using rank-one projection effects. For a nonzero vector \(x\), the projection onto the line \(\mathbb Cx\) is an effect, and the representation identity converts \(F(P_{\mathbb Cx})\geq0\) into \[\operatorname{Re}\langle \rho x,x\rangle\geq0.\] The zero vector is handled separately. Trace normalization follows by applying the representation to the identity effect and using \(F(1)=1\). Symmetry makes the trace real, so equality of its real part with one yields the required complex trace equation.
+
+Uniqueness is proved first at the level of the real-linear functional and then transported to the density operator. Consequently, the public theorem returns \emph{unique existence}, not merely the existence of some representing state.
+
+\subsection{Named proof interface}\label{named-proof-interface}
+
+Table~\ref{tab:busch-stages} lists the main public or semipublic declarations that carry the argument. This mapping makes the prose auditable against the tagged source without requiring the reader to infer the dependency graph from file names.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\caption{Main stages of the Busch formalization.}\label{tab:busch-stages}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Formal declaration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+File
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Role
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Formal declaration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+File
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Role
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\passthrough{\lstinline!EffectMeasure.mono!} & \passthrough{\lstinline!Busch/Effects.lean!} & Monotonicity on effects. \\
+\passthrough{\lstinline!EffectMeasure.map_realSmul!} & \passthrough{\lstinline!Busch/Main.lean!} & Real homogeneity on scalar contractions. \\
+\passthrough{\lstinline!selfAdjoint_effect_decomp!} & \passthrough{\lstinline!Busch/Main.lean!} & Decomposes a self-adjoint operator as a scaled difference of effects. \\
+\passthrough{\lstinline!EffectMeasure.extendSA_*!} & \passthrough{\lstinline!Busch/Main.lean!} & Well-defined real-linear extension to self-adjoint operators. \\
+\passthrough{\lstinline!riesz_selfAdjoint!} & \passthrough{\lstinline!Busch/Main.lean!} & Coordinate trace representation and uniqueness. \\
+\passthrough{\lstinline!busch!}, \passthrough{\lstinline!busch_born_rule!} & \passthrough{\lstinline!Busch/Main.lean!} & Density-operator representation and projection corollary. \\
+\end{longtable}
+
+\section{Formalization of Gleason's theorem}\label{sec:gleason}
+
+\subsection{Formal statement and the dispersion-free corollary}\label{formal-statement-and-the-dispersion-free-corollary}
+
+The project proves the finite-dimensional complex projection theorem. It is a finite-additivity specialization of Gleason's original result: because \(H_n\) is finite-dimensional, all orthogonal decompositions used in the proof are finite, and no separate countable-additivity field is required.
+
+\begin{theorem}[Gleason representation theorem]\label{thm:gleason}
+Let \(n\geq 3\). Every normalized nonnegative finitely additive measure \(\mu\) on the complex subspaces of \(H_n\) is represented by a unique density operator \(\rho\) such that
+\[
+\mu(A)=\operatorname{Re}\operatorname{tr}(\rho P_A)
+\]
+for every subspace \(A\).
+\end{theorem}
+
+This is \passthrough{\lstinline!Gleason.gleason!}. The formal theorem does not claim the infinite-dimensional, real, or quaternionic cases. Finite additivity on orthogonal pairs is sufficient because every decomposition in \(H_n\) is finite.
+
+The development derives the following precise no-go result.
+
+\begin{corollary}[No dispersion-free projection measure]\label{cor:no-dispersion}
+For \(n\geq 3\), no normalized nonnegative finitely additive measure on all subspaces of \(H_n\) takes only the values \(0\) and \(1\).
+\end{corollary}
+
+This corollary is related to the Bell and Kochen--Specker no-go results \cite{bell1966,kochen1967}, but it should not be identified with their full physical formulations. Formally, it excludes a specific class of global, non-contextual, finitely additive two-valued subspace measures. In the project it also serves as an end-to-end semantic test of the main representation theorem.
+
+\subsection{From projection measures to complex frame functions}\label{from-projection-measures-to-complex-frame-functions}
+
+A projection measure gives a function on unit vectors by assigning to \(x\) the measure of the line \(\mathbb Cx\). Additivity over an orthonormal basis implies that the values sum to one. The resulting complex frame function is non-negative and invariant under multiplication of its argument by a complex phase.
+
+The reduction is elementary mathematically, but its formal version requires a reliable interface between subspaces, orthonormal bases, and one-dimensional spans. In particular, the code must prove that the family of basis lines exhausts the whole space and that the measure of their orthogonal supremum is the sum of their measures. These lemmas are later reused when the quadratic representation is transported back from lines to arbitrary subspaces.
+
+\subsection{The real three-dimensional core}\label{the-real-three-dimensional-core}
+
+The central analytic theorem states that every non-negative real frame function on the unit sphere of \(\mathbb R^3\) is quadratic. The development follows the structure of Cooke, Keane, and Moran \cite{cooke1985}, but the formal proof decomposes the argument into smaller geometric components.
+
+A real frame function \(f\) of weight \(W\) satisfies \[f(x)+f(y)+f(z)=W\] for every orthonormal triple \((x,y,z)\). The proof first develops the geometry of latitudes, equators, orthogonal completions, and linear isometries. It then proves that bounded frame functions attain their extrema on the sphere. The tagged formalization establishes this with a pointwise ultrafilter-limit construction and a separate descent argument. This is a formal replacement for compressed limiting steps in the source proof, not a claim that CKM explicitly uses the same ultrafilter construction.
+
+With maximal and minimal points available, the proof constructs an extremal orthonormal frame and compares the frame function with a candidate quadratic form. Several equalities are propagated by rotations through right angles around selected axes. The code makes explicit an extremal-frame lemma that is not isolated as a separate statement in the published presentation. It then proves coincidence on a finite collection of great circles and applies the same machinery to the difference between the frame function and the candidate quadratic form. A counting argument rules out a nonzero remainder.
+
+Two formalization lessons arise here. First, parity of a frame function is proved from the frame condition rather than retained as an extra hypothesis. Second, compactness and extremal attainment must be proved before the maximal-point geometry can be used; treating regularity as if it were already available would be circular.
+
+\subsection{Patching real sections in the complex space}\label{patching-real-sections-in-the-complex-space}
+
+The real theorem does not immediately produce a complex-linear operator. The complex proof restricts the frame function to suitable real sections generated inside \(\mathbb C^n\). Each section yields a real quadratic form. The forms must then agree on overlaps and assemble into a global sesquilinear object.
+
+The patching stage follows the real-section strategy developed in the literature and presented in Dvure\v{c}enskij's treatment \cite{dvurecenskij1993}. The implementation first establishes the required geometric compatibility; complex polarization is used only after sesquilinearity has been justified. The resulting theorem is: \[g(x)=\operatorname{Re}\langle \rho x,x\rangle\] for every unit vector \(x\), with \(\rho\) symmetric. Within the complex patching module, the explicit hypothesis \(n\geq3\) is invoked at the point where one needs a unit vector orthogonal to two prescribed vectors. This statement concerns that module only; the real analytic core is itself intrinsically three-dimensional.
+
+\subsection{Density-operator assembly and uniqueness}\label{density-operator-assembly-and-uniqueness}
+
+The symmetric operator representing the frame function is positive because the original projection measure is non-negative on lines. Its trace is one because the frame function sums to one on an orthonormal basis. The line formula is then extended to an arbitrary subspace by choosing an orthonormal basis of that subspace and using finite orthogonal additivity.
+
+Uniqueness is reduced to equality of quadratic forms. If two symmetric operators have the same Born value on every one-dimensional subspace, then their quadratic forms agree on all unit vectors. A polarization argument yields equality of the operators. The final Lean theorem composes these steps in a short public proof even though the imported analytic and patching layers are substantial.
+
+\subsection{Named proof interface}\label{named-proof-interface-1}
+
+The public theorem in \passthrough{\lstinline!Gleason/Main.lean!} is short because it composes a large internal interface. Table~\ref{tab:gleason-stages} records its principal stages.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\caption{Main stages of the Gleason formalization.}\label{tab:gleason-stages}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Formal declaration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+File
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Role
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Formal declaration
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+File
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Role
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\passthrough{\lstinline!ProjMeasure.frameFunction!} and related lemmas & \passthrough{\lstinline!Gleason/Complex/RealSections.lean!} & Converts a projection measure into a complex frame function. \\
+\passthrough{\lstinline!frameFunction_regular!} & \passthrough{\lstinline!Real3/Regular.lean!} & Proves quadraticity of nonnegative real frame functions in dimension three. \\
+\passthrough{\lstinline!cFrameFunction_regular!} & \passthrough{\lstinline!Complex/Patching.lean!} & Patches real sections into a symmetric complex-linear operator. \\
+\passthrough{\lstinline!isDensityOperator_of_represents!} & \passthrough{\lstinline!Operator.lean!} & Derives positivity and trace normalization. \\
+\passthrough{\lstinline!born_of_quadratic!} & \passthrough{\lstinline!Operator.lean!} & Extends the line formula to arbitrary subspaces. \\
+\passthrough{\lstinline!gleason!}, \passthrough{\lstinline!no_dispersion_free!} & \passthrough{\lstinline!Main.lean!} & Final unique representation and two-valued no-go corollary. \\
+\end{longtable}
+
+\section{Comparative proof engineering}\label{sec:comparison}
+
+\subsection{Two proof architectures}\label{two-proof-architectures}
+
+The shared conclusion of the two theorems can obscure how different their formal proofs are. Table~\ref{tab:proof-architectures} summarizes the contrast.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\caption{Contrasting proof-engineering obligations in the two routes.}\label{tab:proof-architectures}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Stage
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Busch route
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Gleason route
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Stage
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Busch route
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Gleason route
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Input structure & Effects in an ordered convex domain & Values on subspaces or unit rays constrained by orthogonal decompositions \\
+Regularity & Derived real homogeneity from monotonicity and dyadic approximation & Global quadraticity of a frame function from geometric and extremal arguments \\
+Main extension & From effects to a real-linear functional on self-adjoint operators & From real three-dimensional sections to a compatible complex representation \\
+Compactness or analysis & Elementary order bounds and finite-dimensional linear algebra & Extremal attainment, descent geometry, and patching across real sections \\
+Final operator step & Coordinate Riesz representation and positivity tests & Quadratic-form representation, Born values on lines, then arbitrary subspaces \\
+\end{longtable}
+
+The Busch proof is shorter at the conceptual level because the effect domain already carries addition, order, and scalar contraction. The Gleason proof has to recover analytic regularity from orthogonal-basis constraints before the operator layer becomes available. This difference is a principal contribution of the joint artifact: the two developments can be compared under the same formal conventions rather than through unrelated libraries and statement encodings.
+
+\subsection{A common operator layer}\label{a-common-operator-layer}
+
+The two representation theorems reuse the same basic notions of positivity, density operators, orthogonal projections, trace, and Born value. They also share several structural lemmas:
+
+\begin{itemize}
+\item
+  orthogonal projection onto an orthogonal supremum is the sum of the two projections;
+\item
+  a positive symmetric operator whose quadratic form vanishes at a vector annihilates that vector;
+\item
+  partial orthonormal families can be extended to full orthonormal bases;
+\item
+  symmetric operators are determined by their quadratic forms;
+\item
+  basis expansions transport line-level identities to arbitrary subspaces.
+\end{itemize}
+
+The dependency structure is summarized below.
+
+\begin{lstlisting}
+Gleason/Defs.lean
+  |-- projections, measures, density operators, Born value
+  |
+  |-- Gleason/Busch/Effects.lean
+  |      `-- Gleason/Busch/Main.lean --> busch, busch_born_rule
+  |
+  |-- Gleason/Real3/*
+  |-- Gleason/Complex/*
+  |-- Gleason/Operator.lean
+         `-- Gleason/Main.lean --> gleason, no_dispersion_free
+\end{lstlisting}
+
+The common layer is organizational and mathematical, but the two public representation theorems remain logically independent. The Busch theorem does not prove the projection theorem under Gleason's weaker domain-specific hypotheses, and the Gleason theorem does not invoke the Busch representation. Only \passthrough{\lstinline!busch_born_rule!} provides the explicit restriction from effects to projection values.
+
+\subsection{Orthogonality versus lattice disjointness}\label{orthogonality-versus-lattice-disjointness}
+
+The most consequential specification issue concerned the meaning of ``disjoint'' subspaces. Additivity in Gleason's theorem applies to orthogonal subspaces. Lattice disjointness, expressed by zero intersection, is weaker: distinct nonorthogonal lines already have zero intersection. Replacing orthogonality by lattice disjointness would therefore impose additivity on nonorthogonal alternatives and would not express quantum probability.
+
+An early project comment diagnosed the stronger condition as inconsistent in dimension two. That diagnosis was itself incorrect. The normalized-dimension valuation \(A\mapsto\dim(A)/n\) is additive on direct sums with zero intersection. What fails is fidelity to the intended theorem and, in particular, the usual pure-state Born witnesses. This episode illustrates a general lesson for formalized mathematics: semantic validation requires source comparison and concrete models in addition to successful kernel checking.
+
+\subsection{Hidden regularity assumptions}\label{hidden-regularity-assumptions}
+
+Both proofs contain steps that informal accounts can compress into words such as ``continuous'', ``extend linearly'', or ``by polarization''. The formal proof forces each prerequisite to be exposed.
+
+For Busch's theorem, real homogeneity is derived from additivity and monotonicity rather than postulated as continuity. For Gleason's theorem, extremal attainment and real regularity are proved before the complex patching stage. In the operator layer, complex polarization is applied only once the relevant symmetry or sesquilinearity conditions are available. These separations make the mathematical dependency graph explicit and provide reusable intermediate theorems rather than a single monolithic proof.
+
+\subsection{Library-facing contributions}\label{library-facing-contributions}
+
+The project includes auxiliary results that are more general than the final quantum statements. Examples include orthonormal-basis extension lemmas, explicit isometries between prescribed orthonormal configurations, projection identities for orthogonal sums, and a positivity equality-case lemma for symmetric operators. Some are candidates for upstream contribution to Mathlib, although this article reports only the repository-local versions used by the submission artifact.
+
+\section{Verification, trust, and reproducibility}\label{sec:verification}
+
+\subsection{Kernel checking and source guards}\label{kernel-checking-and-source-guards}
+
+All theorem proofs are checked by the Lean 4 kernel \cite{demoura2021} using Mathlib \cite{mathlib2020}. The submission release contains no admitted proof and no project-specific mathematical axiom. The repository verification command builds the complete project and rejects active-source occurrences of \passthrough{\lstinline!sorry!}, \passthrough{\lstinline!admit!}, and \passthrough{\lstinline!sorryAx!}; project declarations using \passthrough{\lstinline!axiom!} or \passthrough{\lstinline!postulate!}; trust-expanding or opaque escape hatches; and \passthrough{\lstinline!native_decide!}. Documentation is checked separately so that words used in historical explanations are not confused with Lean syntax.
+
+The public results are audited with \passthrough{\lstinline!#print axioms!}. For \passthrough{\lstinline!Gleason.busch!}, \passthrough{\lstinline!Gleason.busch_born_rule!}, \passthrough{\lstinline!Gleason.gleason!}, and \passthrough{\lstinline!Gleason.no_dispersion_free!}, the expected dependencies are exactly:
+
+\begin{lstlisting}
+[propext, Classical.choice, Quot.sound]
+\end{lstlisting}
+
+This is not ``axiom-free'' in an absolute foundational sense. It means that no additional theorem-specific axiom or admitted proof is introduced beyond the standard logical principles used by the pinned Lean and Mathlib environment.
+
+\subsection{Non-vacuity and semantic checks}\label{non-vacuity-and-semantic-checks}
+
+Kernel checking cannot detect an unintentionally unsatisfiable or mis-specified hypothesis structure. The project therefore provides concrete inhabitants of its principal structures. Pure-state Born assignments inhabit the projection-measure structure, and vector-state assignments inhabit the effect-measure structure.
+
+The theorem \passthrough{\lstinline!Gleason.no_dispersion_free!} supplies a separate end-to-end consequence check. From the density representation it constructs subspaces of values one and zero and a superposition line of value one half, contradicting a global zero--one assumption. This theorem does not replace the explicit inhabitants; together, the two checks address different forms of semantic error.
+
+\subsection{Pinned submission release}\label{pinned-submission-release}
+
+The source accompanying the journal submission must be the immutable public tag \passthrough{\lstinline!v1.0.5-journal-submission!} at commit \passthrough{\lstinline!FINAL-COMMIT-SHA!}. The final tag is to be created only after the documentation corrections and verification hardening identified during the pre-submission audit have been merged. The release pins both Lean and Mathlib, and its setup command must leave the lock files unchanged.
+
+The reviewer-facing verification sequence is:
+
+\begin{lstlisting}
+git clone https://github.com/Bobart0/gleason-theorem-lean.git
+cd gleason-theorem-lean
+git checkout v1.0.5-journal-submission
+./setup.sh
+./scripts/verify.sh
+\end{lstlisting}
+
+The verification script must perform the full build, source guards, and exact axiom comparison. The final manuscript and cover letter must replace the release-tag and commit placeholders with the values produced by that audited release. A version-specific software DOI should be cited once the GitHub release is archived.
+
+\subsection{Development discipline and AI assistance}\label{development-discipline-and-ai-assistance}
+
+The development proceeded through small compiling milestones, with theorem statements fixed before long proof completion, non-vacuity witnesses added near the corresponding structures, and full builds and axiom audits repeated after major assemblies. Source-generation tools, including generative AI assistants, are not part of the formal trust base: only elaborated proof terms accepted by the pinned kernel are. Their use and the author's responsibility are disclosed under ``Statements and Declarations''.
+
+\section{Related work}\label{sec:related}
+
+The mathematical sources play distinct roles. Gleason's original article gives the general projection representation theorem \cite{gleason1957}. Cooke, Keane, and Moran supply the organization of the real three-dimensional route \cite{cooke1985}, while Richman and Bridges provide a constructive proof used as an independent guide to regularity issues \cite{richman1999}. Dvure\v{c}enskij systematizes the real-section and operator-representation perspective used in the complex layer \cite{dvurecenskij1993}. Busch gives the generalized probability-measure argument on effects \cite{busch2003}; Caves et al.~formulate a related route through generalized measurements and analyze the qubit case \cite{caves2004}.
+
+Within formalized quantum theory, Bordg, Lachnitt, and He developed an Isabelle/HOL library for quantum algorithms and protocols \cite{bordg2021}. Echenim and Mhalla formalized density matrices, projective measurements, the CHSH inequality, and Tsirelson's upper bound in Isabelle/HOL \cite{echenim2024}. These projects provide neighboring quantum infrastructure but do not formalize the representation theorems considered here.
+
+The closest related work consists of two Lean 4 artifacts by Mark J. Soares. \emph{Gleason's Theorem via Busch}, released on 24 April 2026, quantifies over an arbitrary finite-dimensional complex Hilbert space with finrank at least two \cite{soaresbusch2026}. It proves existence of a self-adjoint representative with real trace one, equality of the trace pairing on all effects, and nonnegativity of that pairing. Its standalone public target does not state uniqueness and explicitly excludes the projection-only route.
+
+Soares's \emph{Gleason's Theorem: A Lean 4 Formalization}, initially released publicly on 10 July 2026, proves a broader projection theorem \cite{soaresgleason2026}. It covers real and complex separable Hilbert spaces, countably additive finite measures on orthogonal projections, and a unique positive trace-class representative. Its public statement is separated from the implementation by a Mathlib-only entry point, and its verification script checks exact axiom dependencies and rejects admitted proofs and custom axiomatic escape hatches.
+
+Table~\ref{tab:related-comparison} compares the public interfaces without imposing a single total ordering on the artifacts.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\caption{Comparison with the closest prior Lean artifacts.}\label{tab:related-comparison}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Feature
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Soares: effects
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Soares: projections
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Present artifact
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Feature
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Soares: effects
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Soares: projections
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Present artifact
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Ambient space & Abstract finite-dimensional complex Hilbert space & Abstract separable real or complex Hilbert space & Concrete \(H_n=\mathbb C^{\operatorname{Fin}(n)}\) \\
+Dimension & Finrank at least \(2\) & Dimension at least \(3\) & Busch: \(n\geq1\); Gleason: \(n\geq3\) \\
+Additivity & Admissible sums of effects & Countable orthogonal strong sums & Admissible binary effect sums; orthogonal pairs of subspaces \\
+Public conclusion & Existence of self-adjoint trace-one representative; nonnegative trace pairing & Unique positive trace-class representative & Unique density operator for both routes \\
+Proof route & Real-linear extension and finite-dimensional trace representation & Projection/frame-function route with harmonic analysis and oscillation & Busch algebraic route plus Cooke--Keane--Moran real core and complex patching \\
+Artifact organization & Effects theorem only & Projection theorem only & Both routes, shared definitions, and two corollaries \\
+\end{longtable}
+
+The present Busch theorem has a stronger explicit uniqueness conclusion and covers dimension one, but it is less abstract in its ambient space. The present projection theorem is substantially narrower than Soares's theorem in scalar field, dimension regime, additivity, and ambient-space generality. Its value is an alternative proof architecture and integration with the effects route, not a stronger theorem.
+
+The public histories also qualify the word ``prior.'' Soares's effects release clearly predates the present project. For the projection route, the two public histories are nearly contemporaneous: the present repository contained a complete Busch theorem and substantial real-three-dimensional results before Soares's initial public projection release, but the complete present Gleason theorem followed on 11 July. The repositories do not share code or imports. These facts support a comparison of parallel artifacts, not a claim about private priority or influence.
+
+The present development depends on the general Lean 4 and Mathlib ecosystem \cite{demoura2021,mathlib2020}. Its most reusable additions lie at interfaces that remain relatively laborious: subspaces versus orthogonal projections, complex-linear operators viewed as a real space of self-adjoint operators, extension of partially defined algebraic data, and equality cases for positive quadratic forms. The paper reports repository-local lemmas rather than claiming that they already meet Mathlib's upstream generality and API standards.
+
+\section{Limitations and future work}\label{sec:limitations}
+
+The formal scope is finite-dimensional and complex. The project does not prove the separable infinite-dimensional theorem, where trace-class operators and countable additivity must be treated explicitly, and it does not formalize the real or quaternionic variants. The projection theorem begins at dimension three; dimension two is covered only under the stronger effect-measure hypotheses of the Busch route.
+
+The public theorem statements use the concrete model \(H_n\) rather than an arbitrary finite-dimensional complex Hilbert space. Transport along a unitary isomorphism is mathematically standard, but an abstract-space transport theorem is not part of the public interface. This is a genuine difference from both Soares artifacts. A reusable successor should quantify over an abstract Hilbert space or export an explicit unitary-transport corollary.
+
+The project also lacks the strong implementation boundary used in Soares's repositories, where a standalone Mathlib-only statement is connected to the proof implementation by a bridge theorem. The present public declarations are clear and audited, but a statement-only entry point would further sharpen the trusted interface and facilitate external comparison.
+
+The development remains external to Mathlib. Upstreaming selected generic lemmas would reduce repository-local infrastructure and expose them to broader review. A further objective is a reusable quantum-probability API for effects, projection measures, density operators, and trace representations.
+
+Finally, the paper makes no priority claim. The effects route has a clear prior Lean formalization, and the separable projection theorem of Soares is both earlier as a completed public artifact and mathematically more general. The novelty claimed here is limited to the joint organization, the particular finite-dimensional proof architectures, the dimension-one and uniqueness features of the Busch interface, the corollaries, and the comparative lessons from mechanization. Searches cannot exclude private, unindexed, unpublished, or differently named formalizations, so the related-work account should be updated if additional artifacts are identified.
+
+\section{Conclusion}\label{sec:conclusion}
+
+This article has presented a joint Lean 4 development of finite-dimensional complex versions of the Busch and Gleason representation theorems. The Busch route derives real homogeneity from finite additivity and order, extends the effect assignment to a real-linear functional on self-adjoint operators, and constructs a unique density-operator representation. The Gleason route proves real frame-function regularity in dimension three, patches compatible real sections in a complex space, and transports the resulting quadratic representation from lines to arbitrary subspaces.
+
+The main contribution is comparative rather than priority-based. Earlier Lean artifacts already formalize an abstract finite-dimensional Busch theorem and a more general separable real-and-complex Gleason theorem. The present artifact places both routes under shared definitions and shows, in a common environment, why the effects proof is largely algebraic while the projection proof requires substantial geometry, compactness, regularity, and patching.
+
+Mechanization also clarifies methodological points that are easy to miss in paper mathematics: the exact additivity domain matters; non-vacuity witnesses are indispensable; linear extension requires explicit well-definedness; regularity must be derived from the stated hypotheses; and kernel checking does not replace semantic validation of definitions and documentation. Subject to the final audited release described in Section~\ref{sec:verification}, the result is a reproducible proof chain with no admitted proofs and no project-specific axioms, together with explicit theorem interfaces and reviewer-facing verification commands.
+
+\section*{Statements and Declarations}
+
+\subsection*{Funding}
+
+The author received no specific funding for this work.
+
+\subsection*{Competing interests}
+
+The author declares no financial or non-financial competing interests related to this work.
+
+\subsection*{Author contributions}
+
+Bertrand Dalimier conceived the project, selected and analyzed the mathematical sources, specified the formal targets, directed and reviewed the Lean development, performed the build and axiom audits, and wrote and revised the manuscript. The author approved the submitted version and accepts responsibility for all theorem statements, comparisons, claims, and presentation.
+
+\subsection*{Ethics approval and consent}
+
+Not applicable. The research involved no human participants, animals, or personal data.
+
+\subsection*{Use of generative artificial intelligence}
+
+Generative AI systems were used for proof decomposition, draft Lean code, API exploration, repository analysis, and manuscript revision. They are not authors and are not part of the trusted proof chain. The author selected the formal targets, reviewed and accepted source changes, reran builds and axiom audits, checked citations and comparisons, and takes full responsibility for the work. All reported Lean theorems were checked by the pinned Lean kernel.
+
+\subsection*{Data and code availability}
+
+No empirical data were generated. The complete Lean source, pinned toolchain, build manifest, verification scripts, and documentation will be available in the immutable submission release \cite{dalimier2026} at \url{https://github.com/Bobart0/gleason-theorem-lean}, tag \passthrough{\lstinline!v1.0.5-journal-submission!}, commit \passthrough{\lstinline!FINAL-COMMIT-SHA!}. The final version-specific software DOI must be inserted here and cited in the reference list after the audited release is archived. The manuscript preprint is available at DOI 10.5281/zenodo.21323681.
+
+\appendix
+
+\section{Paper-facing public theorem interfaces}\label{app:interfaces}
+
+The following ASCII transcriptions preserve the binder structure and propositions of the public declarations in release \passthrough{\lstinline!v1.0.5-journal-submission!}. They are typeset for readability rather than intended as copy-paste Lean; the exact Unicode source at commit \passthrough{\lstinline!FINAL-COMMIT-SHA!} is authoritative.
+
+\begin{lstlisting}
+theorem busch {n : Nat} (hn : 1 <= n) (F : EffectMeasure n) :
+  exists! rho : H n ->l[C] H n,
+    IsDensityOperator rho /\
+    forall T, IsEffect T ->
+      F.f T = re (LinearMap.trace C (H n) (rho comp T))
+
+ theorem busch_born_rule {n : Nat} (hn : 1 <= n)
+    (F : EffectMeasure n) :
+  exists rho : H n ->l[C] H n,
+    IsDensityOperator rho /\
+    forall A : Submodule C (H n),
+      F.toProjMeasure.mu A = bornValue rho A
+
+ theorem gleason {n : Nat} (hn : 3 <= n) (m : ProjMeasure n) :
+  exists! rho : H n ->l[C] H n,
+    IsDensityOperator rho /\
+    forall A : Submodule C (H n), m.mu A = bornValue rho A
+
+ theorem no_dispersion_free {n : Nat} (hn : 3 <= n)
+    (m : ProjMeasure n) :
+  not (forall A : Submodule C (H n), m.mu A = 0 \/ m.mu A = 1)
+\end{lstlisting}
+
+\section{Reviewer reproduction commands}\label{app:reproduction}
+
+After the repository audit has been completed and the final immutable release has been created, a reviewer should be able to reproduce all reported checks as follows:
+
+\begin{lstlisting}
+git clone https://github.com/Bobart0/gleason-theorem-lean.git
+cd gleason-theorem-lean
+git checkout v1.0.5-journal-submission
+./setup.sh
+./scripts/verify.sh
+git status --short
+\end{lstlisting}
+
+The final command should produce no output. The verification script should fail on build warnings or errors, admitted proofs, project-specific axioms, prohibited escape hatches, or unexpected axiom dependencies. Before submission, this appendix must replace \passthrough{\lstinline!v1.0.5-journal-submission!} and every release placeholder in the manuscript with the actual audited tag and commit SHA.
+
+
+\begin{thebibliography}{15}
+
+\bibitem{bell1966} Bell, J.S.: On the problem of hidden variables in quantum mechanics. Rev. Mod. Phys. 38, 447--452 (1966). \url{https://doi.org/10.1103/RevModPhys.38.447}
+
+\bibitem{bordg2021} Bordg, A., Lachnitt, H., He, Y.: Certified quantum computation in Isabelle/HOL. J. Autom. Reason. 65, 691--709 (2021). \url{https://doi.org/10.1007/s10817-020-09584-7}
+
+\bibitem{busch2003} Busch, P.: Quantum states and generalized observables: a simple proof of Gleason's theorem. Phys. Rev. Lett. 91, 120403 (2003). \url{https://doi.org/10.1103/PhysRevLett.91.120403}
+
+\bibitem{caves2004} Caves, C.M., Fuchs, C.A., Manne, K.K., Renes, J.M.: Gleason-type derivations of the quantum probability rule for generalized measurements. Found. Phys. 34, 193--209 (2004). \url{https://doi.org/10.1023/B:FOOP.0000019581.00318.a5}
+
+\bibitem{cooke1985} Cooke, R., Keane, M., Moran, W.: An elementary proof of Gleason's theorem. Math. Proc. Camb. Philos. Soc. 98, 117--128 (1985). \url{https://doi.org/10.1017/S0305004100063313}
+
+\bibitem{dalimier2026} Dalimier, B.: \emph{gleason-theorem-lean: Lean 4 Formalization of the Finite-Dimensional Complex Busch and Gleason Theorems}. Submission release \texttt{v1.0.5-journal-submission}, commit \texttt{FINAL-COMMIT-SHA} (2026). Replace this entry with the final version-specific software DOI and release date before submission.
+
+\bibitem{dvurecenskij1993} Dvure\v{c}enskij, A.: \emph{Gleason's Theorem and Its Applications}. Mathematics and Its Applications, vol. 60. Kluwer, Dordrecht (1993). \url{https://doi.org/10.1007/978-94-015-8222-3}
+
+\bibitem{echenim2024} Echenim, M., Mhalla, M.: A formalization of the CHSH inequality and Tsirelson's upper-bound in Isabelle/HOL. J. Autom. Reason. 68, article 2 (2024). \url{https://doi.org/10.1007/s10817-023-09689-9}
+
+\bibitem{gleason1957} Gleason, A.M.: Measures on the closed subspaces of a Hilbert space. J. Math. Mech. 6, 885--893 (1957). \url{https://doi.org/10.1512/iumj.1957.6.56050}
+
+\bibitem{kochen1967} Kochen, S., Specker, E.P.: The problem of hidden variables in quantum mechanics. J. Math. Mech. 17, 59--87 (1967). \url{https://doi.org/10.1512/iumj.1968.17.17004}
+
+\bibitem{demoura2021} de Moura, L., Ullrich, S.: The Lean 4 theorem prover and programming language. In: Platzer, A., Sutcliffe, G. (eds.) Automated Deduction---CADE 28, LNCS 12699, pp. 625--635. Springer, Cham (2021). \url{https://doi.org/10.1007/978-3-030-79876-5_37}
+
+\bibitem{mathlib2020} The Mathlib Community: The Lean mathematical library. In: Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and Proofs, pp. 367--381. ACM, New York (2020). \url{https://doi.org/10.1145/3372885.3373824}
+
+\bibitem{richman1999} Richman, F., Bridges, D.: A constructive proof of Gleason's theorem. J. Funct. Anal. 162, 287--312 (1999). \url{https://doi.org/10.1006/jfan.1998.3372}
+
+\bibitem{soaresbusch2026} Soares, M.J.: \emph{Gleason's Theorem via Busch: A Lean 4 Formalization}, version 1.0.0. Zenodo (2026). \url{https://doi.org/10.5281/zenodo.19739805}
+
+\bibitem{soaresgleason2026} Soares, M.J.: \emph{Gleason's Theorem: A Lean 4 Formalization}, version 1.0.0. Zenodo (2026). \url{https://doi.org/10.5281/zenodo.21301925}
+
+\end{thebibliography}
+
+\end{document}

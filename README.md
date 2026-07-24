@@ -126,6 +126,19 @@ précédemment archivée. Les métadonnées générales du logiciel figurent dan
 [`CITATION.cff`](CITATION.cff). Pour une future version, ajouter le SHA du tag, le
 DOI Zenodo propre à la version et le SWHID uniquement après leur création effective.
 
+## Relation avec le manuscrit
+Le manuscrit soumis au *Journal of Automated Reasoning* est
+[`busch_gleason_JAR_repositioned_v8_audited_beginning.tex`](busch_gleason_JAR_repositioned_v8_audited_beginning.tex).
+Il annonce quatre déclarations publiques (`Gleason.busch`, `Gleason.busch_born_rule`,
+`Gleason.gleason`, `Gleason.no_dispersion_free`), leur plage de dimensions et la liste
+d'axiomes `[propext, Classical.choice, Quot.sound]` ; ces affirmations ont été vérifiées
+contre le code de ce dépôt (voir
+[`docs/manuscript-repository-audit.md`](docs/manuscript-repository-audit.md)). Le
+manuscrit contient encore, à dessein, les placeholders `FINAL-RELEASE-TAG`,
+`FINAL-COMMIT-SHA` et un DOI logiciel à venir : ils ne seront remplacés qu'après création
+du commit et du tag audités (voir « Citer ce travail » ci-dessus et
+[`ARTIFACT.md`](ARTIFACT.md)).
+
 ---
 
 ## English translation
@@ -254,3 +267,15 @@ Tag `v1.0.3-gleason`, commit
 reproducible release. General software metadata is provided in
 [`CITATION.cff`](CITATION.cff). For a future version, add the tagged commit SHA,
 version-specific Zenodo DOI, and SWHID only after they have actually been created.
+
+## Relation to the manuscript
+The manuscript submitted to the *Journal of Automated Reasoning* is
+[`busch_gleason_JAR_repositioned_v8_audited_beginning.tex`](busch_gleason_JAR_repositioned_v8_audited_beginning.tex).
+It announces four public declarations (`Gleason.busch`, `Gleason.busch_born_rule`,
+`Gleason.gleason`, `Gleason.no_dispersion_free`), their dimension ranges, and the axiom
+list `[propext, Classical.choice, Quot.sound]`; these claims have been checked against
+this repository's code (see
+[`docs/manuscript-repository-audit.md`](docs/manuscript-repository-audit.md)). The
+manuscript still intentionally contains the `FINAL-RELEASE-TAG`, `FINAL-COMMIT-SHA`,
+and a pending software DOI placeholders: they will only be replaced once the audited
+commit and tag exist (see "Citing this work" above and [`ARTIFACT.md`](ARTIFACT.md)).
