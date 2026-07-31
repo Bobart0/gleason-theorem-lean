@@ -116,6 +116,29 @@ Busch–Gleason, son infrastructure partagée, son architecture alternative, ses
 corollaires et l'analyse d'ingénierie de preuve. Aucune revendication de priorité
 n'est faite.
 
+## API aval stable / Stable downstream API
+
+Les développements aval (mesure, dilatations de Naimark, représentations de
+chances, etc.) doivent importer la façade `Gleason.EffectAPI` plutôt que les
+modules de preuve internes :
+
+```lean
+import Gleason.EffectAPI
+```
+
+Elle réexporte, sans nouveau résultat mathématique, `Gleason.H`,
+`Gleason.projL`, `Gleason.bornValue`, `Gleason.IsPositiveOp`,
+`Gleason.IsEffect`, `Gleason.IsDensityOperator`, `Gleason.EffectMeasure`,
+`Gleason.busch`, `Gleason.busch_born_rule` et quelques lemmes ponctuels
+(`EffectMeasure.map_zero`, `.mono`, `.isEffect_projL`, `.toProjMeasure`,
+`isEffect_complexSmul`). Audit : [`Verification/EffectAPI.lean`](Verification/EffectAPI.lean).
+
+Downstream developments (measurement, Naimark dilations, chance
+representations, etc.) should import the `Gleason.EffectAPI` facade rather
+than the internal proof modules — same import as above. It re-exports, with
+no new mathematical result, the same declarations listed above. Audit:
+[`Verification/EffectAPI.lean`](Verification/EffectAPI.lean).
+
 ## Licence
 [Apache License 2.0](LICENSE).
 
