@@ -8,9 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # Run the action's explicit build; verify.sh then performs the strict
+      # warning-free build and axiom audit.
       - uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1
         with:
-          build: false
+          build: true
           use-mathlib-cache: true
       - name: Strict reviewer-facing verification
         run: ./scripts/verify.sh

@@ -29,9 +29,13 @@ textuellement identique à toutes les formulations de la littérature.
 ```
 `setup.sh` construit exactement la version figée dans `lean-toolchain` et
 `lake-manifest.json` — il ne les modifie jamais, pour que tout commit/tag reste
-reconstructible à l'identique (important si tu cites ce dépôt). Pour avancer
-délibérément vers une version plus récente de Mathlib, utiliser
-`./update-mathlib.sh` séparément (modifie ces fichiers).
+reconstructible à l'identique (important si tu cites ce dépôt). Versions
+actuellement épinglées : Lean `v4.32.0-rc1`, Mathlib
+`8bba4200986270d3b30be2bb2f8840af47a7854f` (`rev` explicite dans
+`lakefile.toml`). Pour avancer délibérément vers un autre commit Mathlib,
+utiliser `./update-mathlib.sh <FULL_MATHLIB_COMMIT_SHA>` (modifie ces
+fichiers). Détails de la chaîne de reproductibilité :
+[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
 ## Vérification des preuves
 
@@ -42,8 +46,9 @@ délibérément vers une version plus récente de Mathlib, utiliser
 
 `setup.sh` never modifies `lean-toolchain` or `lake-manifest.json` — it builds
 exactly the pinned version, so that any given commit/tag remains reproducible
-long after Mathlib has moved on. To deliberately advance to a newer Mathlib,
-run `./update-mathlib.sh` instead (that one does rewrite those files).
+long after Mathlib has moved on. To deliberately advance to another Mathlib
+commit, run `./update-mathlib.sh <FULL_MATHLIB_COMMIT_SHA>` instead (that one
+does rewrite those files).
 
 Le vérificateur analyse les sources Lean suivies après retrait des commentaires et
 des chaînes, rejette les preuves admises et les formes élargissant la base de
@@ -197,9 +202,12 @@ textually identical to every formulation in the literature.
 ```
 `setup.sh` builds exactly the version pinned in `lean-toolchain` and
 `lake-manifest.json` — it never modifies them, so any commit/tag stays
-reproducible (important if you cite this repo). To deliberately move to a
-newer Mathlib, use `./update-mathlib.sh` separately (that one does rewrite
-these files).
+reproducible (important if you cite this repo). Currently pinned versions:
+Lean `v4.32.0-rc1`, Mathlib `8bba4200986270d3b30be2bb2f8840af47a7854f`
+(explicit `rev` in `lakefile.toml`). To deliberately move to another Mathlib
+commit, use `./update-mathlib.sh <FULL_MATHLIB_COMMIT_SHA>` (that one does
+rewrite these files). Reproducibility chain details:
+[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
 ## Verifying the proofs
 
@@ -210,8 +218,9 @@ these files).
 
 `setup.sh` never touches `lean-toolchain` or `lake-manifest.json` — it builds
 exactly the pinned version, so any given commit/tag remains reproducible long
-after Mathlib has moved on. To deliberately advance to a newer Mathlib, run
-`./update-mathlib.sh` instead (that one does rewrite those files).
+after Mathlib has moved on. To deliberately advance to another Mathlib commit,
+run `./update-mathlib.sh <FULL_MATHLIB_COMMIT_SHA>` instead (that one does
+rewrite those files).
 
 The verifier scans tracked Lean source after removing comments and strings, rejects
 admitted proofs and trust-expanding forms, builds without Lean warnings, and

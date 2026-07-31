@@ -4,6 +4,7 @@ defaultTargets = ["Gleason"]
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
+rev = "8bba4200986270d3b30be2bb2f8840af47a7854f"
 
 [[lean_lib]]
 name = "Gleason"
