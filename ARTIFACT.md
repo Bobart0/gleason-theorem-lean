@@ -34,7 +34,7 @@ re-running an experiment that could give a different numeric answer.
 | Manuscript claim | Verification command | Expected result |
 | --- | --- | --- |
 | The project builds with the pinned Lean/Mathlib versions | `./setup.sh` | `lake build` completes; no error |
-| No admitted proof, no forbidden escape hatch in active Lean source | `scripts/verify.sh` (source-scan stage) | `Lean source scan passed (19 tracked files).` |
+| No admitted proof, no forbidden escape hatch in active Lean source | `scripts/verify.sh` (source-scan stage) | `Lean source scan passed (21 tracked files).` |
 | The build emits no Lean warnings | `scripts/verify.sh` (build stage) | `Build completed successfully (N jobs).`, no `warning:` line |
 | `Gleason.busch`, `Gleason.busch_born_rule`, `Gleason.gleason`, `Gleason.no_dispersion_free` depend only on `[propext, Classical.choice, Quot.sound]` | `scripts/verify.sh` (axiom-audit stage), or manually: `lake env lean Verification/Axioms.lean` | Four lines, each `[propext, Classical.choice, Quot.sound]`; script exits 0 |
 | `ProjMeasure 3` and `EffectMeasure 2/3` are inhabited (non-vacuity) | Included in `lake build` via `Gleason/Nonvacuity.lean`, which is imported by `Gleason.lean` and `Gleason/Main.lean` | Build succeeds (the three `example : Nonempty (...)` terms type-check) |
