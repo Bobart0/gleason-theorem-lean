@@ -1,0 +1,15 @@
+{
+  "title": "Lean 4 Formalization of Busch's and Gleason's Theorems",
+  "description": "AFM-facing final documentation release of the Lean 4 / Mathlib formalization of finite-dimensional complex versions of Busch's and Gleason's representation theorems. Relative to v1.1.0-journal-audit, no Lean source file or theorem body is changed. This release freezes the cleaned publication-facing README and citation metadata used by the Annals of Formalized Mathematics article. The scientific theorem surface remains Gleason.busch, Gleason.busch_born_rule, Gleason.gleason, and Gleason.no_dispersion_free, with the same pinned Lean and Mathlib dependencies.",
+  "creators": [
+    {"name": "Dalimier, Bertrand", "affiliation": "Independent Researcher", "orcid": "0009-0000-2457-375X"}
+  ],
+  "license": "Apache-2.0",
+  "upload_type": "software",
+  "version": "1.1.1",
+  "keywords": ["Lean 4","Mathlib","formalized mathematics","Gleason theorem","Busch theorem","quantum effects","density operators","quantum foundations"],
+  "related_identifiers": [
+    {"identifier": "https://github.com/Bobart0/gleason-theorem-lean", "relation": "isSupplementTo", "scheme": "url"},
+    {"identifier": "https://github.com/Bobart0/gleason-theorem-lean/releases/tag/v1.1.1-afm-final", "relation": "isDerivedFrom", "scheme": "url"}
+  ]
+}

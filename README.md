@@ -149,9 +149,10 @@ no new mathematical result, the same declarations listed above. Audit:
 
 ## Citer ce travail
 Pour le corpus utilisé par l'article AFM, la version immuable recommandée est le tag
-`v1.1.0-journal-audit`, commit
-`5c5bc40d2e4a31a0d1b3112fcc9a3e92b2000ec5`, archivé sur Zenodo sous le DOI
-`10.5281/zenodo.21804155`. Les métadonnées structurées figurent dans
+`v1.1.1-afm-final`. Cette release ne modifie aucun fichier Lean par rapport à
+`v1.1.0-journal-audit`; elle fige uniquement la documentation et les métadonnées
+destinées à la publication. Le DOI de version Zenodo est enregistré dans l'article AFM
+après publication de la release. Les métadonnées structurées figurent dans
 [`CITATION.cff`](CITATION.cff).
 
 ## Utilisation dans l'article AFM
@@ -159,7 +160,7 @@ L'article pour les *Annals of Formalized Mathematics* réutilise les quatre
 déclarations publiques `Gleason.busch`, `Gleason.busch_born_rule`,
 `Gleason.gleason` et `Gleason.no_dispersion_free` depuis la release figée
 ci-dessus. La carte inter-dépôts et l'audit destiné aux rapporteurs sont centralisés
-dans [`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.1-afm-audit/AFM_ARTIFACT.md).
+dans [`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.2-afm-final/AFM_ARTIFACT.md).
 
 ---
 
@@ -289,9 +290,10 @@ analysis. No priority claim is made.
 
 ## Citing this work
 For the corpus used by the AFM article, the recommended immutable release is
-`v1.1.0-journal-audit`, commit
-`5c5bc40d2e4a31a0d1b3112fcc9a3e92b2000ec5`, archived on Zenodo as
-`10.5281/zenodo.21804155`. Structured citation metadata are in
+`v1.1.1-afm-final`. This release changes no Lean source relative to
+`v1.1.0-journal-audit`; it freezes only the publication-facing documentation and
+metadata. The version-specific Zenodo DOI is recorded by the AFM article after the
+release is published. Structured citation metadata are in
 [`CITATION.cff`](CITATION.cff).
 
 ## Use in the AFM article
@@ -299,4 +301,4 @@ The *Annals of Formalized Mathematics* article reuses the four public
 declarations `Gleason.busch`, `Gleason.busch_born_rule`,
 `Gleason.gleason`, and `Gleason.no_dispersion_free` from the frozen release
 above. The cross-repository reviewer map and publication audit are centralized in
-[`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.1-afm-audit/AFM_ARTIFACT.md).
+[`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.2-afm-final/AFM_ARTIFACT.md).

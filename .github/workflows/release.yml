@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  AUDITED_SHA: bc01211e9308cfd3d96d404c863864b8e063a222
+
+jobs:
+  release:
+    if: startsWith(github.event.head_commit.message, 'Release v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Verify release changes are publication-only
+        shell: bash
+        run: |
+          changed="$(git diff --name-only "$AUDITED_SHA" "$GITHUB_SHA")"
+          echo "$changed"
+          unexpected="$(printf '%s\n' "$changed" | grep -Ev '^(README\.md|CITATION\.cff|\.zenodo\.json|\.github/workflows/release\.yml|RELEASE_NOTES_v1\.1\.1-afm-final\.md)$' || true)"
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected changes since audited head:" >&2
+            echo "$unexpected" >&2
+            exit 1
+          fi
+          git diff --check "$AUDITED_SHA" "$GITHUB_SHA"
+
+      - name: Run strict reviewer-facing verification
+        run: ./scripts/verify.sh
+
+      - name: Resolve release tag and notes
+        id: release_meta
+        shell: bash
+        run: |
+          subject="$(git log -1 --pretty=%s)"
+          tag="${subject#Release }"
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+[-A-Za-z0-9.]*$ ]]; then
+            echo "Invalid release tag derived from commit subject: $tag" >&2
+            exit 1
+          fi
+          notes="RELEASE_NOTES_${tag}.md"
+          test -f "$notes"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "notes=$notes" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release and tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+          NOTES: ${{ steps.release_meta.outputs.notes }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving it unchanged."
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes-file "$NOTES"
+          fi
+
+      - name: Verify published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release_meta.outputs.tag }}
+        run: gh release view "$TAG" --json tagName,targetCommitish,publishedAt,url
