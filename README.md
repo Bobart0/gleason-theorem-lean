@@ -148,24 +148,21 @@ no new mathematical result, the same declarations listed above. Audit:
 [Apache License 2.0](LICENSE).
 
 ## Citer ce travail
-Le tag `v1.0.3-gleason`, commit
-`e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`, reste la version reproductible
-précédemment archivée. Les métadonnées générales du logiciel figurent dans
-[`CITATION.cff`](CITATION.cff). Pour une future version, ajouter le SHA du tag, le
-DOI Zenodo propre à la version et le SWHID uniquement après leur création effective.
+Pour le corpus utilisé par l'article AFM, la version immuable recommandée est le tag
+`v1.1.0-journal-audit`, commit
+`5c5bc40d2e4a31a0d1b3112fcc9a3e92b2000ec5`, archivé sur Zenodo sous le DOI
+`10.5281/zenodo.21804155`. Les métadonnées structurées figurent dans
+[`CITATION.cff`](CITATION.cff).
 
-## Relation avec le manuscrit
-Le manuscrit soumis au *Journal of Automated Reasoning* est
-[`busch_gleason_JAR_repositioned_v8_audited_beginning.tex`](busch_gleason_JAR_repositioned_v8_audited_beginning.tex).
-Il annonce quatre déclarations publiques (`Gleason.busch`, `Gleason.busch_born_rule`,
-`Gleason.gleason`, `Gleason.no_dispersion_free`), leur plage de dimensions et la liste
-d'axiomes `[propext, Classical.choice, Quot.sound]` ; ces affirmations ont été vérifiées
-contre le code de ce dépôt (voir
-[`docs/manuscript-repository-audit.md`](docs/manuscript-repository-audit.md)). Le
-manuscrit contient encore, à dessein, les placeholders `FINAL-RELEASE-TAG`,
-`FINAL-COMMIT-SHA` et un DOI logiciel à venir : ils ne seront remplacés qu'après création
-du commit et du tag audités (voir « Citer ce travail » ci-dessus et
-[`ARTIFACT.md`](ARTIFACT.md)).
+## Relation avec les manuscrits
+Le manuscrit Busch--Gleason préparé pour le *Journal of Automated Reasoning* n'a pas
+été accepté et n'est plus en cours d'évaluation. Il est conservé dans le dépôt comme
+trace historique de provenance, et non comme soumission active. L'article actuel pour
+les *Annals of Formalized Mathematics* réutilise les quatre déclarations publiques
+`Gleason.busch`, `Gleason.busch_born_rule`, `Gleason.gleason` et
+`Gleason.no_dispersion_free` depuis la release figée ci-dessus; la carte
+inter-dépôts et l'audit destiné aux rapporteurs sont centralisés dans
+[`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.1-afm-audit/AFM_ARTIFACT.md).
 
 ---
 
@@ -294,20 +291,18 @@ analysis. No priority claim is made.
 [Apache License 2.0](LICENSE).
 
 ## Citing this work
-Tag `v1.0.3-gleason`, commit
-`e21729e0ba5cddcc40dff14a5ae9d2bb0718e878`, remains the previously archived
-reproducible release. General software metadata is provided in
-[`CITATION.cff`](CITATION.cff). For a future version, add the tagged commit SHA,
-version-specific Zenodo DOI, and SWHID only after they have actually been created.
+For the corpus used by the AFM article, the recommended immutable release is
+`v1.1.0-journal-audit`, commit
+`5c5bc40d2e4a31a0d1b3112fcc9a3e92b2000ec5`, archived on Zenodo as
+`10.5281/zenodo.21804155`. Structured citation metadata are in
+[`CITATION.cff`](CITATION.cff).
 
-## Relation to the manuscript
-The manuscript submitted to the *Journal of Automated Reasoning* is
-[`busch_gleason_JAR_repositioned_v8_audited_beginning.tex`](busch_gleason_JAR_repositioned_v8_audited_beginning.tex).
-It announces four public declarations (`Gleason.busch`, `Gleason.busch_born_rule`,
-`Gleason.gleason`, `Gleason.no_dispersion_free`), their dimension ranges, and the axiom
-list `[propext, Classical.choice, Quot.sound]`; these claims have been checked against
-this repository's code (see
-[`docs/manuscript-repository-audit.md`](docs/manuscript-repository-audit.md)). The
-manuscript still intentionally contains the `FINAL-RELEASE-TAG`, `FINAL-COMMIT-SHA`,
-and a pending software DOI placeholders: they will only be replaced once the audited
-commit and tag exist (see "Citing this work" above and [`ARTIFACT.md`](ARTIFACT.md)).
+## Relation to manuscripts
+The Busch--Gleason manuscript prepared for the *Journal of Automated Reasoning*
+was not accepted and is no longer under consideration. It remains in the repository
+as historical provenance, not as an active submission. The current *Annals of
+Formalized Mathematics* article reuses the four public declarations
+`Gleason.busch`, `Gleason.busch_born_rule`, `Gleason.gleason`, and
+`Gleason.no_dispersion_free` from the frozen release above; the cross-repository
+reviewer map and publication audit are centralized in
+[`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.1-afm-audit/AFM_ARTIFACT.md).
