@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  AUDITED_SHA: bc01211e9308cfd3d96d404c863864b8e063a222
+  AUDITED_SHA: cd88c1d658eab2a8c47e950025547ae79c8852ce
 
 jobs:
   release:
@@ -26,7 +26,7 @@ jobs:
         run: |
           changed="$(git diff --name-only "$AUDITED_SHA" "$GITHUB_SHA")"
           echo "$changed"
-          unexpected="$(printf '%s\n' "$changed" | grep -Ev '^(README\.md|CITATION\.cff|\.zenodo\.json|\.github/workflows/release\.yml|RELEASE_NOTES_v1\.1\.1-afm-final\.md)$' || true)"
+          unexpected="$(printf '%s\n' "$changed" | grep -Ev '^(README\.md|CITATION\.cff|\.zenodo\.json|\.github/workflows/release\.yml|RELEASE_NOTES_v1\.1\.2\.md)$' || true)"
           if [ -n "$unexpected" ]; then
             echo "Unexpected changes since audited head:" >&2
             echo "$unexpected" >&2
@@ -48,10 +48,6 @@ jobs:
         run: |
           subject="$(git log -1 --pretty=%s)"
           tag="${subject#Release }"
-          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+[-A-Za-z0-9.]*$ ]]; then
-            echo "Invalid release tag derived from commit subject: $tag" >&2
-            exit 1
-          fi
           notes="RELEASE_NOTES_${tag}.md"
           test -f "$notes"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

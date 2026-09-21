@@ -148,19 +148,18 @@ no new mathematical result, the same declarations listed above. Audit:
 [Apache License 2.0](LICENSE).
 
 ## Citer ce travail
-Pour le corpus utilisé par l'article AFM, la version immuable recommandée est le tag
-`v1.1.1-afm-final`. Cette release ne modifie aucun fichier Lean par rapport à
-`v1.1.0-journal-audit`; elle fige uniquement la documentation et les métadonnées
-destinées à la publication. Le DOI de version Zenodo est enregistré dans l'article AFM
-après publication de la release. Les métadonnées structurées figurent dans
+La version immuable recommandée pour les publications est le tag `v1.1.2`.
+Elle ne modifie aucun fichier Lean par rapport à la release scientifique
+précédente ; elle fournit une façade de publication neutre et des métadonnées
+de citation stables. Les métadonnées structurées figurent dans
 [`CITATION.cff`](CITATION.cff).
 
-## Utilisation dans l'article AFM
-L'article pour les *Annals of Formalized Mathematics* réutilise les quatre
+## Utilisation dans les publications
+Les articles utilisant ce dépôt peuvent citer directement les quatre
 déclarations publiques `Gleason.busch`, `Gleason.busch_born_rule`,
-`Gleason.gleason` et `Gleason.no_dispersion_free` depuis la release figée
-ci-dessus. La carte inter-dépôts et l'audit destiné aux rapporteurs sont centralisés
-dans [`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.2-afm-final/AFM_ARTIFACT.md).
+`Gleason.gleason` et `Gleason.no_dispersion_free` depuis cette release
+figée. La carte inter-dépôts et les commandes de vérification sont centralisées
+dans le guide de publication de `quantum-foundations-lean`.
 
 ---
 
@@ -289,16 +288,14 @@ analysis. No priority claim is made.
 [Apache License 2.0](LICENSE).
 
 ## Citing this work
-For the corpus used by the AFM article, the recommended immutable release is
-`v1.1.1-afm-final`. This release changes no Lean source relative to
-`v1.1.0-journal-audit`; it freezes only the publication-facing documentation and
-metadata. The version-specific Zenodo DOI is recorded by the AFM article after the
-release is published. Structured citation metadata are in
-[`CITATION.cff`](CITATION.cff).
+The recommended immutable release for publications is tag `v1.1.2`.
+It changes no Lean source relative to the preceding scientific release; it
+provides a neutral publication-facing snapshot and stable citation metadata.
+Structured citation metadata are in [`CITATION.cff`](CITATION.cff).
 
-## Use in the AFM article
-The *Annals of Formalized Mathematics* article reuses the four public
-declarations `Gleason.busch`, `Gleason.busch_born_rule`,
-`Gleason.gleason`, and `Gleason.no_dispersion_free` from the frozen release
-above. The cross-repository reviewer map and publication audit are centralized in
-[`quantum-foundations-lean/AFM_ARTIFACT.md`](https://github.com/Bobart0/quantum-foundations-lean/blob/v1.4.2-afm-final/AFM_ARTIFACT.md).
+## Use in publications
+Articles using this repository may cite the four public declarations
+`Gleason.busch`, `Gleason.busch_born_rule`, `Gleason.gleason`, and
+`Gleason.no_dispersion_free` from this frozen release. The cross-repository
+declaration map and verification commands are centralized in the publication
+guide of `quantum-foundations-lean`.
