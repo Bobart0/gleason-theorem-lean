@@ -148,7 +148,7 @@ no new mathematical result, the same declarations listed above. Audit:
 [Apache License 2.0](LICENSE).
 
 ## Citer ce travail
-La version immuable recommandée pour les publications est le tag `v1.1.2`.
+La version immuable recommandée pour les publications est le tag `v1.1.2`, commit `6156219f606c6ac22690c84147ba2771d4cb18f3`, DOI Zenodo `10.5281/zenodo.22883921`.
 Elle ne modifie aucun fichier Lean par rapport à la release scientifique
 précédente ; elle fournit une façade de publication neutre et des métadonnées
 de citation stables. Les métadonnées structurées figurent dans
@@ -288,7 +288,7 @@ analysis. No priority claim is made.
 [Apache License 2.0](LICENSE).
 
 ## Citing this work
-The recommended immutable release for publications is tag `v1.1.2`.
+The recommended immutable release for publications is tag `v1.1.2`, commit `6156219f606c6ac22690c84147ba2771d4cb18f3`, Zenodo DOI `10.5281/zenodo.22883921`.
 It changes no Lean source relative to the preceding scientific release; it
 provides a neutral publication-facing snapshot and stable citation metadata.
 Structured citation metadata are in [`CITATION.cff`](CITATION.cff).
