@@ -13,6 +13,7 @@ authors:
 version: "1.1.2"
 date-released: "2026-09-21"
 
+doi: "10.5281/zenodo.22883921"
 repository-code: "https://github.com/Bobart0/gleason-theorem-lean"
 url: "https://github.com/Bobart0/gleason-theorem-lean"
 
